@@ -1,0 +1,59 @@
+## 大規模言語モデル
+
+[PDF](handouts.qmd){.pdf-gate title="配布資料（PDF）"}
+
+::: {.idx-lead}
+全14回。「次の1文字を当てる」から始めて、最終回は**推し文豪ボット**（自作GPT）を育てる。
+:::
+
+<div id="lecture-search">
+  <input id="search-input" type="search" placeholder="全文検索 — どの回に出てきたか探せる（例：埋め込み、softmax、temperature）" autocomplete="off">
+  <div id="search-results" class="search-ui-results"></div>
+</div>
+
+:::: {.lectures}
+
+### 導入 {.sec .cat1}
+::: {.grid .cat1}
+- [ことばを当てる機械](lm-introduction.qmd)
+:::
+
+### 架空の地名メーカーを育てる {.sec .cat2}
+::: {.grid .cat2}
+- [文字を数にする](tokenization.qmd)
+- [数えるだけの言語モデル](bigram-counting.qmd)
+- [学習で当てる](bigram-neural.qmd)
+- [ことばの地図](embeddings.qmd)
+- [窓を広げる](mlp-lm.qmd)
+:::
+
+### Attention を開けて GPT を組む {.sec .cat3}
+::: {.grid .cat3}
+- [注目という発想](attention-intuition.qmd)
+- [Q・K・V を開ける](attention-qkv.qmd)
+- [順序とカンニング](position-mask.qmd)
+- [部品を束ねる](transformer-block.qmd)
+- [小さなGPTを訓練する](gpt-training.qmd)
+- [生成を操る](sampling.qmd)
+- [ChatGPT までの距離](to-chatgpt.qmd)
+- [最終プロジェクト：推し文豪ボット](bungo-project.qmd)
+:::
+
+### 参考資料 [回数外]{.sub} {.sec}
+::: {.grid .app}
+- [BPEトークナイザを自作する](bpe-appendix.qmd)
+:::
+
+::::
+
+<script>
+document.addEventListener('keydown', function(e) {
+  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+  }
+}, true);
+</script>
+
+<!-- 検索ボックスの動作は search-ui.js（全ページ共通、cleanslidekit 拡張が読み込む）が担う -->

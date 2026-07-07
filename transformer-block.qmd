@@ -1,0 +1,305 @@
+---
+title: "部品を束ねる"
+subtitle: "マルチヘッド・FFN・残差・LayerNorm — Transformer の全身を組む"
+---
+
+## 前回の振り返り
+
+- マスク付き注意ヘッドが完成した。今日は残りの部品を全部付けて**全身を組む**
+- 新しい部品は実質2つ（束ねる・整える）。あとは第1コースの持ち物で足りる
+
+::: {.callout-note}
+今日から行列に**バッチの軸**が付く：入力は（バッチ, 文字数, 次元）の3次元。
+行列積を最後の2軸だけにするため `k.T` を `k.transpose(-2, -1)` と書く — 中身は同じ。
+:::
+
+
+## 視線は1系統では足りない
+
+- ヘッド1本＝視線の表1枚。でも読むときの視線は1種類ではない
+  - 「直前の文字」を見る視線、「文の主語」を見る視線、「開きカッコ」を見る視線……
+- 解決は力技：==同じ仕組みを並列に何本も走らせて、結果を横につなぐ==
+
+```{python}
+#| echo: true
+import math
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class Head(nn.Module):
+    def __init__(self, n_embd, head_size, block_size):
+        super().__init__()
+        self.query = nn.Linear(n_embd, head_size, bias=False)
+        self.key = nn.Linear(n_embd, head_size, bias=False)
+        self.value = nn.Linear(n_embd, head_size, bias=False)
+        self.register_buffer("tril", torch.tril(torch.ones(block_size, block_size)))
+
+    def forward(self, x):
+        B, T, C = x.shape
+        q, k = self.query(x), self.key(x)
+        w = q @ k.transpose(-2, -1) / math.sqrt(k.shape[-1])
+        w = w.masked_fill(self.tril[:T, :T] == 0, float("-inf"))
+        w = F.softmax(w, dim=-1)
+        return w @ self.value(x)
+
+class MultiHead(nn.Module):
+    def __init__(self, n_embd, n_head, block_size):
+        super().__init__()
+        head_size = n_embd // n_head          # 幅を等分して合計は元どおり
+        self.heads = nn.ModuleList(
+            Head(n_embd, head_size, block_size) for _ in range(n_head))
+        self.proj = nn.Linear(n_embd, n_embd)  # つないだ結果を混ぜ直す
+
+    def forward(self, x):
+        return self.proj(torch.cat([h(x) for h in self.heads], dim=-1))
+```
+
+- **マルチヘッド注意**（[multi-head attention]{.en}）。新しい数学はゼロ — `cat` して `Linear` 1枚
+
+
+## 集めたら、考える — FFN
+
+- 注意は他の文字から情報を**集める**部品。集めた情報を**加工する**場所がまだない
+- 各位置ごとに、小さな2層ネット（第1コースの「変換を重ねる」そのもの）を通す
+
+```{python}
+#| echo: true
+class FeedForward(nn.Module):
+    def __init__(self, n_embd):
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(n_embd, 4 * n_embd),   # いったん4倍に広げて
+            nn.ReLU(),                       # 折って
+            nn.Linear(4 * n_embd, n_embd))   # 戻す
+
+    def forward(self, x):
+        return self.net(x)
+```
+
+- 注意＝**会議で情報を集める**、FFN＝**自分の席に戻って考える**。この交互が Transformer のリズム
+- FFN は位置ごとに独立（隣を見ない）— 見る仕事は注意に任せてある
+
+
+## 深く積むための保険 — 残差接続
+
+::: {.callout-important title="クイズ"}
+バックプロパゲーションは「微分を**掛けて**貯める」だった。
+小さい数を何十回も掛けると、勾配はどうなる？
+:::
+
+::: {.fragment}
+- 消える（勾配消失）。層を重ねるほど入口に勾配が届かなくなる — 深いネットの持病
+- 対策：部品を**迂回路つき**にする
+
+$$
+x \leftarrow x + f(x)
+$$
+
+- 出力＝「元の $x$」＋「部品の仕事ぶん」。勾配は足し算の枝を**素通り**して入口まで届く
+- **残差接続**（[residual connection]{.en}）。コードでは `x + f(x)` と書くだけ
+:::
+
+
+## 入力を揃えてから渡す — LayerNorm
+
+- 深く積むと、途中のベクトルの大きさがバラバラに育って学習が不安定になる
+- 各位置のベクトルを**平均0・ばらつき1**に揃える部品を、各部品の直前に置く
+
+```{python}
+#| echo: true
+import torch
+import torch.nn as nn
+
+torch.manual_seed(0)
+x = torch.randn(2, 5, 96) * 7 + 3          # 平均3・ばらつき7のベクトルたち
+ln = nn.LayerNorm(96)
+y = ln(x)
+print(f"before: mean {x.mean():.2f} / std {x.std():.2f}")
+print(f"after : mean {y.mean():.2f} / std {y.std():.2f}")
+```
+
+- **LayerNorm**（[layer normalization]{.en}）。やっていることは第1コースの「特徴量の標準化」の親戚
+- 揃えたあとに掛ける・足す用の小さなパラメータ（γ・β）だけ学習される
+
+
+## ブロック — Transformer の1段
+
+- 4部品を決まった順に組む。この1段を**ブロック**（[Transformer block]{.en}）と呼ぶ
+
+:::: {.columns}
+::: {.column width="55%"}
+```{python}
+#| echo: true
+class Block(nn.Module):
+    def __init__(self, n_embd, n_head, block_size):
+        super().__init__()
+        self.sa = MultiHead(n_embd, n_head, block_size)
+        self.ff = FeedForward(n_embd)
+        self.ln1 = nn.LayerNorm(n_embd)
+        self.ln2 = nn.LayerNorm(n_embd)
+
+    def forward(self, x):
+        x = x + self.sa(self.ln1(x))   # 揃えて→会議→迂回路で合流
+        x = x + self.ff(self.ln2(x))   # 揃えて→考える→合流
+        return x
+```
+:::
+::: {.column width="45%"}
+```{.d2 sketch="true" width="100%"}
+direction: up
+X0: 入力 x { style.fill: "#e1f5ff" }
+LN1: LayerNorm { style.fill: "#fdebd0" }
+SA: マルチヘッド注意 { style.fill: "#f5b7b1" }
+P1: "+" { shape: circle; style.fill: "#d5f5e3" }
+LN2: LayerNorm { style.fill: "#fdebd0" }
+FF: FFN { style.fill: "#f9e79f" }
+P2: "+" { shape: circle; style.fill: "#d5f5e3" }
+X0 -> LN1 -> SA -> P1
+X0 -> P1: 迂回路
+P1 -> LN2 -> FF -> P2
+P1 -> P2: 迂回路
+```
+:::
+::::
+
+- ==ブロックは入口と出口が同じ形==（T×n_embd）→ **いくらでも積み重ねられる**
+
+
+## 全身を組む — これが GPT {#peek-gpt-class}
+
+```{python}
+#| echo: true
+class GPT(nn.Module):
+    def __init__(self, vocab_size, n_embd, n_head, n_layer, block_size):
+        super().__init__()
+        self.block_size = block_size
+        self.tok_emb = nn.Embedding(vocab_size, n_embd)   # 文字の埋め込み
+        self.pos_emb = nn.Embedding(block_size, n_embd)   # 位置の埋め込み
+        self.blocks = nn.Sequential(
+            *[Block(n_embd, n_head, block_size) for _ in range(n_layer)])
+        self.ln_f = nn.LayerNorm(n_embd)
+        self.head = nn.Linear(n_embd, vocab_size)         # 語彙スコアに戻す
+
+    def forward(self, idx):                               # idx: (B, T) 文字番号
+        B, T = idx.shape
+        x = self.tok_emb(idx) + self.pos_emb(torch.arange(T))
+        x = self.blocks(x)
+        return self.head(self.ln_f(x))                    # (B, T, vocab) ロジット
+
+model = GPT(vocab_size=3045, n_embd=96, n_head=4, n_layer=2, block_size=64)
+logits = model(torch.randint(3045, (2, 10)))              # 2文・各10文字を試しに
+print(logits.shape)
+print(f"パラメータ数: {sum(p.numel() for p in model.parameters()):,}")
+```
+
+- 入口は文字番号の列、出口は**全位置ぶんの「次の1文字」スコア** — バイグラムと同じ約束
+- 語彙3,045（『吾輩は猫である』サイズ）で**約82万パラメータ**
+
+
+## 中身の勘定
+
+```{python}
+#| echo: true
+#| output-location: fragment
+parts = {"埋め込み（文字+位置）": [model.tok_emb, model.pos_emb],
+         "ブロック×2": [model.blocks],
+         "仕上げの語彙スコア": [model.head]}
+for name, mods in parts.items():
+    n = sum(p.numel() for m in mods for p in m.parameters())
+    print(f"{name:12s}: {n:8,d}")
+```
+
+::: {.fragment}
+- 埋め込みと語彙スコアだけで**7割超**。この体格で日本語3,045字と戦う
+- GPT-2 も GPT-4 も、==この設計図のまま各部品を大きくして積んだだけ==（ブロック数十段・次元数千）
+:::
+
+
+## **Tweak** 設計図の数字で遊ぶ {.badge-practice}
+
+- [GPTクラスのコード](#peek-gpt-class){.peek} の設定を変えて、形とパラメータ数を確認（訓練はしないので一瞬）
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `n_layer=2` → `8` | パラメータはどこがどれだけ増える？（内訳の勘定で確認） |
+| `n_embd=96` → `192` | 層を増やすのと次元を増やすの、効き方の違いは？ |
+| `n_head=4` → `5` | エラーで止まる。なぜ96を5等分できないか、`cat` の幅で説明 |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- `n_head=5` は `16×95 と 96×96 は掛けられない` と怒られる — head_size = 96÷5 = 19（切り捨て）で、5本つないでも幅95にしかならないから。**n_embd は n_head で割り切れる値にする**のが約束
+:::
+
+
+## まとめ
+
+- **マルチヘッド**＝ヘッドを並列に走らせて `cat` → `Linear`。視線が複数系統になる
+- **FFN**＝集めた情報を位置ごとに考える2層ネット。注意と交互に働く
+- **残差**＝ $x + f(x)$ の迂回路で勾配を守る。**LayerNorm**＝部品の前でベクトルを揃える
+- ブロックは同じ形で積み放題。埋め込み→ブロック×N→語彙スコアで **GPT の全身が完成**
+
+::: {.callout-note title="次回予告"}
+設計図はできた。次回、『吾輩は猫である』32万字を流し込んで**火を入れる**。
+デタラメしか言えない82万個の数が、言葉を覚えていく様子を定点観測する。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：迂回路の効果を勾配で確かめる
+
+残差接続の有無で入口に届く勾配がどう変わるか、ミニ実験で確かめよ。
+
+1. `f = nn.Sequential(nn.Linear(16, 16), nn.ReLU())` を10個作り、`x = torch.randn(1, 16, requires_grad=True)` を用意
+2. **残差なし**（`x` に順に `f` を適用）と**残差あり**（`x + f(x)` を繰り返す）の2通りで出力の合計を `backward()`
+3. `x.grad.abs().mean()` を比較（残差ありの方が桁違いに大きいはず）
+
+### 問題2：語彙のコスト
+
+`vocab_size` を 3,045（文字レベル日本語）と 65（英語の文字レベル相当）にした GPT のパラメータ数を比べよ。差はどの部品から来るか、内訳の勘定で示せ。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import torch
+import torch.nn as nn
+
+# 問題1
+torch.manual_seed(0)
+layers = [nn.Sequential(nn.Linear(16, 16), nn.ReLU()) for _ in range(10)]
+
+x1 = torch.randn(1, 16, requires_grad=True)
+h = x1
+for f in layers:
+    h = f(h)              # 残差なし
+h.sum().backward()
+
+x2 = x1.detach().clone().requires_grad_(True)
+h = x2
+for f in layers:
+    h = h + f(h)          # 残差あり
+h.sum().backward()
+
+print(f"残差なしの入口勾配: {x1.grad.abs().mean():.6f}")
+print(f"残差ありの入口勾配: {x2.grad.abs().mean():.6f}")
+
+# 問題2
+for v in [3045, 65]:
+    m = GPT(vocab_size=v, n_embd=96, n_head=4, n_layer=2, block_size=64)
+    n_emb = m.tok_emb.weight.numel() + sum(p.numel() for p in m.head.parameters())
+    print(f"vocab {v:5d}: 全体 {sum(p.numel() for p in m.parameters()):8,d}"
+          f"（うち語彙まわり {n_emb:7,d}）")
+```
+
+- 問題1：ReLU 10段の掛け算で勾配は目に見えて痩せる。迂回路があると入口まで太いまま届く
+- 問題2：ブロック部分は同じなのに全体は3倍近く違う — **大語彙のコストは埋め込みと出口に集中**する。実物の LLM が文字でなくサブワード（BPE）を使う理由のひとつ

@@ -1,0 +1,277 @@
+---
+title: "学習で当てる"
+subtitle: "ニューラル・バイグラム — 「数える」と「学習する」が同じ答えに行き着く"
+---
+
+## 前回の振り返り
+
+- 数えて作った75×75の確率表で、架空の地名が作れた
+- でも第1コースを思い出すと、MNIST のときは**数えなかった**
+  - 損失を決めて、勾配降下法で `fit` した
+
+::: {.callout-important title="クイズ"}
+前回の表と同じものを、数えずに**勾配降下法だけ**で作れるか？
+:::
+
+::: {.fragment}
+- 作れる。しかも「数えられない問題」への扉がそこで開く — 今日はその実験
+:::
+
+
+## 問題を分類器の形に直す
+
+- 「次の1文字を当てる」を、見慣れた形に並べ直す
+
+| | MNIST | 今日 |
+|---|---|---|
+| 入力 $x$ | 画像（784次元） | いまの文字（1つ） |
+| 出力 | 10クラスの確率 | ==75クラスの確率== |
+| 訓練データ | (画像, 正解の数字) | (いまの文字, 次の文字) |
+| 損失 | 交差エントロピー | ==交差エントロピー== |
+
+- 訓練データは前回のバイグラムの組そのもの：**11,428組**の (いまの文字, 次の文字)
+
+
+## 文字を「ベクトル」にする — one-hot
+
+- モデルに入れるために、文字番号を75次元のベクトルにする
+- **one-hot ベクトル**：その文字の位置だけ 1、あとは全部 0
+
+```{python}
+#| echo: true
+import torch
+import torch.nn.functional as F
+
+x = torch.tensor([2, 0])                      # 文字番号 2 と 0
+X = F.one_hot(x, num_classes=75).float()
+print(X.shape)
+print(X[0, :6], "...")                        # 2番の位置だけ 1
+print(X[1, :6], "...")                        # 0番の位置だけ 1
+```
+
+- 「どの文字か」という情報を、数値の演算に乗る形にしただけ
+
+
+## モデルは行列1枚
+
+- パラメータは 75×75 の行列 $W$ が1枚。one-hot を掛けて75個のスコアを出す
+
+$$
+\text{one-hot}(x) \; @ \; W \;=\; \text{75個のスコア（ロジット）} \;\xrightarrow{\text{softmax}}\; \text{確率}
+$$
+
+- 第1コースの言い方なら：**バイアスなし・活性化なしの线形1層**を75クラス分類に使う
+
+::: {.callout-note}
+$W$ をぜんぶ0で初期化すると、softmax の出力は全文字 $1/75$ の**一様分布**。
+「何も知らない」状態の損失は $-\log(1/75) = 4.3175$ — 学習前に予言できる。
+:::
+
+
+## 学習ループ — 3拍子は今日も同じ {#peek-neural-bigram}
+
+```{python}
+#| echo: true
+import pandas as pd
+import torch
+import torch.nn.functional as F
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+
+xs, ys = [], []
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        xs.append(stoi[a])
+        ys.append(stoi[b])
+X = F.one_hot(torch.tensor(xs), num_classes=75).float()
+y = torch.tensor(ys)
+
+W = torch.zeros((75, 75), requires_grad=True)
+opt = torch.optim.AdamW([W], lr=0.5)
+for it in range(1, 101):
+    opt.zero_grad()                        # ① リセット
+    loss = F.cross_entropy(X @ W, y)       # forward と損失
+    loss.backward()                        # ② backprop（自動）
+    opt.step()                             # ③ 勾配降下で1歩
+    if it in (1, 10, 50, 100):
+        print(f"更新 {it:3d}回 | Loss: {loss.item():.4f}")
+```
+
+- 1回目の損失は**予言どおり 4.3175**。そこから勾配降下で転がり落ちる
+
+
+## 山場：2つの表を並べる
+
+- 学習した $W$ を softmax で確率にして、前回の「数えた表」と比べる
+
+```{python}
+#| echo: false
+# reuse the kernel state from the training cell above (W, xs, ys, chars, stoi)
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+P_learn = F.softmax(W, dim=1).detach().numpy()
+
+N = np.zeros((75, 75))
+for a, b in zip(xs, ys):
+    N[a, b] += 1
+P_count = N / N.sum(axis=1, keepdims=True)
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 5.6))
+for ax, P, title in [(axes[0], P_count, "数えた表"), (axes[1], P_learn, "学習した表")]:
+    ax.imshow(P, cmap="Blues", vmax=0.5)
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_title(title, fontsize=14)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| echo: true
+#| output-location: fragment
+print("確率の差の最大:", np.abs(P_learn - P_count).max().round(4))
+print("P(う|ょ)  数え:", P_count[stoi['ょ'], stoi['う']].round(3),
+      " 学習:", P_learn[stoi['ょ'], stoi['う']].round(3))
+```
+
+::: {.fragment}
+- ==別々の道から、同じ表に着いた== — 勾配降下法は交差エントロピーが最小になる表を探し、その答えが「数えた表」だった
+:::
+
+
+## なぜわざわざ学習するのか
+
+- 数える方が速くて正確なのに、遠回りした理由：
+
+::: {.callout-important title="クイズ"}
+「直前の**5文字**を見て次を当てる」を表で作ると、行はいくつ必要？
+:::
+
+::: {.fragment}
+- $75^5 \approx$ **23億行**。データは9,681文字しかない — ほぼ全行が空っぽになる
+- ==数える作戦は文脈を伸ばした瞬間に破綻する==。勾配降下法はこの先も使える
+- ここから先のモデル（MLP、そして Transformer）は全部この3拍子で学習する
+:::
+
+
+## 学習した表でも生成できる
+
+- 前回の生成コードの `P` を `P_learn` に差し替えるだけ
+
+```{python}
+#| echo: true
+import numpy as np
+
+rng = np.random.default_rng(0)
+for _ in range(5):
+    i, s = 0, ""
+    while True:
+        i = rng.choice(75, p=P_learn[i] / P_learn[i].sum())   # 丸め誤差の補正
+        if i == 0:
+            break
+        s += chars[i]
+    print(s)
+```
+
+- 出来ばえも前回と同レベル — 中身が同じ表なのだから当然
+
+
+## **Tweak** 学習の挙動を観察する {.badge-practice}
+
+- [学習ループのコード](#peek-neural-bigram){.peek} を書き換えて実行
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `lr=0.5` → `lr=0.01` | 100回では全然下がりきらない（何回ならいい？） |
+| `range(1, 101)` → `range(1, 501)` | 損失はどこまで下がる？ 2.34 の壁を観察 |
+| `torch.zeros` → `torch.randn(75, 75, requires_grad=True)` | 初期損失が 4.3175 からずれる（一様分布でなくなる） |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- どう頑張っても損失は**約2.34で頭打ち**になる。これはコードのバグでも学習不足でもない — 次の練習問題で正体を暴く
+:::
+
+
+## まとめ
+
+- 「次の1文字」を**75クラス分類**に直した：one-hot × 行列 $W$ → softmax → 交差エントロピー
+- 勾配降下法で学習した表は、**数えた表と一致**した（差は小数第3位以下）
+- 数える作戦は文脈を伸ばすと破綻する。学習はこの先も通用する — だから遠回りに価値がある
+- 学習ループは今日も `zero_grad → backward → step` の3拍子
+
+::: {.callout-note title="次回予告"}
+one-hot × 行列の計算、実は**行を1本選んでいるだけ**。
+この見方から「文字の意味をベクトルで持つ」というLLMの心臓部が生まれる。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：損失2.34の壁の正体
+
+「数えた表」そのものの損失を計算し、学習の到達点と一致することを確かめよ。
+
+0. 本編のコードで `P_count` と `xs`, `ys` まで作る
+1. 全11,428組について $-\log P_{\text{count}}[x, y]$ の平均を計算（`np.log` と配列添字を使う）
+2. 学習後の損失（約2.346）と比べる
+
+### 問題2：どの文字が一番「読みにくい」か
+
+文字ごとに「その文字の次を当てるときの平均損失」を計算し、**次が一番予想しにくい文字**と**一番予想しやすい文字**を1つずつ挙げよ。
+
+1. 各組 $(x, y)$ の損失 $-\log P_{\text{count}}[x, y]$ を、$x$ の文字ごとに平均する
+2. 平均損失が最大の文字と最小の文字を表示（登場10回未満の文字は除く）
+3. 最小の文字がなぜ予想しやすいか、表の行を見て説明せよ
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+xs, ys = [], []
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        xs.append(stoi[a])
+        ys.append(stoi[b])
+N = np.zeros((75, 75))
+for a, b in zip(xs, ys):
+    N[a, b] += 1
+P_count = N / N.sum(axis=1, keepdims=True)
+
+# 問題1
+xs_a, ys_a = np.array(xs), np.array(ys)
+loss_count = -np.log(P_count[xs_a, ys_a]).mean()
+print("数えた表の損失:", loss_count.round(4))   # 学習の到達点とほぼ同じ
+
+# 問題2
+per_char = {}
+for c in range(75):
+    mask = xs_a == c
+    if mask.sum() >= 10:
+        per_char[chars[c]] = -np.log(P_count[xs_a[mask], ys_a[mask]]).mean()
+hardest = max(per_char, key=per_char.get)
+easiest = min(per_char, key=per_char.get)
+print(f"予想しにくい: {hardest} ({per_char[hardest]:.3f})")
+print(f"予想しやすい: {easiest} ({per_char[easiest]:.3f})")
+```
+
+- 問題1：学習は「数えた表」を再発見しただけ — **2.34はバイグラムという作戦自体の限界**。これより下げるには、1文字より多くの文脈を見るしかない（次回以降の伏線）
+- 問題2：最も当てやすいのは「ょ」（ほぼ「う」一択、平均損失0.07）。最難関は境界「・」（3.47）— **名前の1文字目が一番予想がつかない**、という直感どおりの結果

@@ -1,0 +1,351 @@
+---
+title: "数えるだけの言語モデル"
+subtitle: "バイグラム — 学習ゼロで、名前が作れてしまう"
+---
+
+## 前回の振り返り
+
+- ことばは数になった：`stoi` / `itos` / `encode` / `decode` の4点セット
+- 地名データ：1,747件、語彙74文字
+
+::: {.callout-important title="クイズ"}
+地名のよみで、「ょ」の**次**に来る文字は何が多い？
+「きょうと」「ちょうし」…… 予想してから、数えて確かめる。
+:::
+
+::: {.fragment}
+- 今日のモデルの作戦はこれだけ：==直前の1文字だけ見て、次の1文字を当てる==
+:::
+
+
+## バイグラム — 隣り合う2文字
+
+- 隣り合う2文字の組を**バイグラム**（[bigram]{.en}）と呼ぶ
+- 「しぶや」のバイグラム：「し→ぶ」「ぶ→や」
+- データ全体でこの組を**数えるだけ**。学習も勾配もまだ使わない
+
+::: {.callout-note}
+「次の1文字を当てる分類器」の最弱バージョン。弱いが、**動くものを最初に作る**のはシステム作りの鉄則。
+:::
+
+
+## 名前の始まりと終わりに印を打つ
+
+- 「どの文字で始まりやすいか」「どこで終わるか」も当てたい
+- そこで名前の前後に境界の印「・」を付けてから数える
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: "しぶや" { style.fill: "#e1f5ff" }
+B: "・しぶや・" { style.fill: "#fff4e1" }
+C: "・→し／し→ぶ／ぶ→や／や→・" { style.fill: "#d5f5e3" }
+A -> B: 印を付ける
+B -> C: バイグラムに分解
+```
+
+- 「・→し」＝「し」で始まった、「や→・」＝「や」で終わった、と読む
+- 語彙は74＋1で**75文字**になる
+
+
+## 全部数える
+
+```{python}
+#| echo: true
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))   # 境界を0番にする
+stoi = {c: i for i, c in enumerate(chars)}
+
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):     # 隣り合う2文字を順に取る
+        N[stoi[a], stoi[b]] += 1
+
+print("組の総数:", N.sum())
+print("「ょ→う」の回数:", N[stoi["ょ"], stoi["う"]])
+```
+
+- 75×75 の表が「地名らしさ」の全記録。行＝いまの文字、列＝次の文字
+
+
+## 表を絵にする
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import japanize_matplotlib
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+
+fig, ax = plt.subplots(figsize=(9.5, 9.5))
+ax.imshow(N, cmap="Blues", vmax=40)   # 40回で頭打ちにして薄いマスも見えるように
+ax.set_xticks(range(75)); ax.set_yticks(range(75))
+ax.set_xticklabels(chars, fontsize=5.5)
+ax.set_yticklabels(chars, fontsize=5.5)
+ax.set_xlabel("次の文字"); ax.set_ylabel("いまの文字")
+ax.set_title("バイグラム回数表（濃い＝多い）", fontsize=13)
+plt.tight_layout()
+plt.show()
+```
+
+- クリックで拡大して、濃いマスを探検してみる（「ょ」の行、「ん」の列……）
+
+
+## 表が知っていること
+
+::: {.callout-important title="クイズ"}
+「・」の**行**のトップ5＝名前の最初に来やすい文字。何だと思う？
+「・」の**列**のトップ5＝名前の最後の文字。こっちはかなり偏るはず……
+:::
+
+```{python}
+#| echo: true
+#| output-location: fragment
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+
+first = N[0].argsort()[::-1][:5]        # ・の行：最初の文字
+last = N[:, 0].argsort()[::-1][:5]      # ・の列：最後の文字
+print("最初:", [(chars[i], N[0, i]) for i in first])
+print("最後:", [(chars[i], N[i, 0]) for i in last])
+```
+
+::: {.fragment}
+- 最後は「し」792回の圧勝 — **市**・町（ちょう／まち）・村の「制度」が表に写り込んでいる
+- 誰も教えていないのに、数えただけで「地名の文法」が浮かび上がる
+:::
+
+
+## 回数を確率に直す
+
+- 「し」の行の合計で割れば、「し」の次に来る文字の**確率分布**になる
+- MNIST の出力（10クラスの確率）と同じ形。クラスが75個になっただけ
+
+```{python}
+#| echo: true
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+
+P = N / N.sum(axis=1, keepdims=True)   # 各行を合計1に
+print("P(う|ょ) =", P[stoi["ょ"], stoi["う"]].round(4))
+print("P(・|し) =", P[stoi["し"], stoi["・"]].round(4))   # 「し」で終わる確率
+```
+
+- 「ょ」の次は99%「う」。「し」まで来たら71%でそこで終わり
+
+
+## 確率で1文字選ぶ
+
+- 分布から**確率に比例して**1文字引く — `np.random.choice` がそのまま使える
+
+```{python}
+#| echo: true
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+P = N / N.sum(axis=1, keepdims=True)
+
+rng = np.random.default_rng(0)
+i = stoi["ょ"]
+for _ in range(5):
+    print(chars[rng.choice(75, p=P[i])], end=" ")   # 「ょ」の次を5回引く
+```
+
+- ほぼ「う」、たまに別の字 — サイコロの目が確率表どおりに偏っている
+
+
+## 生成 — 表とサイコロだけで名前を作る {#peek-bigram-gen}
+
+- 「・」から始めて、出た文字を次の入力にして繰り返す。「・」が出たら終わり
+
+```{python}
+#| echo: true
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+P = N / N.sum(axis=1, keepdims=True)
+
+rng = np.random.default_rng(0)
+for _ in range(10):
+    i, s = 0, ""                        # 0 = 「・」からスタート
+    while True:
+        i = rng.choice(75, p=P[i])
+        if i == 0:
+            break                       # 「・」が出たら名前の完成
+        s += chars[i]
+    print(s)
+```
+
+
+## 出来ばえ品評会
+
+- 「きたやまちょう」「なごうし」 — ==実在しないのに、実在しそう==
+- 「とんむらそんだてしかむら」 — 村を2回付けるな
+- 10件とも実在の1,747件には**入っていない**（コピーではなく新作）
+
+::: {.callout-tip}
+出力を毎回変えたいときは `default_rng(0)` の数字（乱数の**シード**）を変える。
+同じシードなら同じ出力 — 実験の再現に必須の道具。
+:::
+
+
+## でたらめ名の解剖
+
+- 失敗作を1つ、表に戻って調べる：「とんむらそんだてしかむら」
+
+```{python}
+#| echo: true
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+
+seq = "・とんむらそんだてしかむら・"
+print([f"{a}→{b}:{N[stoi[a], stoi[b]]}" for a, b in zip(seq, seq[1:])])
+```
+
+- どの一歩も、データに**実在する**組み合わせ（最少でも3回は出てくる）
+- ==一歩一歩は正しいのに、全体は迷子== — 直前の1文字しか覚えていないから
+- 「むら」と付けた時点で、その前に「そん」と言ったことはもう忘れている
+
+
+## **Tweak** 表とサイコロで遊ぶ {.badge-practice}
+
+- [生成のコード](#peek-bigram-gen){.peek} を書き換えて実行
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `default_rng(0)` → `default_rng(7)` など | 別の名前セットが出る（同じ数字なら毎回同じ） |
+| `i, s = 0, ""` → `i, s = stoi["ふ"], "ふ"` | 「ふ」で始まる名前だけ作れる |
+| `rng.choice(75, p=P[i])` → `P[i].argmax()` | サイコロをやめて毎回1位を選ぶと……？ |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- argmax 版は**毎回同じ1つの名前**に行き着く（何が出るかはお楽しみ）。確率で「揺らす」ことが多様さの源
+- 書き出しを変えると、表の**その行**から旅が始まる — 生成は行から行への乗り継ぎ
+:::
+
+
+## まとめ
+
+- **数えるだけ**の言語モデル：バイグラム回数表 → 行ごとに確率化 → サイコロで次々引く
+- 境界トークン「・」が「始まりやすさ」「終わりやすさ」まで面倒を見る
+- 一歩一歩は正しいのに全体は迷子 — **記憶が1文字**しかないのが弱点
+- 出力は確率的：シードで再現をコントロールする
+
+::: {.callout-note title="次回予告"}
+この表、実は**勾配降下法でも作れる**。「数える」と「学習する」が同じ答えに行き着く瞬間を見る。
+交差エントロピー、久しぶりの再登場。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：ある文字の「次」の分布を棒グラフに
+
+「か」の次に来る文字の確率分布を、確率の高い順に**上位10文字**の棒グラフで表示せよ。
+
+0. [chimei.csv](data/chimei.csv) を `data/` に配置し、本編のコードで `P` まで作る
+1. 「か」の行 `P[stoi["か"]]` から上位10個の添字を取る（`argsort` を利用）
+2. `plt.bar` で描画（x軸ラベルは文字、`import japanize_matplotlib` を忘れずに）
+
+### 問題2：名前の最後に来られる文字
+
+74文字のうち、**名前の最後の文字になれるもの**（「・」列の回数が1以上の文字）をすべて挙げよ。何種類あるか（先に予想してから数えること）。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75), dtype=int)
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+P = N / N.sum(axis=1, keepdims=True)
+
+# 問題1
+row = P[stoi["か"]]
+top = row.argsort()[::-1][:10]
+plt.figure(figsize=(7, 3))
+plt.bar([chars[i] for i in top], row[top], color="#5dade2")
+plt.ylabel("確率")
+plt.title("「か」の次に来る文字トップ10")
+plt.tight_layout()
+plt.show()
+
+# 問題2
+enders = [chars[i] for i in range(1, 75) if N[i, 0] > 0]
+print(f"最後に来られる文字（{len(enders)}種類）:", enders)
+```
+
+- 1,747件の最後の文字は**6種類だけ** — 市・町・村・区の読みが出口を独占している

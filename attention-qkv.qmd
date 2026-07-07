@@ -1,0 +1,279 @@
+---
+title: "Q・K・V を開ける"
+subtitle: "自己注意の実装 — 有名な式の正体は行列積と softmax だけ"
+---
+
+## 前回の振り返り
+
+- 注意＝3ステップの表計算：**関連度（内積）→ 割合（softmax）→ 重み付き平均**
+- 手計算も検算も済んだ。残った疑問はこれだった：
+
+::: {.callout-important title="前回の宿題"}
+名札 $k$・持ってる情報 $v$・探しもの $q$ の中身は、**誰が書くのか？**
+:::
+
+::: {.fragment}
+- 答え：文字の埋め込みベクトルから、**行列1枚ずつで変換して作る**。行列の中身は学習まかせ
+:::
+
+
+## 3人の作り方 — 行列を1枚ずつ
+
+- 文字の埋め込み $\vec{\vphantom{b}x}$ から、3種類のベクトルを作る：
+
+$$
+\vec{\vphantom{b}q} = \vec{\vphantom{b}x}\, W_Q \qquad
+\vec{\vphantom{b}k} = \vec{\vphantom{b}x}\, W_K \qquad
+\vec{\vphantom{b}v} = \vec{\vphantom{b}x}\, W_V
+$$
+
+| 記号 | 名前 | 役割 |
+|---|---|---|
+| $Q$ | **クエリ**（[query]{.en}） | 探しもの：「いま何の情報が欲しいか」 |
+| $K$ | **キー**（[key]{.en}） | 名札：「私はこういう情報を持っている」 |
+| $V$ | **バリュー**（[value]{.en}） | 中身：実際に混ぜられて运ばれる情報 |
+
+- $W_Q, W_K, W_V$ は勾配降下で学習されるただの行列 — ==「どこを見るべきか」が学習される==とは、この3枚が育つこと
+
+
+## 全位置いっせいに
+
+- 文が $T$ 文字なら、埋め込みを積んだ行列 $X$（$T$行）にまとめて掛ける — 行列積の便利さ（第1コース）
+
+```{python}
+#| echo: true
+import numpy as np
+
+X = np.array([[1.0, 0.0],     # 3文字ぶんの埋め込み（おもちゃサイズ）
+              [0.0, 1.0],
+              [1.0, 1.0]])
+Wq = np.array([[1.0, 0.0], [1.0, 1.0]])
+Wk = np.array([[1.0, 1.0], [0.0, 1.0]])
+Wv = np.array([[1.0, 0.0], [0.0, 1.0]])
+
+Q, K, V = X @ Wq, X @ Wk, X @ Wv
+scores = Q @ K.T                  # ① 全ペアの関連度を一撃で
+print(scores)
+```
+
+- `Q @ K.T` の $(i, j)$ 成分＝「$i$ 文字目の探しもの」と「$j$ 文字目の名札」の内積
+- ==$T \times T$ の「視線の表」==が1回の行列積で出る
+
+
+## スケーリング — 内積は次元で膨らむ
+
+::: {.callout-important title="クイズ"}
+ベクトルの次元 $d$ を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？
+:::
+
+```{python}
+#| echo: true
+#| output-location: fragment
+import numpy as np
+
+rng = np.random.default_rng(0)
+for d in [2, 64]:
+    dots = [rng.standard_normal(d) @ rng.standard_normal(d) for _ in range(1000)]
+    print(f"d={d:3d}: 内積の典型的な大きさ = {np.std(dots):.2f}")
+```
+
+::: {.fragment}
+- 足し合わせる項が $d$ 個あるので $\sqrt{d}$ 倍で膨らむ（2→64 で約5.7倍）
+- スコアが大きすぎると softmax が**一極集中**して、視線が1点に固まってしまう：
+
+```{python}
+#| echo: true
+s = np.array([8.0, 0.0, -8.0])            # d=64 スケールの生スコア
+e = np.exp(s); print("そのまま:", (e / e.sum()).round(4))
+e = np.exp(s / 8); print("÷√64  :", (e / e.sum()).round(4))
+```
+
+- だからスコアを $\sqrt{d}$ で割ってから softmax する — それだけの話
+:::
+
+
+## 完成形 — 論文の式と3ステップ
+
+- 2017年の論文 *Attention Is All You Need* の中心の式：
+
+$$
+\mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V
+$$
+
+| 式の部品 | 3ステップでの正体 |
+|---|---|
+| $QK^\top$ | ① 関連度を測る（全ペアの内積） |
+| $\sqrt{d}$ で割る | ①′ 膨らみ補正 |
+| $\mathrm{softmax}$ | ② 割合にする（行ごとに合計1） |
+| $\cdots V$ | ③ 重み付き平均で混ぜる |
+
+- ==行列積2回と softmax 1回==。世界を変えた式の中身は、先週の手計算
+
+
+## 通しで動かす {#peek-qkv-full}
+
+```{python}
+#| echo: true
+import numpy as np
+
+def softmax_rows(S):
+    e = np.exp(S - S.max(axis=1, keepdims=True))
+    return e / e.sum(axis=1, keepdims=True)
+
+X = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+Wq = np.array([[1.0, 0.0], [1.0, 1.0]])
+Wk = np.array([[1.0, 1.0], [0.0, 1.0]])
+Wv = np.array([[1.0, 0.0], [0.0, 1.0]])
+
+Q, K, V = X @ Wq, X @ Wk, X @ Wv
+weights = softmax_rows(Q @ K.T / np.sqrt(2))   # 視線の表（各行の合計が1）
+out = weights @ V                              # 各文字の「混ぜた結果」
+
+print(weights.round(3))
+print(out.round(3))
+```
+
+- 出力は**文字ごとに1本**：3文字入れたら、視線済みベクトルが3本返る
+- どの文字も「自分の探しもの」で全員を見た — これを**自己注意**（[self-attention]{.en}）と呼ぶ
+
+
+## 視線の表を絵にする
+
+```{python}
+#| echo: false
+# reuse kernel state: weights
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(4.6, 4.0))
+im = ax.imshow(weights, cmap="Blues", vmin=0, vmax=1)
+labels = ["1文字目", "2文字目", "3文字目"]
+ax.set_xticks(range(3)); ax.set_xticklabels(labels)
+ax.set_yticks(range(3)); ax.set_yticklabels(labels)
+for i in range(3):
+    for j in range(3):
+        ax.text(j, i, f"{weights[i, j]:.2f}", ha="center", va="center",
+                color="white" if weights[i, j] > 0.5 else "#1a5276")
+ax.set_xlabel("見られる側（K）"); ax.set_ylabel("見る側（Q）")
+ax.set_title("視線の表 — 各行の合計が1")
+plt.tight_layout()
+plt.show()
+```
+
+- 3文字目は3文字目自身を62%見ている、など**視線の配分が読める**
+- この先、本物のモデルの視線もこの絵で覗く
+
+
+## PyTorch 部品にしておく
+
+- あとで組み立てやすいよう、クラスにまとめる — 第1コースの `nn.Module` の作法
+
+```{python}
+#| echo: true
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class SelfAttention(nn.Module):
+    def __init__(self, n_embd, head_size):
+        super().__init__()
+        self.query = nn.Linear(n_embd, head_size, bias=False)   # Wq
+        self.key   = nn.Linear(n_embd, head_size, bias=False)   # Wk
+        self.value = nn.Linear(n_embd, head_size, bias=False)   # Wv
+
+    def forward(self, x):                       # x: (文字数 T, n_embd)
+        q, k, v = self.query(x), self.key(x), self.value(x)
+        w = q @ k.T / k.shape[-1] ** 0.5        # ① 関連度 ＋ ①′ 補正
+        w = F.softmax(w, dim=-1)                # ② 割合にする
+        return w @ v                            # ③ 混ぜる
+
+torch.manual_seed(0)
+sa = SelfAttention(n_embd=8, head_size=4)
+x = torch.randn(5, 8)                           # 5文字・8次元
+print(sa(x).shape)
+```
+
+- forward は実質3行。`bias=False` は「行列1枚」を式のとおりに書いただけ
+
+
+## **Tweak** 行列をいじって視線を操る {.badge-practice}
+
+- [通しのコード](#peek-qkv-full){.peek} を書き換えて、視線の表の変化を見る
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `Wq` を `np.eye(2)`（単位行列）に | 探しものが埋め込みそのままになる。表はどう動く？ |
+| `Wv` を `np.zeros((2, 2))` に | 視線はそのままなのに、出力だけ全部ゼロになる — QK と V の分業を確認 |
+| スコアを `* 10` してから softmax | 視線が一極集中する（スケーリングの逆実験） |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- **視線（どこを見るか）は Q と K だけ**で決まり、**運ばれる中身は V だけ**が決める。この分業が attention の設計の核心
+:::
+
+
+## まとめ
+
+- Q（探しもの）・K（名札）・V（中身）は、埋め込みに**行列を1枚ずつ**掛けて作る — その行列が学習される
+- 全ペアの関連度は `Q @ K.T` 一撃。$\sqrt{d}$ で膨らみを補正してから softmax
+- $\mathrm{softmax}(QK^\top / \sqrt{d})\, V$ — 行列積2回＋softmax。もう読める
+- 出力は文字ごとに1本の「視線済みベクトル」。自分たちで自分たちを見るので**自己注意**
+
+::: {.callout-note title="次回予告"}
+実はこの仕組み、言語モデルに使うには**2つの大問題**を抱えている。
+ひとつ：文字の順番を知らない。ふたつ：**未来がカンニングできてしまう**。
+:::
+
+
+## 練習問題
+
+以下の問題を解け（問題1は先に紙で答えてからコードで確認）。
+
+### 問題1：形を追いかける
+
+$T = 5$ 文字、埋め込み $d = 8$、`head_size` $= 4$ のとき、次の行列の形（行数×列数）をそれぞれ答えよ。
+
+1. $Q$、$K$、$V$
+2. $QK^\top$（視線の表）
+3. 出力 $\mathrm{softmax}(QK^\top/\sqrt{d})\,V$
+
+`SelfAttention` の `forward` に `print(q.shape)` などを差し込んで検算せよ。
+
+### 問題2：視線の表の行の合計
+
+本編の「通しで動かす」コードで、`weights` の**各行の合計**を計算して1になることを確かめよ。列の合計はどうか。1にならないのはなぜか、1行で説明せよ。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import numpy as np
+import torch
+
+# 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4
+torch.manual_seed(0)
+sa2 = SelfAttention(n_embd=8, head_size=4)
+x = torch.randn(5, 8)
+q, k, v = sa2.query(x), sa2.key(x), sa2.value(x)
+print(q.shape, (q @ k.T).shape, sa2(x).shape)
+
+# 問題2
+def softmax_rows(S):
+    e = np.exp(S - S.max(axis=1, keepdims=True))
+    return e / e.sum(axis=1, keepdims=True)
+
+X = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+Wq = np.array([[1.0, 0.0], [1.0, 1.0]])
+Wk = np.array([[1.0, 1.0], [0.0, 1.0]])
+Wv = np.array([[1.0, 0.0], [0.0, 1.0]])
+weights = softmax_rows((X @ Wq) @ (X @ Wk).T / np.sqrt(2))
+print("行の合計:", weights.sum(axis=1).round(3))
+print("列の合計:", weights.sum(axis=0).round(3))
+# softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由
+```

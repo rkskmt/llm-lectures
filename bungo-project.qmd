@@ -1,0 +1,209 @@
+---
+title: "最終プロジェクト：推し文豪ボット"
+subtitle: "自分のGPTを育てる — そして文豪テストの種明かし"
+---
+
+## 文豪テスト、開封
+
+初回の4つの文章。投票の結果を覚えているだろうか。
+
+| | 正体 |
+|---|---|
+| A（喜多床へ行って顔さえ剃って貰やあ…） | **本物の漱石** |
+| B（元来主人のように関する主人は…） | ==機械== |
+| C（迷亭はとぼけた顔をして…） | **本物の漱石** |
+| D（まあどうですか、全く君の事じゃ…） | ==機械== |
+
+- B と D を書いたのは：**82万パラメータ・『吾輩は猫である』1冊・3,500回訓練**の文字レベルGPT
+- つまり、君たちが前回まで動かしてきた `ckpt_best.pt` **そのもの**（temperature 0.8・top-k 40）
+
+
+## 種明かしの種明かし
+
+- 生成文と本文の一致は最長でも**9文字** — 暗記の吐き出しではなく、**文体の統計**が書いた偽物
+- よく読めば文法は壊れている。それでも投票が割れるのは、==「漱石の音」が確かに写っている==から
+- 32万字＋50分の訓練でこれなら、**推し作家**ならどうなる？ — というのが今日の全部
+
+::: {.callout-important title="最終プロジェクト"}
+青空文庫から好きな作家・作品を選び、自分のGPTを育て、**偽物の一文**を提出せよ。
+最終日は全員の偽物＋本物でクラス対抗・文豪テスト大会を開く。
+:::
+
+
+## 材料選び — 青空文庫
+
+- [青空文庫](https://www.aozora.gr.jp/) は著作権の切れた作品の宝庫（漱石・太宰・芥川・賢治・乱歩……）
+- 作品の**図書カード**から「テキストファイル（ルビあり）」の zip をダウンロード → 解凍して `.txt` を `data/` に置く
+
+::: {.callout-important title="材料の量が成績を決める"}
+- **10万字以上**が快適圏（長編1本、または短編の詰め合わせ）
+- 短い作品は速く仕上がるが、**すぐ過学習する**（後述の実測を見よ）
+- 短編派は同じ作家の複数作品を1ファイルに**連結**するのがおすすめ
+:::
+
+
+## 下ごしらえ — ルビと注記を洗う
+
+- 青空文庫のテキストは Shift_JIS で、ルビ《…》や注記［＃…］が混ざっている。洗ってから使う
+
+```{python}
+#| echo: true
+#| eval: false
+import re
+
+raw = open("data/ginga_tetsudo.txt", encoding="cp932").read()   # DLした生テキスト
+
+parts = re.split(r"-{10,}\r?\n", raw)      # 冒頭の説明書きを外す
+body = parts[2]
+body = re.split(r"\r?\n底本：", body)[0]    # 末尾の書誌情報を外す
+body = body.replace("｜", "")
+body = re.sub(r"《[^》]*》", "", body)      # ルビ
+body = re.sub(r"［＃[^］]*］", "", body)    # 注記
+body = body.replace("\r\n", "\n").strip() + "\n"
+
+open("data/mybungo.txt", "w", encoding="utf-8").write(body)
+print(len(body), "字 / 語彙", len(set(body)))
+```
+
+- 複数作品を使う場合は、この処理を作品ごとに行って `body` を足し合わせる
+- **最初に「字数と語彙」を必ず表示する** — 材料の下見をしない料理人にならない
+
+
+## 育てる — 道具はすべて手元にある
+
+- 訓練コードは**小さなGPTの回のものを1行だけ差し替える**：読み込むファイル名だけ
+
+```{python}
+#| echo: true
+#| eval: false
+import torch
+import torch.nn.functional as F
+from gpt import GPT
+
+torch.set_num_threads(1)
+text = open("data/mybungo.txt", encoding="utf-8").read()   # ← ここだけ差し替え
+chars = sorted(set(text))
+stoi = {c: i for i, c in enumerate(chars)}
+data = torch.tensor([stoi[c] for c in text])
+n = int(len(data) * 0.9)
+train_data, val_data = data[:n], data[n:]
+
+def get_batch(d):
+    ix = torch.randint(len(d) - 65, (32,))
+    x = torch.stack([d[i:i + 64] for i in ix])
+    y = torch.stack([d[i + 1:i + 65] for i in ix])
+    return x, y
+
+torch.manual_seed(42)
+model = GPT(vocab_size=len(chars), n_embd=96, n_head=4, n_layer=2, block_size=64)
+opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
+
+for it in range(1, 3501):
+    xb, yb = get_batch(train_data)
+    opt.zero_grad()
+    loss = F.cross_entropy(model(xb).view(-1, len(chars)), yb.view(-1))
+    loss.backward()
+    opt.step()
+    if it % 250 == 0:
+        with torch.no_grad():
+            xv, yv = get_batch(val_data)
+            vl = F.cross_entropy(model(xv).view(-1, len(chars)), yv.view(-1))
+        print(f"{it:5d}回 | train {loss.item():.3f} | val {vl.item():.3f}")
+        torch.save({"cfg": dict(n_embd=96, n_head=4, n_layer=2, block_size=64),
+                    "vocab": "".join(chars),
+                    "state_dict": model.state_dict()}, f"data/my_ckpt_{it}.pt")
+```
+
+- 250回ごとに val を表示し、**重みを保存**していく — 早期終了は「あとから底を選ぶ」で実現できる
+
+
+## 何回回すべきか — 実測の目安
+
+同じ設定で材料の量だけ変えた実測：
+
+| 材料 | 字数 / 語彙 | val の底 | そのときの様子 |
+|---|---|---|---|
+| 『吾輩は猫である』 | 32万 / 3,045 | **2,500〜3,500回**（約20分） | 文体が出る |
+| 『銀河鉄道の夜』 | 3.9万 / 1,050 | **約1,000回**（数分） | それ以降は val が悪化 |
+
+- ==小さい材料ほど、早く仕上がり、早く腐る==（過学習）— val の数字だけが頼り
+- 語彙が小さいと1回あたりの計算も軽い。**まず500回**回して、val の動きを見てから延長を決める
+
+::: {.callout-tip}
+損失の数字はデータが違うと直接比べられない（語彙数が違えば「当てずっぽう」の損失から違う）。
+比べてよいのは**同じデータでの train と val** — この2本の開きだけが過学習の証拠。
+:::
+
+
+## 偽物を提出する
+
+```{python}
+#| echo: true
+#| eval: false
+import torch
+import torch.nn.functional as F
+from gpt import GPT
+
+blob = torch.load("data/my_ckpt_1000.pt", weights_only=True)   # valの底の重みを選ぶ
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])
+model.eval()
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
+
+torch.manual_seed(7)
+idx = torch.tensor([[stoi[c] for c in "その夜"]])
+out = model.generate(idx, 120, temperature=0.8, top_k=40)
+print("".join(chars[i] for i in out[0].tolist()))
+```
+
+提出物（文豪テスト大会のエントリーシート）：
+
+0. 作家名・使った作品と字数・語彙サイズ
+1. **偽物1本（120字前後）**と、生成に使ったツマミ（temperature / top-k / シード / 書き出し）
+2. 同じ作家の**本物1本**（偽物と長さを揃える）
+3. train / val 損失の推移（printの写しでよい）と、**どの回の重みを選んだか＋その理由**
+
+
+## 大会のルール
+
+- 出題者以外は「本物・偽物」を投票 → 騙した票数がスコア
+- 発表者は最後に**ツマミと訓練の記録**を開示（再現できない魔法は禁止）
+- 審査観点はふたつ：==どれだけ騙せたか==と、==なぜ騙せたかを説明できるか==
+
+::: {.callout-note}
+騙せなかった偽物にも価値がある — **どこでバレたか**（文法？語彙？リズム？）を言語化できれば、
+それはモデルの弱点分析であり、立派な技術報告になる。
+:::
+
+
+## 講義全体のまとめ — 部品総覧
+
+| 部品 | 正体 | 作った回 |
+|---|---|---|
+| トークン化・語彙 | 文字に番号を振る | 文字を数にする |
+| 確率で次を選ぶ | 数える→サイコロ | 数えるだけの言語モデル |
+| 交差エントロピー学習 | 数えの一般化 | 学習で当てる |
+| `nn.Embedding` | 表引き＝ことばの地図 | ことばの地図 |
+| 過学習との再会 | 窓を広げすぎた罰 | 窓を広げる |
+| Attention | 内積→softmax→重み付き平均 | 注目という発想 / Q・K・V |
+| 位置埋め込み・因果マスク | 順序を教え、未来を封じる | 順序とカンニング |
+| マルチヘッド・FFN・残差・LayerNorm | 束ねて、考えて、深く積む | 部品を束ねる |
+| 訓練と早期終了 | val の底で止める | 小さなGPTを訓練する |
+| temperature・top-k | 生成のツマミ | 生成を操る |
+
+::: {.callout-note title="約束の回収"}
+**ブラックボックス、ゼロ。** 文豪テストの偽物は、この表の部品だけで書かれた。
+:::
+
+
+## この先の世界
+
+- **語彙を賢くしたら？** — 文字をやめてサブワードへ：**BPE**（回数外の参考資料で自作できる）
+- **もっと大きくしたら？** — 同じ設計図のまま21万倍が ChatGPT の土台（前回）。スケールの先は現在進行形の研究
+- **文章以外は？** — 画像も音声も「トークン列にして次を当てる」の親戚が動いている。開け方は知ってのとおり：**forward は何か・損失は何か・勾配はどう流れるか**
+
+::: {.callout-note title="持ち帰り"}
+家族か友人に文豪テストを出題してみること。騙せたら、その偽物は君の部品が書いた文章だ。
+騙せなくても、**なぜバレたかを説明できる** — それがこの講義の到達点。
+:::

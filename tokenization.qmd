@@ -1,0 +1,301 @@
+---
+title: "文字を数にする"
+subtitle: "トークン化と語彙 — ことばを機械に食べさせる下ごしらえ"
+---
+
+## 前回の宿題
+
+- 言語モデルは「次の1文字を当てる」**分類器** — ここまでは前回の話
+- ところで、第1コースで学習に使った材料を思い出すと……
+  - MNIST の画像：28×28 の**数値**（明るさ 0〜1）
+  - 損失も勾配も、ぜんぶ**数値の計算**だった
+
+::: {.callout-important title="クイズ"}
+「あ」は数字ではない。ニューラルネットに「あ」をどうやって入れる？
+:::
+
+::: {.fragment}
+- 答えはあっけない：**番号を振る**。今日はそれを自分の手でやる
+:::
+
+
+## 文章を部品に割る — トークン化
+
+- 文章をモデルに渡す単位に割ることを**トークン化**（[tokenization]{.en}）、1つ1つの部品を**トークン**（[token]{.en}）と呼ぶ
+- 割り方は選べる：
+
+| 割り方 | 「吾輩は猫である」の例 | 部品の種類 |
+|---|---|---|
+| 単語ごと | 吾輩 / は / 猫 / で / ある | 数十万〜 |
+| **文字ごと** | 吾 / 輩 / は / 猫 / で / あ / る | 数十〜数千 |
+
+- この講義では**文字ごと**で通す — 部品が少なく、仕組みがぜんぶ見える
+
+::: {.callout-note}
+ChatGPT などの実物は中間の「サブワード」単位（**BPE** という作り方）を使う。仕組みは回数外の参考資料で。
+:::
+
+
+## 材料：日本の市区町村名
+
+- これから数回の材料は、**全国 1,747 市区町村の名前の「よみがな」**
+- [chimei.csv](data/chimei.csv) をダウンロードして、作業フォルダの `data/` に置く
+
+```{python}
+#| echo: true
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+print(len(names), "件")
+print(names[:5])
+```
+
+::: {.callout-note title="出典"}
+総務省「全国地方公共団体コード」より作成（政府標準利用規約）。カタカナ表記をひらがなに変換してある。
+:::
+
+
+## この材料で何をするか
+
+- ゴール：この名前たちを読み込んで、**実在しない「架空の市町村名」を作る機械**を育てる
+- 名前は短い・ひらがなだけ・でも「らしさ」がある — 練習台として最高の性質
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: 1,747件の実在の地名 { style.fill: "#e1f5ff" }
+B: 言語モデル { shape: hexagon; style.fill: "#fff4e1" }
+C: "架空の地名「ひがわむら」…" { style.fill: "#d5f5e3" }
+A -> B: 学習
+B -> C: 生成
+```
+
+- どこまで「本物っぽく」なるかは、これから作るモデルの腕次第
+
+
+## 語彙 — 使う文字の一覧表
+
+- データに出てくる文字を全部集めた集合を**語彙**（[vocabulary]{.en}）と呼ぶ
+
+```{python}
+#| echo: true
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = sorted(set("".join(names)))   # 全部つなげて、重複を消して、並べる
+print("語彙サイズ:", len(chars))
+print("".join(chars))
+```
+
+- ひらがな74種類だけ — 「ゑ」も「ー」も地名には出てこない
+- ==語彙の1文字1文字に、この並び順で番号を振る==
+
+
+## 番号との対応表を作る
+
+- 文字→番号の辞書と、番号→文字のリスト。この2つで変換は両方向できる
+
+```{python}
+#| echo: true
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = sorted(set("".join(names)))
+
+stoi = {c: i for i, c in enumerate(chars)}   # string to int
+itos = chars                                  # int to string（リストのまま使える）
+print(stoi["あ"], stoi["ん"])
+print(itos[0], itos[73])
+```
+
+- `stoi` / `itos` という変数名はこの先の回でもずっと使う
+
+
+## encode と decode
+
+```{python}
+#| echo: true
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+itos = chars
+
+def encode(s):
+    return [stoi[c] for c in s]
+
+def decode(ids):
+    return "".join(itos[i] for i in ids)
+
+print(encode("しぶや"))
+print(decode(encode("しぶや")))
+```
+
+- 行って戻ってこられる（**往復できる**）ことが対応表の合格条件
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: "「しぶや」" { style.fill: "#e1f5ff" }
+B: "[17, 48, 62]" { style.fill: "#fff4e1" }
+A -> B: encode
+B -> A: decode
+```
+
+
+## 演習：往復させる
+
+自作の `encode` / `decode` が往復できることを確かめよ。
+
+0. さっきのスライドのコードを `.py` ファイルにコピーして実行
+1. 好きな市区町村名（ひらがな）を `encode` して番号列を表示
+2. その番号列を `decode` して元に戻ることを確認（`==` で比較した結果も表示）
+3. 「とうきょう」のように**データに実在しない並び**でも往復できることを確認
+
+```{python}
+#| echo: true
+#| eval: false
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+itos = chars
+
+def encode(s):
+    return [stoi[c] for c in s]
+
+def decode(ids):
+    return "".join(itos[i] for i in ids)
+
+word = "とうきょう"
+ids = encode(word)
+print(ids)
+print(decode(ids))
+print(decode(ids) == word)   # True — 実在しない並びでも文字さえ語彙にあれば往復できる
+```
+
+
+## 表に無い文字が来たら？
+
+::: {.callout-important title="クイズ"}
+`encode("パリ")` を実行したら何が起きる？予想してから実行。
+:::
+
+::: {.fragment}
+- `KeyError: 'パ'` — **語彙に無い文字は変換できずにエラー**で止まる
+- これは正しい挙動。だまって握りつぶすより、その場で止まって教えてくれる方がいい
+- 実物の LLM も同じ問題を抱えている：語彙にどんな部品を揃えるかは設計の急所
+:::
+
+
+## 大きな文章だと語彙はどうなる？
+
+- 最終回に使う材料も、ここで一目だけ：夏目漱石**『吾輩は猫である』全文**
+- [neko.txt](data/neko.txt) をダウンロードして `data/` に置く
+
+::: {.callout-important title="クイズ"}
+『吾輩は猫である』全文（約32万字）に出てくる文字は**何種類**？
+ひらがな＋カタカナで約170、そこに漢字が乗る。1000？ 2000？
+:::
+
+```{python}
+#| echo: true
+#| output-location: fragment
+text = open("data/neko.txt", encoding="utf-8").read()
+print("総文字数:", len(text))
+print("語彙サイズ:", len(set(text)))
+```
+
+::: {.fragment}
+- **3,000超** — 日本語の文字レベル言語モデルは、この大語彙と戦うことになる
+:::
+
+::: {.callout-note title="出典"}
+青空文庫『吾輩は猫である』（著作権消滅済み）。ルビ・注記を除去したテキスト。
+:::
+
+
+## 語彙サイズ比較
+
+```{python}
+#| echo: false
+import matplotlib.pyplot as plt
+import japanize_matplotlib
+import pandas as pd
+
+plt.rcParams["font.size"] = 12
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+v_chimei = len(set("".join(names)))
+text = open("data/neko.txt", encoding="utf-8").read()
+v_neko = len(set(text))
+
+fig, ax = plt.subplots(figsize=(7, 3))
+labels = ["地名よみがな", "『吾輩は猫である』"]
+vals = [v_chimei, v_neko]
+bars = ax.barh(labels, vals, color=["#5dade2", "#e74c3c"], height=0.55)
+for b, v in zip(bars, vals):
+    ax.text(v + 30, b.get_y() + b.get_height() / 2, str(v), va="center")
+ax.set_xlabel("語彙サイズ（vocabulary size）")
+ax.set_xlim(0, 3500)
+plt.tight_layout()
+plt.show()
+```
+
+- 同じ「日本語」でも、材料しだいで語彙は**40倍**違う
+- 語彙が大きい＝分類の選択肢が多い＝当てるのが難しい。まずは74択の地名から
+
+
+## まとめ
+
+- ことばを数にする手順：**トークン化**（文字ごとに割る）→ **語彙**（文字一覧）→ 番号の対応表
+- `stoi` / `itos` / `encode` / `decode` — この4点セットはこの講義の全域で使い回す
+- 語彙に無い文字はエラー。地名は74種類、『猫』は3,000超
+
+::: {.callout-note title="次回予告"}
+数になったので、いよいよ「次の1文字を当てる」が始められる。
+最初のモデルは学習すらしない — **数えるだけ**。それでも名前が作れてしまう。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：一番よく使われる文字
+
+地名データ全体（1,747件をつなげた文字列）で、**登場回数の多い文字トップ5**を回数つきで表示せよ。
+
+1. [chimei.csv](data/chimei.csv) を読み込み、`"".join(...)` で1本の文字列に
+2. 各文字の回数を辞書で数える（`collections.Counter` を使ってもよい）
+3. 多い順に並べてトップ5を表示
+
+### 問題2：使われていないひらがな
+
+五十音の基本46文字（`"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん"`）のうち、**地名のよみに1度も使われていない文字**をすべて表示せよ。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+from collections import Counter
+
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+all_text = "".join(names)
+
+# 問題1
+counts = Counter(all_text)
+for c, n in counts.most_common(5):
+    print(c, n)
+
+# 問題2
+gojuon = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん"
+unused = [c for c in gojuon if c not in counts]
+print("未使用:", unused)
+```

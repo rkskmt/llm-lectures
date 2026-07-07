@@ -1,0 +1,289 @@
+---
+title: "ことばの地図"
+subtitle: "埋め込み — 文字の意味が「場所」になる"
+---
+
+## 前回の振り返り
+
+- one-hot × 行列 $W$ → softmax で、バイグラム表を勾配降下法で学習できた
+
+::: {.callout-important title="クイズ"}
+one-hot ベクトル（1が1個、あとは0）と行列の掛け算。
+計算機は75×75＝5,625回の掛け算を**本当に**する必要がある？
+:::
+
+::: {.fragment}
+- するわけがない。0を掛けるところは全部消える — 残るのは……
+:::
+
+
+## 種明かし：行を1本選んでいるだけ
+
+```{python}
+#| echo: true
+import torch
+import torch.nn.functional as F
+
+W = torch.arange(12.0).reshape(4, 3)      # 小さな行列で実験（語彙4、行の長さ3）
+x = torch.tensor([2])                     # 「2番の文字」
+X = F.one_hot(x, num_classes=4).float()
+
+print(W)
+print(X @ W)          # one-hot × 行列
+print(W[2])           # 行列の2行目
+```
+
+- `X @ W` と `W[2]` は**同じもの**。one-hot の掛け算の正体は==表引き==
+- つまり前回のモデルは「**文字ごとに1本のベクトル**（表の行）を持っていた」だけ
+
+
+## 見方を変えると、世界が変わる
+
+- 前回の $W$：各文字が「次に来る文字のスコア75個」という行を持つ
+- この行を「**その文字の性格を表すベクトル**」と読み替える
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: "文字番号\n「し」= 17" { style.fill: "#e1f5ff" }
+B: "ベクトル\n(0.2, -1.3, …)" { style.fill: "#fff4e1" }
+C: "75文字ぶんの\nスコア" { style.fill: "#d5f5e3" }
+A -> B: 表引き
+B -> C: 変換
+```
+
+- こう分けると、真ん中のベクトルの長さは**75である必要がない**
+- 好きな長さ $d$ のベクトル＋あとで75に戻す変換（線形1層）に分解できる
+- この「文字→$d$次元ベクトル」の表を**埋め込み**（[embedding]{.en}）と呼ぶ
+
+
+## どこまで縮められる？
+
+::: {.callout-important title="クイズ"}
+『吾輩は猫である』は語彙3,045。バイグラム表は 3,045×3,045 = **927万個**の数。
+埋め込みを**2次元**にしたら、パラメータはいくつになる？
+:::
+
+::: {.fragment}
+- 埋め込み表 3,045×2 ＋ 戻す変換 2×3,045（＋バイアス3,045）＝ **15,225個**
+- ==609分の1==。そんなに潰して、まともに動くのか？ — 実験で確かめる
+- おまけ：$d=2$ なら、全文字を**1枚の地図**として描ける
+:::
+
+
+## 実験：3,045文字を2次元に押し込む {#peek-emb-train}
+
+```{python}
+#| echo: true
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+torch.set_num_threads(1)
+text = open("data/neko.txt", encoding="utf-8").read()
+chars = sorted(set(text))
+stoi = {c: i for i, c in enumerate(chars)}
+V = len(chars)
+
+data = torch.tensor([stoi[c] for c in text])
+xs, ys = data[:-1], data[1:]              # (いまの文字, 次の文字) 32万組
+
+torch.manual_seed(0)
+model = nn.Sequential(nn.Embedding(V, 2),   # 文字 → 2次元ベクトル（表引き）
+                      nn.Linear(2, V))      # 2次元 → 3045文字のスコア
+opt = torch.optim.AdamW(model.parameters(), lr=2e-2)
+g = torch.Generator().manual_seed(0)
+
+for it in range(1, 1001):
+    ix = torch.randint(len(xs), (1024,), generator=g)   # ミニバッチ
+    opt.zero_grad()
+    loss = F.cross_entropy(model(xs[ix]), ys[ix])
+    loss.backward()
+    opt.step()
+    if it in (1, 100, 500, 1000):
+        print(f"更新 {it:4d}回 | Loss: {loss.item():.4f}")
+```
+
+- `nn.Embedding(V, 2)` が「表引き」の正式な部品。中身はただの V×2 行列
+- 32万組は多いので**ミニバッチ**（毎回1,024組だけ使う）— MNISTの回と同じ作法
+
+
+## 609分の1に潰した成績は
+
+- 比較対象：**フルサイズのバイグラム表**（数えて作る927万個版）の損失
+
+```{python}
+#| echo: true
+#| output-location: fragment
+import numpy as np
+
+text = open("data/neko.txt", encoding="utf-8").read()
+chars = sorted(set(text))
+stoi = {c: i for i, c in enumerate(chars)}
+ids = np.array([stoi[c] for c in text])
+
+N = np.zeros((len(chars), len(chars)))
+np.add.at(N, (ids[:-1], ids[1:]), 1)      # 2次元版「全部数える」
+P = (N + 1) / (N + 1).sum(axis=1, keepdims=True)
+print("フル表の損失:", round(float(-np.log(P[ids[:-1], ids[1:]]).mean()), 3))
+```
+
+::: {.fragment}
+- フル表 **約4.7** vs 2次元埋め込み **約4.8** — ==609分の1でほぼ互角==
+- 927万個の表は、実は2次元の「配置」でほとんど代用できるスカスカな情報だった
+:::
+
+
+## 地図を描く
+
+```{python}
+#| echo: false
+# reuse kernel state (model, chars, text) from the training cell
+from collections import Counter
+
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+
+E = model[0].weight.detach()
+cnt = Counter(text)
+
+
+def klass(c):
+    if "ぁ" <= c <= "ゖ":
+        return "ひらがな"
+    if "ァ" <= c <= "ヶ" or c == "ー":
+        return "カタカナ"
+    if "一" <= c <= "鿿":
+        return "漢字"
+    return "記号・数字"
+
+
+colors = {"ひらがな": "#e74c3c", "カタカナ": "#2980b9", "漢字": "#95a5a6", "記号・数字": "#27ae60"}
+freq = [i for i, c in enumerate(chars) if cnt[c] >= 50]
+
+fig, ax = plt.subplots(figsize=(9, 7.2))
+for name, col in colors.items():
+    idx = [i for i in freq if klass(chars[i]) == name]
+    ax.scatter(E[idx, 0], E[idx, 1], s=14, color=col, label=name, alpha=0.65)
+for c in "一二三十":
+    ax.annotate(c, E[stoi[c]].tolist(), fontsize=16, fontweight="bold", color="#1a5276",
+                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#1a5276", alpha=0.85))
+ax.annotate("「吾」は地図の外 (-4.0, 9.1) に一匹だけ", xy=(-3.0, 3.6), xytext=(-2.4, 3.55),
+            fontsize=10, arrowprops=dict(arrowstyle="->", color="#555"))
+ax.set_xlim(-3.2, 3.4)
+ax.set_ylim(-3.4, 4.1)
+ax.legend(loc="lower right")
+ax.set_title("『吾輩は猫である』の文字の地図（50回以上出る525文字）", fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+
+- 縦横の軸に意味はない。**近さ**だけが情報
+
+
+## 地図から見つかるもの
+
+- **文字の種類ごとに住み分け**が始まっている — ひらがな・カタカナ・漢字・記号。誰も教えていない
+- **漢数字が寄り集まる**：一・二・三・四・五・六・七・十がほぼ同じ場所に（「百」「半」も近くに来る）
+- **「吾」は一匹狼**：地図のはるか外に1文字だけ
+
+::: {.callout-important title="クイズ"}
+なぜ「吾」だけ仲間はずれの場所に置かれた？この小説ならではの理由がある。
+:::
+
+::: {.fragment}
+- 「吾」の次は**90%「輩」**（535回中481回）— 他のどの文字とも違う極端な性格だから、専用の場所をもらった
+:::
+
+
+## 意味は「使われ方」に宿る
+
+- モデルは文字の意味も種類も教わっていない。見たのは==どんな文脈で使われるか==だけ
+- 使われ方が似た文字は、同じ場所に置くと損失が下げやすい → 自然に寄り集まる
+- 「単語の意味はその使われ方が決める」— **分布仮説**（[distributional hypothesis]{.en}）。現代のLLMの土台になっている考え方
+
+::: {.callout-note}
+実物のLLMは $d=2$ ではなく数千次元。地図としては描けないが、
+「近い＝似た使われ方」の原理は同じ。2次元で見たくなったら第1コースの**PCA**の出番。
+:::
+
+
+## 部品の対応表
+
+| 今日の道具 | 正体 | 初出 |
+|---|---|---|
+| `nn.Embedding(V, d)` | V×d 行列から行を引くだけ | 今日（中身は前回の $W$） |
+| `nn.Linear(d, V)` | アフィン変換でスコアに戻す | 第1コース |
+| ミニバッチ | 毎回データの一部で勾配を出す | MNISTの回 |
+
+- **新しい概念は「表引きを分解した」ことだけ**。部品は全部知り合い
+
+
+## **Tweak** 地図を揺らしてみる {.badge-practice}
+
+- [学習のコード](#peek-emb-train){.peek} を書き換えて、地図の描画まで実行
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `torch.manual_seed(0)` → `(1)` など | 地図の向きや裏表が変わる。では「吾」の孤立や数字の集まりは？ |
+| `range(1, 1001)` → `range(1, 301)` | 学習途中の「できかけの地図」が見える |
+| `nn.Embedding(V, 2)` → `(V, 8)`（描画は最初の2軸） | 損失はどうなる？地図は読みやすくなる？ |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- シードを変えると配置は回転・裏返りするが、**「吾」はどのシードでも外れた場所**に行く。偶然ではなく、データがそうさせている
+- レアな文字（数回しか出ない漢字）は初期値からほぼ動かない — 地図の中央の雲はほとんど「未学習」
+:::
+
+
+## まとめ
+
+- one-hot × 行列の正体は**表引き** — だから `nn.Embedding` は行列1枚
+- 表引きを「$d$次元ベクトル＋戻す変換」に分解したものが**埋め込み**。609分の1に潰しても互角だった
+- 地図では、**使われ方が似た文字が勝手に寄り集まる**（漢数字の群れ、「吾」の孤立）
+- 意味 ≒ 使われ方 ≒ 地図上の場所 — 分布仮説
+
+::: {.callout-note title="次回予告"}
+文字がベクトルになった。となれば複数の文字をまとめて入れられる —
+**窓を広げて**、バイグラムの「記憶1文字」の壁を越えに行く。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：漢数字の群れを確かめる
+
+本編の地図に「四五六七八九十」を注釈として追加し、漢数字が集まっているか確かめよ。
+
+0. [neko.txt](data/neko.txt) を `data/` に配置し、本編のコードで地図の描画まで再現
+1. `for c in "一二三四五六七八九十":` で `ax.annotate` を回す
+2. 集まりから一番外れている漢数字はどれか、目視で挙げる
+
+### 問題2：圧縮率の計算
+
+語彙 $V = 3{,}045$ のとき、次の3つのパラメータ数を計算し、フル表に対する圧縮率（何分の1か）をそれぞれ求めよ。
+
+1. フルのバイグラム表（$V \times V$）
+2. $d=2$ の埋め込み分解（$V d + d V + V$。最後の $V$ はバイアス）
+3. $d=8$ の埋め込み分解
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+# 問題1は本編コードに annotate を足すだけ（八と九がやや南に外れる）
+
+# 問題2
+V = 3045
+full = V * V
+for d in [2, 8]:
+    small = V * d + d * V + V
+    print(f"d={d}: {small:,} 個 — フル表 {full:,} 個の 約{full // small}分の1")
+```

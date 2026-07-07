@@ -1,0 +1,209 @@
+---
+title: "生成を操る"
+subtitle: "temperature と top-k — 無難と暴走のあいだにツマミがある"
+---
+
+## 前回の振り返り
+
+- 訓練済みの重み（`ckpt_best.pt`）を手に入れ、文章が生成できるようになった
+- モデルの出力は**確率分布** — 生成の自由度は「その分布から==どう引くか==」に集約される
+- 今日は引き方のツマミを2つ握る。まずは準備：
+
+```{python}
+#| echo: false
+import sys
+
+sys.path.append("tools/refimpl")
+```
+
+```{python}
+#| echo: true
+import torch
+from gpt import GPT
+
+torch.set_num_threads(1)
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])
+model.eval()
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
+```
+
+- [gpt.py](tools/refimpl/gpt.py) と [ckpt_best.pt](data/runs/neko/ckpt_best.pt) は前回と同じ配置で
+
+
+## 実験：毎回1位だけを選んだら
+
+- 「一番ありそうな文字を選び続ける」のが最強に思える。バイグラムの Tweak で見た **argmax 作戦**
+
+```{python}
+#| echo: true
+def gen(prompt, n, temperature=1.0, top_k=None, seed=0):
+    torch.manual_seed(seed)
+    idx = torch.tensor([[stoi[c] for c in prompt]])
+    out = model.generate(idx, n, temperature=temperature, top_k=top_k)
+    return "".join(chars[i] for i in out[0].tolist())
+
+print(gen("吾輩は", 60, top_k=1))     # top_k=1 ＝ 常に1位だけ
+```
+
+- 「少々**ぷんぷんぷんぷんぷん**している」 — ==堂々巡りに落ちた==
+- 常に最有力の道だけを歩くと、同じ角を回り続ける。しかもシードを変えても**毎回同じ文**
+- だからサイコロ（確率での抽選）は生成の命綱。問題は「どれくらい揺らすか」
+
+
+## ツマミ1：temperature
+
+- softmax の**前**に、スコアを $T$ で割る — たったこれだけ
+
+$$
+\text{probs} = \mathrm{softmax}\!\left(\frac{\text{logits}}{T}\right)
+$$
+
+- $T < 1$：スコア差が拡大 → 分布が**尖る**（1位に集中、無難）
+- $T > 1$：スコア差が縮小 → 分布が**平らになる**（番狂わせが増える、危険）
+- $T \to 0$：ほぼ argmax。$T = 1$：モデルの分布そのまま
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+idx = torch.tensor([[stoi[c] for c in "吾輩は"]])
+with torch.no_grad():
+    logits = model(idx)[0, -1]
+
+fig, axes = plt.subplots(1, 3, figsize=(10.5, 3.2))
+for ax, T in zip(axes, [0.5, 1.0, 2.0]):
+    p = F.softmax(logits / T, dim=0)
+    probs, ii = p.topk(8)
+    ax.bar([chars[i] for i in ii.tolist()], probs, color="#5dade2")
+    ax.set_title(f"T = {T}")
+    ax.set_ylim(0, 0.8)
+fig.suptitle("「吾輩は」の次の1文字の分布（上位8）", fontsize=12)
+plt.tight_layout()
+plt.show()
+```
+
+- 同じモデル・同じ入力でも、$T$ だけで「こ」の確率が **72% ⇄ 16% ⇄ 2%** と変わる
+
+
+## 聞き比べ：T = 0.2 / 0.8 / 2.0
+
+```{python}
+#| echo: true
+for T in [0.2, 0.8, 2.0]:
+    print(f"--- T = {T} ---")
+    print(gen("吾輩は", 80, temperature=T), "\n")
+```
+
+- **T=0.2**：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）
+- **T=0.8**：ほどよく揺れて、いちばん「漱石風」
+- **T=2.0**：==漢字の豪雨== — 分布の尻尾にいたレア文字が当選しまくる
+
+
+## ツマミ2：top-k — 尻尾を切る安全網
+
+- $T$ を上げたいが暴走は困る → **上位 $k$ 文字だけ残して**、あとは $-\infty$ にしてから抽選
+- 票を $-\infty$ で消す — ==因果マスクと同じ手口==（softmax の前に消すのが作法）
+
+```{python}
+#| echo: true
+print(gen("吾輩は", 80, temperature=2.0, top_k=40))
+```
+
+- 同じ T=2.0 でも、尻尾の3,005文字が消えるだけで「日本語の音」に戻ってくる
+- `gpt.py` の `generate` はこの2ツマミ込みで書いてある：
+
+```python
+logits = logits / temperature                      # ツマミ1
+if top_k is not None:
+    v, _ = torch.topk(logits, top_k)
+    logits[logits < v[:, [-1]]] = float("-inf")    # ツマミ2（尻尾を消す）
+probs = F.softmax(logits, dim=-1)
+nxt = torch.multinomial(probs, num_samples=1)      # サイコロ
+```
+
+
+## 実物も同じツマミで動いている
+
+| うちのモデル | ChatGPT など実物の API |
+|---|---|
+| `temperature=0.8` | `temperature`（同じ意味・同じ数式） |
+| `top_k=40` | `top_k` / `top_p`（尻尾の切り方の親戚） |
+| シード固定で再現 | `seed` 指定（対応するAPIもある） |
+
+- 「AIの回答は毎回違う」の正体は、この**サイコロ**
+- 同じ質問に違う答えが返るのは故障ではなく、$T > 0$ の仕様
+
+::: {.callout-note}
+`top_p`（累積確率で切る方式）は top-k の親戚。名前だけ覚えておけば仕様表が読める。
+:::
+
+
+## **Tweak** ツマミを回しまくる {.badge-practice}
+
+- `gen` を好きに呼んで実験（実行のたびに `seed` を変えると別の文が出る）
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `temperature=0.5` と `1.5` のあいだを刻む | 自分の耳で「ちょうどいい温度」を探す |
+| `top_k=3` で `temperature=1.0` | 安全網がきつすぎると何の刑に近づく？ |
+| `gen("名前はまだ", 80, 0.8)` | 書き出しで話題を誘導できるか試す |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- `top_k` を小さくしすぎると argmax の「堂々巡り」に近づく — **2つのツマミは同じ「無難⇄暴走」軸**を別の方法で動かしている
+:::
+
+
+## まとめ
+
+- 生成のツマミは2つ：**temperature**（分布を尖らせる/平らにする）と **top-k**（尻尾を切る）
+- argmax（top_k=1）は堂々巡り、T が高すぎると漢字の豪雨 — ==良い文はそのあいだ==にある
+- 実装は「割る」「-∞で消す」「サイコロ」の3行。ChatGPT の同名パラメータも同じ仕組み
+- 確率的な出力は故障ではなく仕様 — シードで再現もできる
+
+::: {.callout-note title="次回予告"}
+自作GPTはここで完成。次回は**このモデルと ChatGPT の距離**を測る —
+足りないのは仕組みか、それとも量か。ついでに、LLM が堂々と嘘をつく理由も種明かしする。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：argmax の決定性
+
+`top_k=1` で `seed=0` と `seed=123` の2回生成し、出力が**完全に一致する**ことを `==` で確かめよ。サイコロを振っているのに同じになる理由を1行で説明せよ。
+
+### 問題2：安全網の値段
+
+`temperature=1.0` で `top_k=5` と `top_k=None` の200文字を生成し、それぞれの**文字の種類数**（`len(set(...))`）を比べよ。top-k が「守ってくれるもの」と「奪うもの」を1行ずつ述べよ。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+# 問題1
+a = gen("吾輩は", 60, top_k=1, seed=0)
+b = gen("吾輩は", 60, top_k=1, seed=123)
+print("一致:", a == b)
+# 上位1文字しか残らないので、サイコロの目が何であれ当選者は同じ
+
+# 問題2
+a = gen("吾輩は", 200, temperature=1.0, top_k=5, seed=0)
+b = gen("吾輩は", 200, temperature=1.0, top_k=None, seed=0)
+print("top_k=5   :", len(set(a)), "種類")
+print("top_k=None:", len(set(b)), "種類")
+# 守るもの：レア文字の事故（暴走）を防ぐ／奪うもの：語彙の多様性
+```

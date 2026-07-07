@@ -1,0 +1,221 @@
+---
+title: "ChatGPT までの距離"
+subtitle: "足りないのは仕組みか、量か — そして騙されない側になる"
+---
+
+## 完成した機械を眺める
+
+- 手元にあるもの：82万パラメータ・『吾輩は猫である』1冊で育てた文字レベル GPT
+- 世の中にあるもの：ChatGPT
+
+::: {.callout-important title="クイズ"}
+うちの子と ChatGPT の差は、次のどれが一番大きい？
+
+**a.** 仕組み（アーキテクチャ）が根本的に違う　**b.** 大きさとデータ量　**c.** 訓練後の仕込み
+:::
+
+::: {.fragment}
+- 答えは **b と c**。仕組みの根っこは、君たちが組んだものと**ほぼ同じ**
+:::
+
+
+## 設計図は読めるようになっている
+
+- GPT-2（2019年・OpenAI）の公表スペックを、うちの子の隣に置く：
+
+| | うちの子 | GPT-2 | GPT-3 |
+|---|---|---|---|
+| ブロック数（n_layer） | 2 | 48 | 96 |
+| 埋め込み次元（n_embd） | 96 | 1,600 | 12,288 |
+| ヘッド数（n_head） | 4 | 25 | 96 |
+| 文脈長（block_size） | 64 | 1,024 | 2,048 |
+| パラメータ数 | 82万 | 15億 | 1,750億 |
+
+- 行の項目名がぜんぶ読める — ==同じ設計図の、数字違い==
+- 埋め込み → ブロック×N → 語彙スコア、という背骨は変わらない
+
+
+## 距離1：スケール
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(7.5, 3.6))
+names = ["うちの子", "GPT-2 (2019)", "GPT-3 (2020)"]
+params = [817_125, 1.5e9, 175e9]
+bars = ax.barh(names, params, color=["#5dade2", "#f5b7b1", "#e74c3c"], height=0.55)
+ax.set_xscale("log")
+ax.set_xlabel("パラメータ数（対数目盛）")
+for b, p, label in zip(bars, params, ["82万", "15億", "1,750億"]):
+    ax.text(p * 1.4, b.get_y() + b.get_height() / 2, label, va="center")
+ax.set_xlim(1e5, 1e13)
+ax.invert_yaxis()
+plt.tight_layout()
+plt.show()
+```
+
+- GPT-3 はうちの子の**約21万倍**。データも『猫』32万字に対して**数千億トークン**
+- うちの子は同じ本を64周して過学習した。巨大 LLM は逆に==データが多すぎて1周も読み切らない==ことがある — 暗記する暇がない
+
+
+## 距離2：語彙 — 文字をやめる
+
+- 組み立ての回の勘定：うちの子はパラメータの**7割**が語彙まわり（3,045字の出入口）
+- 実物は文字でなく**サブワード**を使う：よく出る文字の並びを1トークンに合体させた単位
+
+| | うちの子 | GPT-2以降 |
+|---|---|---|
+| トークン | 文字（3,045種） | サブワード（約5万種） |
+| 「こんにちは」 | 5トークン | 1〜2トークン |
+
+- 同じ文脈長でも**ずっと長い文章**が窓に入る。語彙の作り方（**BPE**）は回数外の参考資料で自作する
+
+::: {.callout-note}
+LLM の料金表が「文字数」でなく「トークン数」なのは、この単位で動いているから。
+:::
+
+
+## 距離3：仕込み — 予測マシンから対話相手へ
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: 事前学習\n（次の1トークン予測） { style.fill: "#e1f5ff" }
+B: 指示チューニング\n（対話の手本で追加訓練） { style.fill: "#fff4e1" }
+C: 好みの調整\n（人の評価で仕上げ） { style.fill: "#d5f5e3" }
+A -> B -> C
+```
+
+- **事前学習**：うちの子がやったこと、そのもの。ここで「言葉」を覚える
+- **指示チューニング**（[instruction tuning]{.en}）：「質問→回答」形式の手本を追加で学習。文の続きではなく**応答**を返すようになる
+- **好みの調整**（[RLHF]{.en} — 名前だけ紹介）：人間が「良い答え」を選び、その好みに寄せる
+- ChatGPT ＝ ==次語予測マシン＋行儀のしつけ==。土台は最後まで次語予測
+
+
+## 実験：うちの子に事実を聞く
+
+```{python}
+#| echo: false
+import sys
+
+sys.path.append("tools/refimpl")
+```
+
+```{python}
+#| echo: true
+import torch
+from gpt import GPT
+
+torch.set_num_threads(1)
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])
+model.eval()
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
+
+def gen(prompt, n, seed=0):
+    torch.manual_seed(seed)
+    idx = torch.tensor([[stoi[c] for c in prompt]])
+    out = model.generate(idx, n, temperature=0.8, top_k=40)
+    return "".join(chars[i] for i in out[0].tolist())
+
+print(gen("主人の名前は", 50, seed=1))
+```
+
+- 流暢に**何も答えていない**。しかも「名前は**まだ**…」と続けたがる — コーパスで一番有名な「名前」の文脈（「名前はまだ無い」）を引きずっている
+- ==喋っているのは事実ではなく統計== — 「ありそうな続き」製造機の正直な姿
+
+
+## ハルシネーション — 堂々と間違える理由
+
+- LLM が事実でないことを流暢に述べる現象を**ハルシネーション**（[hallucination]{.en}）と呼ぶ
+- 原理は今日見たとおり：モデルの中には「ありそうさ」しかなく、==「本当かどうか」という軸が存在しない==
+- スケールが上がると「ありそう」と「本当」の一致率は上がる。だが**原理は消えない** — ChatGPT も、うちの子の21万倍上手なだけの「続き製造機」
+
+::: {.callout-important title="だから、騙されない側になる"}
+- **検算できるものは検算する**（計算・日付・引用は特に）
+- **出典を出させて、実物を確認する**（それらしい架空の出典も平気で作る）
+- **流暢さと自信は、正しさの証拠にならない** — うちの子がその生き証人
+:::
+
+
+## 演習：AIの発言をファクトチェックする
+
+うちの子に『吾輩は猫である』の内容を3回語らせ、本文と照合して採点せよ。
+
+0. [neko.txt](data/neko.txt)・[gpt.py](tools/refimpl/gpt.py)・[ckpt_best.pt](data/runs/neko/ckpt_best.pt) を本編と同じ配置に
+1. `gen("吾輩の主人は", 60, seed=n)` を seed 0〜2 で実行
+2. 出力に含まれる「事実らしい主張」に下線を引く（紙でよい）
+3. その主張が本文にあるか、`in` 演算子や `count` で検索して判定（`"○○" in text` など）
+
+```{python}
+#| echo: true
+#| eval: false
+#| code-fold: true
+#| code-summary: "解答の型を見る"
+text = open("data/neko.txt", encoding="utf-8").read()
+claim = "本堤分署"                      # 出力から拾った「事実らしい」語
+print(claim in text, text.count(claim))  # 本文にあるか・何回か
+```
+
+
+## ここまでの部品でニュースが読める
+
+| 見かける言葉 | 正体（習った回） |
+|---|---|
+| 「コンテキスト長 128K」 | `block_size`（順序とカンニング） |
+| 「トークン課金」 | BPE の語彙単位（今日） |
+| 「temperature を下げて」 | 生成のツマミ（前回） |
+| 「1.8兆パラメータ」（噂話） | `sum(p.numel() ...)`（部品を束ねる） |
+| 「事前学習済みモデル」 | 次語予測の訓練（小さなGPT） |
+
+- 仕様表や記事の**専門用語の大半が、自作した部品の名前**になった
+
+
+## まとめ
+
+- ChatGPT との距離は主に：**スケール**（21万倍）・**語彙**（BPE）・**仕込み**（指示チューニング＋好み調整）
+- 背骨は同じ：埋め込み → Transformer ブロック → 次語予測
+- ハルシネーションは故障ではなく原理 — 中身は「ありそうさ」だけで、「本当」の軸が無い
+- 検算する・出典を確かめる・流暢さを信じない — 作った者だけが持てる健全な不信感
+
+::: {.callout-note title="次回予告：最終回"}
+仕上げは**推し文豪ボット** — 青空文庫から好きな作家を選んで、自分のGPTを育てる。
+そして初回の**文豪テスト**の種明かしをする。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：主人の本名を突き止める
+
+うちの子は「主人の名前」を答えられなかった。本文データから主人（英語教師）の本名を突き止めよ。
+
+1. [neko.txt](data/neko.txt) を読み込み、`text.count("苦沙弥")` と `text.count("珍野")` を表示
+2. 登場回数から、呼び名と姓を推定する（答え合わせは検索エンジンでどうぞ）
+
+### 問題2：スケールの倍率
+
+うちの子（817,125）に対する GPT-2（15億）・GPT-3（1,750億）の倍率を計算せよ。GPT-3 の倍率を「うちの子◯◯台ぶん」と読み上げられる形で表示すること。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+# 問題1
+text = open("data/neko.txt", encoding="utf-8").read()
+print("苦沙弥:", text.count("苦沙弥"), "回")   # 呼び名はこちら（99回）
+print("珍野:", text.count("珍野"), "回")       # 姓はたった2回 — 検索しないと出会えない
+
+# 問題2
+mine = 817_125
+for name, p in [("GPT-2", 1.5e9), ("GPT-3", 175e9)]:
+    print(f"{name}: うちの子 {p / mine:,.0f} 台ぶん")
+```

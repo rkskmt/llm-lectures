@@ -1,0 +1,42 @@
+## Handouts
+
+[← Lectures](index.qmd){.backlink}
+
+::: {.idx-lead}
+各回スライドの配布用 PDF。クリックで開く。番号は講義一覧と対応。
+:::
+
+:::: {.lectures}
+
+### 導入 {.sec .cat1}
+::: {.grid .cat1 .dl}
+- [ことばを当てる機械](pdf/lm-introduction.pdf){target="_blank"}
+:::
+
+### 架空の地名メーカーを育てる {.sec .cat2}
+::: {.grid .cat2 .dl}
+- [文字を数にする](pdf/tokenization.pdf){target="_blank"}
+- [数えるだけの言語モデル](pdf/bigram-counting.pdf){target="_blank"}
+- [学習で当てる](pdf/bigram-neural.pdf){target="_blank"}
+- [ことばの地図](pdf/embeddings.pdf){target="_blank"}
+- [窓を広げる](pdf/mlp-lm.pdf){target="_blank"}
+:::
+
+### Attention を開けて GPT を組む {.sec .cat3}
+::: {.grid .cat3 .dl}
+- [注目という発想](pdf/attention-intuition.pdf){target="_blank"}
+- [Q・K・V を開ける](pdf/attention-qkv.pdf){target="_blank"}
+- [順序とカンニング](pdf/position-mask.pdf){target="_blank"}
+- [部品を束ねる](pdf/transformer-block.pdf){target="_blank"}
+- [小さなGPTを訓練する](pdf/gpt-training.pdf){target="_blank"}
+- [生成を操る](pdf/sampling.pdf){target="_blank"}
+- [ChatGPT までの距離](pdf/to-chatgpt.pdf){target="_blank"}
+- [最終プロジェクト：推し文豪ボット](pdf/bungo-project.pdf){target="_blank"}
+:::
+
+### 参考資料 [回数外]{.sub} {.sec}
+::: {.grid .app .dl}
+- [BPEトークナイザを自作する](pdf/bpe-appendix.pdf){target="_blank"}
+:::
+
+::::

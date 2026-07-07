@@ -1,0 +1,285 @@
+---
+title: "小さなGPTを訓練する"
+subtitle: "32万字を流し込んで、火を入れる"
+---
+
+## 前回の振り返り
+
+- GPT の全身が完成した：埋め込み → ブロック×2 → 語彙スコア。**約82万パラメータ**
+- ただし中身はまだ乱数 — 今日、『吾輩は猫である』**32万字**を流し込んで学習させる
+
+::: {.callout-note}
+今日から前回組んだクラス一式を `gpt.py` として使う。
+[gpt.py](tools/refimpl/gpt.py) をダウンロードして、自分のスクリプトと同じフォルダに置く。
+:::
+
+
+## 訓練データの形 — 1枚で64問
+
+- 文章を **64文字**（`block_size`）ずつ切り出し、「1文字ずらし」を正解にする
+
+```{python}
+#| echo: false
+import sys
+
+sys.path.append("tools/refimpl")
+```
+
+```{python}
+#| echo: true
+import torch
+
+text = open("data/neko.txt", encoding="utf-8").read()
+chars = sorted(set(text))
+stoi = {c: i for i, c in enumerate(chars)}
+
+data = torch.tensor([stoi[c] for c in text])
+n = int(len(data) * 0.9)
+train_data, val_data = data[:n], data[n:]    # 採点用の1割は隠しておく
+
+x = data[:8]                                  # 短い例で仕組みを見る
+y = data[1:9]
+print("入力:", "".join(chars[i] for i in x))
+print("正解:", "".join(chars[i] for i in y))
+```
+
+- 入力の各位置に「その次の文字」が正解として並ぶ
+- 因果マスクのおかげで、==64文字の1枚が「次を当てる問題」64問ぶん==になる — 前回のマスクはこのための仕込みだった
+
+
+## ミニバッチを切り出す
+
+```{python}
+#| echo: true
+def get_batch(data, block_size=64, batch_size=32):
+    ix = torch.randint(len(data) - block_size - 1, (batch_size,))
+    x = torch.stack([data[i:i + block_size] for i in ix])
+    y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
+    return x, y
+
+xb, yb = get_batch(train_data)
+print(xb.shape, yb.shape)     # (32文, 64文字) が2組
+```
+
+- ランダムな場所から32本切り出す。1バッチ＝32×64＝**2,048問**
+
+
+## 火入れ — 300回だけ回してみる {#peek-gpt-train}
+
+```{python}
+#| echo: true
+import torch.nn.functional as F
+from gpt import GPT
+
+torch.set_num_threads(1)                     # CPUではこの方が速いことが多い
+torch.manual_seed(42)
+model = GPT(vocab_size=len(chars), n_embd=96, n_head=4, n_layer=2, block_size=64)
+opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
+
+for it in range(1, 301):
+    xb, yb = get_batch(train_data)
+    opt.zero_grad()
+    logits = model(xb)                                    # (32, 64, 3045)
+    loss = F.cross_entropy(logits.view(-1, len(chars)),   # 2,048問まとめて採点
+                           yb.view(-1))
+    loss.backward()
+    opt.step()
+    if it in (1, 100, 200, 300):
+        print(f"更新 {it:3d}回 | Loss: {loss.item():.4f}")
+```
+
+- 3拍子の学習ループは**一字一句このまま** — モデルが GPT になっただけ
+- 初期損失は約8.2（$=\ln 3045$、何も知らない状態）。そこから一気に転がり落ちる
+
+
+## 生成してみる — 300回時点の実力
+
+```{python}
+#| echo: true
+@torch.no_grad()
+def generate(model, prompt, n):
+    idx = torch.tensor([[stoi[c] for c in prompt]])
+    for _ in range(n):
+        logits = model(idx[:, -64:])[:, -1, :]   # 見えるのは直近64文字まで
+        probs = F.softmax(logits, dim=-1)
+        idx = torch.cat([idx, torch.multinomial(probs, 1)], dim=1)
+    return "".join(chars[i] for i in idx[0].tolist())
+
+torch.manual_seed(0)
+print(generate(model, "吾輩は", 80))
+```
+
+- 自己回帰の生成ループは**バイグラムの回と同じ考え方**：出た文字を入力の尻に足して繰り返す
+- まだ怪しい。だがもう「日本語の音」はしはじめている — ここから先は回数の勝負
+
+
+## 言葉を覚えていく定点観測
+
+同じスクリプト（[train_neko.py](tools/refimpl/train_neko.py)）を回し続け、節目ごとに生成させた記録：
+
+::: {.callout-note title="0回（乱数のまま）"}
+寺吹瞳麼Q次軒融亡項多忙鴻武箝未肯美汚ヘ煙促喪襟欣銷京紫胎篤銅狎撮腹杭棄羊骨絞煉果物孤葵層幣穴姿他娘誦磯持……
+:::
+
+::: {.callout-note title="50回 — ひらがなと句読点を発見"}
+だなり大ではて融んて多こょ武箝未そに汚。をるしずせ銷っの大が御や。ててて時す。な果物のとう幣てる今…い。持ののてあ師合面たでけっん……
+:::
+
+::: {.callout-note title="500回 — 言葉のかけらが出る"}
+「なりゃでは、融んだ多忙いわんです。汚ヘを促しずせている大き御やり腹の男時はなさ。物を受けると云っている。第存に待し合面白いけに区物を食え」……
+:::
+
+::: {.callout-note title="2,000回 — 文の形になる"}
+果物を受けるところだと椽側のごとく眼を面白いかに区別らしておく。群鶴館なのみなんだ。それから感心みたら君の下へはもっとよい切って行きっと正おると間違える。吾輩は……
+:::
+
+::: {.callout-note title="10,000回（約50分）"}
+「なるほどは、融突然多忙ですよ。それじゃ、私しゃボイがメンチボーの御師匠さんが、果物を一層の通り今日に至るまで遠征を入れた時改急に一生懸命になって上げなければ……
+:::
+
+- 文字 → かな → 単語 → 文 — ==人間の子どもと同じ順番==で言葉を覚えていく
+
+
+## クイズ：10,000回回すと何が起きる？
+
+::: {.callout-important title="クイズ"}
+損失のグラフはどうなっていると思う？
+訓練データ（見た文章）と、隠しておいた1割（初見の文章）の**2本の線**を想像してから、めくる。
+:::
+
+::: {.fragment}
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+
+log = pd.read_csv("data/runs/neko/loss_main.csv")
+fig, ax = plt.subplots(figsize=(7.5, 3.9))
+ax.plot(log["iter"], log["train_loss"], "o-", color="#5dade2", ms=3.5, label="train（見た文章）")
+ax.plot(log["iter"], log["val_loss"], "o-", color="#e74c3c", ms=3.5, label="val（初見の文章）")
+ax.axvline(2500, color="gray", ls="--", lw=1)
+ax.annotate("val の底", xy=(2500, 3.6), xytext=(4200, 4.6),
+            arrowprops=dict(arrowstyle="->", color="#555"))
+ax.set_xlabel("更新回数")
+ax.set_ylabel("損失")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+:::
+
+::: {.fragment}
+- **val は2,500回あたりで底（約3.6）を打ち、その後は悪化** — train だけが下がり続ける
+- 32万字を10,000回で**約64周**も読んだ（$10000 \times 2048 \div 321139$）— 同じ本の読みすぎ
+:::
+
+
+## 過学習、最終決戦
+
+- 地名MLPの回とまったく同じ形が、GPT でも出た — ==モデルが変わっても病気は同じ==
+- 訓練文の細かい癖に最適化が進み、**初見の文章への実力はむしろ落ちていく**
+- 対策も同じ発想：**val が底を打ったところで止めて、その時点の重みを使う**（早期終了）
+
+::: {.callout-note}
+本物の LLM はこの逆で「同じ文章を何周もしない」規模のデータを使う —
+データの量で過学習をねじ伏せている（この話は「ChatGPTまでの距離」の回で）。
+:::
+
+
+## 訓練済みの重みを読み込む
+
+- 訓練は途中の重みを保存できる。val の底で保存した**配布用チェックポイント**を用意した
+- [ckpt_best.pt](data/runs/neko/ckpt_best.pt)（3.4MB）をダウンロードして `data/runs/neko/` に置く
+
+```{python}
+#| echo: true
+import torch
+from gpt import GPT
+
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])    # 82万個の数を一括で流し込む
+model.eval()
+
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
+torch.manual_seed(1)
+print(generate(model, "吾輩は", 100))
+```
+
+- 同じ `train_neko.py` を3,500回（このPCで約20分）回しただけの重み。**魔法の材料はゼロ**
+
+
+## **Tweak** 火加減を変える {.badge-practice}
+
+- [300回訓練のコード](#peek-gpt-train){.peek} を書き換えて、生成まで続けて実行
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `range(1, 301)` → `range(1, 1001)` | 3倍待つと生成文はどれだけ変わる？（時間も測ってみる） |
+| `batch_size=32` → `8` | 1回が速くなる代わりに、Loss の下がり方はどうなる？ |
+| `generate(model, "猫は", 80)` | 書き出しを変える。語彙にある文字なら何でも使える |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- 訓練を伸ばすほど良くなるのは（このサイズとデータでは）**val の底まで**。「長く回す＝偉い」ではないことをグラフが示している
+:::
+
+
+## まとめ
+
+- 訓練データ＝「64文字の窓」と「1文字ずらしの正解」。マスクのおかげで1枚が64問になる
+- 学習ループは3拍子のまま。損失 8.2（無知）→ 3.6（val の底）
+- 生成の定点観測：文字 → かな → 単語 → 文 の順に覚えていく
+- **過学習は GPT でも起きる**。val を見張り、底の重みを使う（早期終了）
+
+::: {.callout-note title="次回予告"}
+訓練済みモデルを手に入れた。次回は**生成のツマミ**（temperature・top-k）を握って、
+「無難な文」と「壊れた文」のあいだを自由に行き来する。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：何周読んだか
+
+バッチ32本×64文字で10,000回更新したとき、モデルが処理した総文字数を計算し、『吾輩は猫である』（321,139字）の**何周ぶん**にあたるか求めよ。500回・3,500回ならそれぞれ何周か。
+
+### 問題2：チェックポイントの中身
+
+`ckpt_best.pt` を読み込み、以下を表示せよ。
+
+1. 保存されている語彙のサイズ（`len(blob["vocab"])`）
+2. モデル設定（`blob["cfg"]`）
+3. `state_dict` の中で**一番大きい**パラメータの名前と形（`blob["state_dict"].items()` を `numel()` で比べる）
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import torch
+
+# 問題1
+corpus = 321139
+for iters in [500, 3500, 10000]:
+    total = iters * 32 * 64
+    print(f"{iters:6d}回 → {total / corpus:6.1f} 周")
+
+# 問題2
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+print("語彙:", len(blob["vocab"]), "| 設定:", blob["cfg"])
+name, p = max(blob["state_dict"].items(), key=lambda kv: kv[1].numel())
+print("最大のパラメータ:", name, tuple(p.shape))
+```
+
+- 問題1：3,500回でもすでに**22周**。データより回数が多い訓練は、いつか暗記に向かう
+- 問題2：最大は文字の埋め込み表（3045×96）— 実は出口の語彙スコアの行列も同じ大きさで同率1位。大語彙のコストがここでも主役

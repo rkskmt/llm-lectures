@@ -1,0 +1,313 @@
+---
+title: "窓を広げる"
+subtitle: "MLP言語モデル — 記憶1文字の壁を越える"
+---
+
+## 前回の振り返り
+
+- 文字は**埋め込み**で $d$ 次元ベクトルになった（表引き＝`nn.Embedding`）
+- ただしモデルはまだバイグラム：==直前の1文字==しか見ていない
+- 地名バイグラムの損失は**2.34の壁**に当たった — 作戦自体の限界だった
+
+::: {.callout-important title="クイズ"}
+「かみ」まで読んだ。次は？「かわ」まで読んだ。次は？
+**2文字**見えるだけで、どれくらい予想が変わるだろう。
+:::
+
+
+## 作戦：直前の数文字をまとめて入れる
+
+- 直前 $n$ 文字の**窓**（[context window]{.en}）を決めて、全部ベクトルにして、**つなげて**1本にする
+- つないだベクトルを第1コースでおなじみの**多層ネットワーク**に通す
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: "・ し ぶ\n(窓=3文字)" { style.fill: "#e1f5ff" }
+B: "埋め込み×3\n(8次元×3本)" { style.fill: "#fff4e1" }
+C: "つなげる\n(24次元)" { style.fill: "#fdebd0" }
+D: "Linear→ReLU→Linear" { style.fill: "#f5b7b1" }
+E: "75文字の\nスコア" { style.fill: "#d5f5e3" }
+A -> B -> C -> D -> E
+```
+
+- 部品は `Embedding`・`Flatten`・`Linear`・`ReLU` — ==ぜんぶ知り合い==
+
+
+## データを窓の形に切り直す
+
+- 名前の前に窓ぶんの「・」を敷いてから、1文字ずつずらして切る
+
+```{python}
+#| echo: true
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+
+def windows(name_list, ctx):
+    xs, ys = [], []
+    for name in name_list:
+        seq = [0] * ctx + [stoi[c] for c in name] + [0]
+        for i in range(len(seq) - ctx):
+            xs.append(seq[i:i + ctx])   # 窓
+            ys.append(seq[i + ctx])     # その次の1文字（正解）
+    return xs, ys
+
+xs, ys = windows(["しぶや"], ctx=3)
+for x, y in zip(xs, ys):
+    print("".join(chars[i] for i in x), "→", chars[y])
+```
+
+- 「・・・→し」は「何もない状態から『し』で始まった」という訓練例になる
+
+
+## 訓練と評価を分けておく
+
+- 今日は「本当に上手くなったか」を測りたいので、最初に**訓練用と評価用**に分ける
+- 第1コースの鉄則：==採点は見せていないデータで==
+
+```{python}
+#| echo: true
+import pandas as pd
+import torch
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+
+g = torch.Generator().manual_seed(42)
+perm = torch.randperm(len(names), generator=g).tolist()
+n = int(len(names) * 0.9)
+train_names = [names[i] for i in perm[:n]]   # 1,572件で学習
+val_names = [names[i] for i in perm[n:]]     #   175件で採点
+print(len(train_names), len(val_names))
+```
+
+
+## MLP言語モデルを組んで学習 {#peek-mlp-train}
+
+```{python}
+#| echo: true
+import torch.nn as nn
+import torch.nn.functional as F
+
+torch.set_num_threads(1)
+ctx = 3
+X, y = map(torch.tensor, windows(train_names, ctx))
+Xv, yv = map(torch.tensor, windows(val_names, ctx))
+
+torch.manual_seed(0)
+model = nn.Sequential(nn.Embedding(75, 8),        # 文字→8次元ベクトル
+                      nn.Flatten(1),              # 3本を1本(24次元)につなぐ
+                      nn.Linear(8 * ctx, 64),
+                      nn.ReLU(),
+                      nn.Linear(64, 75))
+opt = torch.optim.AdamW(model.parameters(), lr=3e-3)
+gb = torch.Generator().manual_seed(0)
+
+for it in range(1, 3001):
+    ix = torch.randint(len(X), (256,), generator=gb)
+    opt.zero_grad()
+    loss = F.cross_entropy(model(X[ix]), y[ix])
+    loss.backward()
+    opt.step()
+
+with torch.no_grad():
+    print(f"train loss: {F.cross_entropy(model(X), y).item():.4f}")
+    print(f"val   loss: {F.cross_entropy(model(Xv), yv).item():.4f}")
+```
+
+- バイグラムの2.34を（訓練側では）大きく割った。学習ループは今日も3拍子のまま
+
+
+## 生成して聞き比べる
+
+```{python}
+#| echo: true
+torch.manual_seed(1)
+for _ in range(10):
+    window, s = [0] * ctx, ""
+    while True:
+        logits = model(torch.tensor([window]))
+        i = torch.multinomial(F.softmax(logits, dim=-1), 1).item()
+        if i == 0:
+            break
+        s += chars[i]
+        window = window[1:] + [i]     # 窓を1文字ぶんスライド
+    print(s)
+```
+
+| 数えるバイグラム（前々回） | MLP（今日） |
+|---|---|
+| きたやまちょう | おおじたわらまち |
+| なごうし | つるぎし |
+| とんむらそんだてしかむら | きょうおんし |
+| さがさっさとかわし | たかさらちょう |
+
+- 「村を2回付ける」ような迷子が減り、==最後まで一貫した名前==が増えた
+
+
+## うますぎる名前には気をつける
+
+```{python}
+#| echo: true
+made = ["おおじたわらまち", "つるぎし", "きょうおんし", "みなみちょう", "おおのし"]
+for s in made:
+    print(s, "→", "実在する" if s in names else "新作")
+```
+
+- 10件中2件は**実在の名前をそのまま再現**していた（みなみちょう・おおのし）
+- 「上手くなった」と「覚えただけ」の区別 — どこかで聞いた話が始まる
+
+
+## クイズ：窓を広げれば広げるほど良い？
+
+::: {.callout-important title="クイズ"}
+窓を 1 → 2 → 3 → 5 文字と広げると、**見せていないデータでの損失**はどうなる？
+予想してから、めくる。
+:::
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+
+# reuse kernel state: windows(), train_names, val_names
+results = {}
+for c in [1, 2, 3, 5]:
+    Xc, yc = map(torch.tensor, windows(train_names, c))
+    Xvc, yvc = map(torch.tensor, windows(val_names, c))
+    torch.manual_seed(0)
+    m = nn.Sequential(nn.Embedding(75, 8), nn.Flatten(1),
+                      nn.Linear(8 * c, 64), nn.ReLU(), nn.Linear(64, 75))
+    o = torch.optim.AdamW(m.parameters(), lr=3e-3)
+    gb2 = torch.Generator().manual_seed(0)
+    for it in range(3000):
+        ix = torch.randint(len(Xc), (256,), generator=gb2)
+        o.zero_grad()
+        F.cross_entropy(m(Xc[ix]), yc[ix]).backward()
+        o.step()
+    with torch.no_grad():
+        results[c] = (F.cross_entropy(m(Xc), yc).item(),
+                      F.cross_entropy(m(Xvc), yvc).item())
+
+cs = list(results)
+fig, ax = plt.subplots(figsize=(7, 3.8))
+ax.plot(cs, [results[c][0] for c in cs], "o-", color="#5dade2", label="train")
+ax.plot(cs, [results[c][1] for c in cs], "o-", color="#e74c3c", label="val")
+ax.axhline(2.625, color="gray", ls="--", lw=1, label="数えるバイグラム (val)")
+ax.set_xticks(cs)
+ax.set_xlabel("窓の広さ（文字数）")
+ax.set_ylabel("損失")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+::: {.fragment}
+- train は下がり続けるのに、**val は窓2で底を打って悪化に転じる**
+- この2本の線の開き方 — 第1コースの多項式の次数のグラフと**同じ形**
+:::
+
+
+## 過学習、再会
+
+- 窓を広げる＝「この5文字の並びのときはこの文字」という**丸暗記**がしやすくなる
+- 名前はたった1,572件。暗記で train の点は稼げるが、新しい名前には通用しない
+- 対策も第1コースと同じ発想が効く：データを増やす、モデルを控えめに、**val を見て早めに止める**
+
+::: {.callout-note}
+窓の組数は窓幅によらず**10,288組のまま**（1名前あたり「文字数+1」個）。
+データは増えていないのに表現力だけ上がる — 過学習の典型的な条件。
+:::
+
+
+## それでも「窓」には根本的な限界がある
+
+- 窓の外は**永遠に見えない**。窓5でも、6文字前はもう存在しない
+- 窓を広げると入力の次元も暗記のリスクも増える — 力ずくに未来はない
+- 地名（平均5.5文字）ならこれでいい。だが最終目標は**文章**：
+
+> 「吾輩は猫である。名前は**まだ**……」
+
+- 「まだ無い」と続けるには、9文字前の「名前」を見る必要がある
+- ==全部見えて、そのとき必要なところだけ効かせる==仕組みが要る — それが次章の主役
+
+::: {.callout-note title="ここまでで幹1が完結"}
+数える→学習する→埋め込む→窓を広げる。「架空の地名メーカー」はここで一区切り。
+ここから先は、この部品たちを持って**文章**の世界（『吾輩は猫である』）へ移る。
+:::
+
+
+## **Tweak** 窓と部品で遊ぶ {.badge-practice}
+
+- [学習のコード](#peek-mlp-train){.peek} を書き換えて、生成まで続けて実行
+
+::: {.tweak}
+| 変えること | 何が起きるか |
+|--|--|
+| `ctx = 3` → `ctx = 1` | バイグラム相当に退化。生成名の迷子っぷりは戻る？ |
+| `nn.Linear(8 * ctx, 64)` の 64 → 8 | 表現力を絞ると train/val はそれぞれどっちに動く？ |
+| `torch.manual_seed(1)`（生成側）→ 別の数 | 別の名前セット。お気に入りの新作地名を探そう |
+:::
+
+::: {.callout-tip}
+## ここで観察
+
+- `ctx = 1` に戻すと val 損失は約2.65 — 数えるバイグラム（2.62）とほぼ同じ所に落ちる。**見える文脈が同じなら、たどり着く実力も同じ**
+- 生成コードは窓幅を変えてもそのまま動く（`[0] * ctx` と「窓スライド」で書いてあるから）
+:::
+
+
+## まとめ
+
+- 窓＝直前 $n$ 文字を埋め込み→連結→MLP。部品は全部第1コースの持ち物
+- 生成の質は明確に向上（迷子が減る）。ただし val の改善はわずかで、**窓を広げすぎると過学習**
+- 実在名の「丸暗記再現」も出始めた — 上達と暗記は別物
+- 窓には根本的限界：**窓の外は見えない**
+
+::: {.callout-note title="次回予告"}
+文章の中で「どこを見るべきか」は、そのときどきで違う。
+固定の窓ではなく、**モデル自身に「見る場所」を選ばせる** — Attention の登場。
+:::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：自分の入力の「次」を当てさせる
+
+学習済みの MLP（ctx=3）に好きな3文字（ひらがな）を入れ、次の1文字の**予想トップ3**を確率つきで表示せよ。
+
+0. 本編のコードで学習まで実行（[chimei.csv](data/chimei.csv) を `data/` に配置）
+1. 3文字を `stoi` で番号にして `model(torch.tensor([番号列]))` でスコアを出す
+2. `F.softmax` で確率にし、`topk(3)` で上位3件を「文字：確率」で表示
+3. 「かわさ」「よこは」で試し、直感と合うか確かめる
+
+### 問題2：窓と組数
+
+窓幅 1・3・5 のそれぞれで訓練データの組数（`len(X)`）を表示し、**同じ数になる理由**を1行で説明せよ。
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+# 問題1（本編の model, stoi, chars が残っている前提）
+def top3(s):
+    x = torch.tensor([[stoi[c] for c in s]])
+    p = F.softmax(model(x), dim=-1)[0]
+    probs, idx = p.topk(3)
+    print(s, "→", [(chars[i], round(float(pr), 3)) for i, pr in zip(idx.tolist(), probs)])
+
+top3("かわさ")
+top3("よこは")
+
+# 問題2
+for c in [1, 3, 5]:
+    Xc, _ = windows(names, c)
+    print(f"窓{c}: {len(Xc)}組")
+# 1つの名前から「文字数+1」個の窓が取れる。敷いた「・」の数が窓幅と一緒に増えるので、組数は窓幅によらない
+```

@@ -47,3 +47,6 @@ data/_code.xlsx
 /peek-ui.js
 /badge-ui.js
 /toc-ui.js
+
+# author-side overfit checkpoint (decks only need ckpt_best)
+data/runs/neko/ckpt_main.pt

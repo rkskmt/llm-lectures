@@ -8,6 +8,9 @@ project:
     - "favicon.svg"
     - "data/chimei.csv"
     - "data/neko.txt"
+    - "data/runs/**"
+    - "tools/refimpl/gpt.py"
+    - "tools/refimpl/train_neko.py"
 
 website:
   title: "LLM Lectures"
