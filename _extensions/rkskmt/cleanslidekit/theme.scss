@@ -1,0 +1,146 @@
+/*-- scss:defaults --*/
+
+// Ported from clean-revealjs (grantmcdermott/clean v1.4.1) when the
+// extension was dropped. Only rules that were still visible survive here;
+// everything clean defined but custom.css already overrides was left out,
+// and the Roboto Google-Fonts import was dropped (the font stack in
+// custom.css no longer includes Roboto).
+
+$jet: #131516;
+$accent: #107895;
+$accent2: #9a2515;
+
+$presentation-font-size-root: 32px;
+$presentation-heading-color: $jet;
+$presentation-heading-font-weight: lighter;
+$body-color: $jet;
+$link-color: $accent;
+$selection-bg: #26351c;
+
+// clean used "Roboto, sans-serif" (via a Google Fonts CDN import) for body
+// and headings. The body font is overridden in custom.css; headings now use
+// the same stack so Latin glyphs match the body instead of Roboto.
+$font-family-sans-serif: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", "Meiryo", sans-serif;
+$presentation-heading-font: $font-family-sans-serif;
+
+/*-- scss:rules --*/
+
+.reveal a {
+  line-height: 1.5em;
+}
+
+.reveal p {
+  font-weight: lighter;
+}
+
+// title slide
+
+#title-slide {
+  text-align: left;
+
+  .title {
+    color: $body-color;
+    font-size: 1.4em;
+    font-weight: lighter;
+  }
+
+  .subtitle {
+    color: $accent;
+    font-style: italic;
+    margin-top: 0em;
+    font-weight: lighter;
+  }
+
+  .institute,
+  .quarto-title-affiliation,
+  .quarto-title-author-email {
+    font-style: italic;
+  }
+
+  .author,
+  .quarto-title-author-name {
+    color: $body-color;
+  }
+
+  .quarto-title-authors {
+    display: flex;
+    justify-content: left;
+
+    .quarto-title-author {
+      padding-left: 0em;
+      padding-right: 0em;
+      width: 100%;
+    }
+  }
+}
+
+.reveal h4 {
+  color: $accent2;
+  font-weight: normal;
+  margin-top: 1.25em;
+}
+
+// lists
+
+.reveal ul {
+  font-weight: lighter;
+  padding-left: 16px;
+
+  li::marker {
+    color: mix($accent, white, 70%);
+  }
+}
+
+.reveal ul ul {
+  list-style: none;
+
+  li:before {
+    content: "\2192";
+    color: mix($accent, white, 60%);
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+    margin-right: 0.5em;
+  }
+}
+
+.reveal ol {
+  font-weight: lighter;
+  padding-left: 16px;
+
+  li::marker {
+    color: $accent;
+  }
+}
+
+// tables
+
+.reveal table {
+  margin: auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.8em;
+}
+
+.reveal table th,
+.reveal table td {
+  border: none;
+  padding: .23em;
+  text-align: left;
+  font-weight: lighter;
+}
+
+.reveal table thead th,
+.reveal .slides table tr:last-child td,
+.reveal .slides table {
+  border-bottom: 2px solid #D3D3D3;
+}
+
+.reveal table thead th {
+  font-weight: bold;
+}
+
+.reveal table caption {
+  color: #666666;
+  font-variant: small-caps;
+}

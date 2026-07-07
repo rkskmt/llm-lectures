@@ -1,0 +1,13 @@
+author: "rkskmt"
+format:
+  cleanslidekit-revealjs: default
+# Extension-external filters (separate Quarto extensions, kept local):
+filters:
+  - d2
+  - lightbox
+lightbox: auto
+# d2 bakes a 100px margin into every SVG by default — far too much on a
+# 720px slide (shrinks the actual diagram). Keep just enough for sketch
+# strokes.
+d2:
+  pad: 16

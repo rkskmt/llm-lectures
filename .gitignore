@@ -1,0 +1,49 @@
+# Quarto
+.quarto/
+_site/
+site_libs/
+*_files/
+*.quarto_ipynb
+imgs/decision_boundary.png
+
+# Handout PDFs — generated on demand by tools/qmd2pdf (see README).
+# Deployed via gh-pages from the local working dir; not committed.
+pdf/
+
+# Local dependencies (installed by setup.py)
+libs/
+
+# Extensions (optional - 通常はコミットする)
+# _extensions/
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.cursor/
+.windsurf/
+*.swp
+
+# Course corpora and run artifacts under data/ ARE committed (decks read them).
+data/_code.xlsx
+
+/.quarto/
+**/*.quarto_ipynb
+
+# format-resources the cleanslidekit extension copies next to rendered decks
+# (sources live in _extensions/rkskmt/cleanslidekit/ — these root copies are build output)
+/custom.css
+/slide-ui.js
+/search-ui.js
+/peek-ui.js
+/badge-ui.js
+/toc-ui.js

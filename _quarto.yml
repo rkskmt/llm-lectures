@@ -1,0 +1,13 @@
+project:
+  type: website
+  render:
+    - "*.qmd"
+  resources:
+    - "imgs/**"
+    - "pdf/**"
+    - "favicon.svg"
+    - "data/chimei.csv"
+    - "data/neko.txt"
+
+website:
+  title: "LLM Lectures"

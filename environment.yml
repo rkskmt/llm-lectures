@@ -1,0 +1,24 @@
+name: llm
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  - jupyter
+  - nbformat
+  - nbclient
+  - ipykernel
+  - numpy
+  - pandas
+  - matplotlib
+  - seaborn
+  - scipy
+  - scikit-learn
+  - pytorch-cpu
+  - torchvision
+  - altair
+  - vl-convert-python
+  - d2  # diagram rendering for the quarto-d2 extension
+  - pip
+  - pip:
+      - japanize-matplotlib
