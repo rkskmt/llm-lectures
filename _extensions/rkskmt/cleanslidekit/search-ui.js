@@ -89,6 +89,17 @@
       return p.split('/').pop().toLowerCase();
     }
 
+    // How strongly a hit is "about" the query: a match in the slide heading
+    // (section) means the term is that slide's topic, not just mentioned in
+    // passing; a match in the deck title is the next-best signal. Body-only
+    // hits score 0. Used to float topic slides above incidental mentions.
+    function topicScore(e, q) {
+      var s = 0;
+      if ((e.section || '').toLowerCase().indexOf(q) >= 0) s += 2;
+      if ((e.title || '').toLowerCase().indexOf(q) >= 0) s += 1;
+      return s;
+    }
+
     function loadIndex() {
       if (indexData !== null) return Promise.resolve(indexData);
       return fetch('search.json')
@@ -128,16 +139,19 @@
           resultsEl.innerHTML = '<div class="search-note">' + T.noHits + '</div>';
           return;
         }
-        // Float hits from the deck the user is currently viewing to the top,
-        // preserving the original order within each group (stable sort). Done
-        // before the 30-hit cap so a current-deck hit late in the index still
-        // wins its place.
+        // Rank the hits (stable sort keeps the original index order within a
+        // tier). Done before the 30-hit cap so a strong-but-late hit still
+        // wins its place. Priority:
+        //   1. slide-heading / deck-title matches — the term is the topic, not
+        //      just mentioned (this is what surfaces "where X is explained").
+        //   2. hits from the deck being viewed, so in-deck search stays local.
         var cur = currentDeckFile();
-        if (cur) {
-          hits.sort(function (a, b) {
-            return (deckFile(a.href) === cur ? 0 : 1) - (deckFile(b.href) === cur ? 0 : 1);
-          });
-        }
+        hits.sort(function (a, b) {
+          var d = topicScore(b, q) - topicScore(a, q);
+          if (d) return d;
+          if (cur) return (deckFile(a.href) === cur ? 0 : 1) - (deckFile(b.href) === cur ? 0 : 1);
+          return 0;
+        });
         hits = hits.slice(0, 30);
         resultsEl.innerHTML = hits.map(function (e) {
           var href = e.href.replace('#', '#/');
