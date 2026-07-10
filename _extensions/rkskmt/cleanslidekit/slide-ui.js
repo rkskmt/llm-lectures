@@ -22,6 +22,7 @@
 
     var counterInit = false;
     var codeExpandInit = false;
+    var scrollHintInit = false;
     var codeZoomFontSize = 2.2;
     var codeZoomPanMode = false;
     var codeZoomDragging = false;
@@ -521,11 +522,71 @@
       } catch (e) {}
     }
 
+    // Scroll hint: when a slide taller than the frame is shown for the
+    // first time, a chevron dips twice at the bottom center, then fades
+    // (the CSS animation owns the timing — see #scroll-hint in custom.css).
+    // Scrolling or leaving the slide dismisses it early, and each slide
+    // hints at most once per page load.
+    function removeScrollHint() {
+      try {
+        var el = document.getElementById('scroll-hint');
+        if (el && el.parentNode) el.parentNode.removeChild(el);
+      } catch (e) {}
+    }
+
+    function maybeShowScrollHint() {
+      try {
+        if (!window.Reveal || !Reveal.getCurrentSlide) return;
+        // Keep the hint out of printed handouts (tools/qmd2pdf prints ?print-pdf).
+        if (/print-pdf/gi.test(window.location.search)) return;
+        var sec = Reveal.getCurrentSlide();
+        if (!sec) return;
+        // Already had its chance — leave a still-running instance alone
+        // (the window-load re-measure below must not cut it short).
+        if (sec.dataset.scrollHinted === 'true') return;
+        removeScrollHint();  // a previous slide's hint may still be animating
+        if (sec.scrollHeight <= sec.clientHeight + 32) return;
+        if (sec.scrollTop > 4) return;
+        var slides = document.querySelector('.reveal .slides');
+        if (!slides) return;
+        sec.dataset.scrollHinted = 'true';
+        var hint = document.createElement('div');
+        hint.id = 'scroll-hint';
+        hint.setAttribute('aria-hidden', 'true');
+        hint.innerHTML =
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" ' +
+          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+          '<path d="M5 9l7 7 7-7"></path></svg>';
+        slides.appendChild(hint);
+        hint.addEventListener('animationend', removeScrollHint);
+        sec.addEventListener('scroll', removeScrollHint, { once: true, passive: true });
+      } catch (e) {}
+    }
+
+    function initScrollHint() {
+      try {
+        if (scrollHintInit || !window.Reveal || !Reveal.on) return;
+        scrollHintInit = true;
+        Reveal.on('slidechanged', maybeShowScrollHint);
+        if (Reveal.isReady && Reveal.isReady()) {
+          maybeShowScrollHint();
+        } else {
+          Reveal.on('ready', maybeShowScrollHint);
+        }
+        // On 'ready' webfonts/images may not have settled and the first
+        // slide can measure as not overflowing — re-check once fully loaded.
+        window.addEventListener('load', function() {
+          setTimeout(maybeShowScrollHint, 150);
+        });
+      } catch (e) {}
+    }
+
     function setup() {
       try {
         new MutationObserver(function() {
           createHome();
           addCodeExpandButtons();
+          initScrollHint();
           if (document.querySelector('.reveal > .footer')) {
             createNav();
             if (window.Reveal && Reveal.isReady()) initCounter();
@@ -536,6 +597,7 @@
         initCodeExpand();
         fixDataUriLightbox();
         initTabsetMemory();
+        initScrollHint();
       } catch (e) {}
     }
 

@@ -262,12 +262,12 @@ for name, mods in parts.items():
 ::: {.callout-tip}
 ## ここで観察
 
-- `block_size` を倍にして増えるのは**位置の埋め込み表だけ**：64×96 = 6,144 → 128×96 = 12,288。パラメータ的には安い買い物（ただし視線の表は T×T に広がるので、計算の手間は別勘定）
+- `block_size` を倍にして増えるのは**位置の埋め込み表だけ**：64×96 = 6,144 → 128×96 = 12,288。パラメータ的には安い買い物（ただし各ヘッドが作る視線の表は T×T に広がるので、計算の手間は別勘定）
 - 内訳の勘定で pos_emb は「埋め込み」の行に混ざっている — 増分 6,144 はそこに現れる
 :::
 
 
-## 全身を歩く — うちの子 {.badge-practice}
+## 全身を歩く — 自作GPT {.badge-practice}
 
 いま組んだ `GPT` クラスの中身を、訓練済みの実重みで上から下まで歩く。
 
@@ -286,7 +286,7 @@ for name, mods in parts.items():
 
 <iframe src="https://bbycroft.net/llm" width="100%" height="540" loading="lazy" style="border: 1px solid #ccc; border-radius: 6px;"></iframe>
 
-- うちの子の箱と対応する部品を**3つ**見つけて、隣の人に30秒で説明（Embedding／Attention／MLP＝FFN…）
+- 自作GPTの箱と対応する部品を**3つ**見つけて、隣の人に30秒で説明（Embedding／Attention／MLP＝FFN…）
 - ブラウザ内で GPT-2 を動かせる [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) も同じ遊びができる／[LLM Visualization を別タブで開く](https://bbycroft.net/llm){target="_blank"}
 
 ::: {.callout-note}

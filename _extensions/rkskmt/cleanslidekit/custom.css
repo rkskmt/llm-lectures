@@ -1118,3 +1118,30 @@ a.lightbox[href]::after {
    a lightbox anchor — stays an inline-left <img>. Center those. */
 .reveal .slides p:has(> img:only-child),
 .reveal .slides p:has(> a:only-child > img){text-align:center}
+
+/* Scroll hint — a "more content below" nudge (created by slide-ui.js).
+   When a slide taller than the frame is first shown, a chevron at the
+   bottom center dips twice, then fades out. It lives in .slides (NOT the
+   section) so it stays put while the section scrolls beneath it. The CSS
+   animation owns the whole lifecycle: slide-ui.js removes the node on
+   animationend. Self-centered via margin, keeping transform free for
+   the dips; bottom offset clears the footer nav (◀ n/m ▶). */
+#scroll-hint{position:absolute;left:50%;bottom:46px;margin-left:-20px;width:40px;height:40px;
+  border-radius:50%;background:rgba(41,128,185,.82);box-shadow:0 2px 8px rgba(25,45,80,.28);
+  display:flex;align-items:center;justify-content:center;color:#fff;pointer-events:none;
+  z-index:40;opacity:0;animation:scroll-hint-nudge 2.8s ease-in-out forwards}
+#scroll-hint svg{width:22px;height:22px;display:block}
+@keyframes scroll-hint-nudge{
+  0%{opacity:0;transform:translateY(-6px)}
+  12%{opacity:1;transform:translateY(0)}
+  30%{transform:translateY(9px)}
+  46%{transform:translateY(0)}
+  62%{transform:translateY(9px)}
+  80%{opacity:1;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(0)}
+}
+/* The dips are decorative; with reduced motion just fade in and out. */
+@media (prefers-reduced-motion:reduce){
+  #scroll-hint{animation:scroll-hint-still 2.2s ease forwards}
+}
+@keyframes scroll-hint-still{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}

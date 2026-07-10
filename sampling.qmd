@@ -225,7 +225,7 @@ plt.show()
 ```
 
 - 「吾輩は猫であ」の次は**1文字**（「る」92%）で到達、「吾輩は」の次は**299文字** — ==枠の広さが分布の形に追随する==
-- うちの `generate` のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る
+- 自作GPTの `generate` のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る
 
 
 ## サイコロの種 — 揺れを再現する
@@ -256,7 +256,7 @@ print(c)
 
 ## 実物も同じツマミで動いている
 
-| うちのモデル | ChatGPT など実物の API |
+| 自作GPT | ChatGPT など実物の API |
 |---|---|
 | `temperature=0.8` | `temperature`（同じ意味・同じ数式） |
 | `top_k=40` | `top_k` / `top_p`（前のスライドの2種類の尻尾切り） |

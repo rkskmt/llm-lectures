@@ -78,7 +78,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 
 3層で賄う。主役は自作：
 
-1. **うちの子エクスプローラ（自作、主役）** — `explorer/index.html`。訓練済み ckpt_best の実重み・実活性で、構造図→部品クリック→中身（ヒートマップ／視線の表＋弧／次の1文字分布）。CDN 不要・日本語・講義用語。**段階違いで4箇所に iframe 埋め込み**：qkv回（`#view=attn`、右上が空＝マスクの伏線）／マルチヘッド回（`#view=heads`、係の分業）／深く積む回（`#view=structure`、全身歩き）／訓練回（`#view=predict`、予想の変化）。詳細は §実測ログ
+1. **自作GPTエクスプローラ（自作ツール、主役）** — `explorer/index.html`。訓練済み ckpt_best の実重み・実活性で、構造図→部品クリック→中身（ヒートマップ／視線の表＋弧／次の1文字分布）。CDN 不要・日本語・講義用語。**段階違いで4箇所に iframe 埋め込み**：qkv回（`#view=attn`、右上が空＝マスクの伏線）／マルチヘッド回（`#view=heads`、係の分業）／深く積む回（`#view=structure`、全身歩き）／訓練回（`#view=predict`、予想の変化）。詳細は §実測ログ
 2. **既存の公開デモ** — [LLM Visualization](https://bbycroft.net/llm)（bbycroft）は「実物大」担当として深く積む回に **iframe 埋め込み**（X-Frame-Options なしを実測確認済み）。[Transformer Explainer](https://poloclub.github.io/transformer-explainer/) は ChatGPT までの距離の回に **iframe 埋め込み**（2026-07-10 動作確認済み — Temperature スライダ・Top-k/Top-p 切替・サブワード分割が見える。GPT-2 small）。深く積む回からはリンクアウトのまま。受け身にならないよう「30秒で隣に説明」タスク付き
 3. **BertViz** — 視線との対話用に訓練回で採用（§実測ログの BertViz 項）。スライダー系（temperature 等）は plotly 組み込み slider で足りる
 4. **plotly iframe（IP3200 方式）** — 埋め込みの d=2 地図は plotly の text scatter で対話化（ズーム・ホバー・凡例切替。初期表示は全域＝「吾」の孤立が最初から見える）。`fig.write_html("iframes/…", include_plotlyjs="directory")` → `::: {.plotly-iframe src=…}`（cleanslidekit の lua）。`iframes/` はレンダー時再生成（gitignore）＋ resources。plotly は environment.yml に追加済み
@@ -161,7 +161,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 - MLP top3：「かわさ」→ と39%/き34%、「よこは」→ **ま76%**
 - 『猫』d=2 埋め込み（batch1024・1000iter・約1分）：フル表バイグラム 4.70 vs d=2 4.79（**609分の1でほぼ互角**）。漢数字（一二三四五六七十）が同域に集合、「吾」は次が90%「輩」ゆえ大外れ位置（シード変更でも孤立は再現）
 - 残差の勾配実験（Linear+ReLU 10段）：入口勾配 0.000035（残差なし）vs 6.94（残差あり）
-- GPT-2/3 対比表の公表値：GPT-2 = 48層/d1600/25頭/ctx1024/1.5B、GPT-3 = 96層/d12288/96頭/ctx2048/175B（=うちの子の約21万倍）
+- GPT-2/3 対比表の公表値：GPT-2 = 48層/d1600/25頭/ctx1024/1.5B、GPT-3 = 96層/d12288/96頭/ctx2048/175B（=自作GPTの約21万倍）
 
 ### 訓練済みモデルの視線（inspect_attention.py、ckpt_best、2026-07-10）
 
@@ -184,7 +184,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 - ただし `pip install bertviz`（通常）は transformers・boto3・sentencepiece を引き込む（fresh-clone は重くなるが動く）。生成 HTML は **d3/jquery/require.js を cdnjs から読む** — 閲覧時にネット必須
 - 生成 HTML はファイル書き出し→ブラウザで開けば VSCode スクリプト運用の学生でも使える
 
-### うちの子エクスプローラ（explorer/、export_explorer_data.py、2026-07-10）
+### 自作GPTエクスプローラ（explorer/、export_explorer_data.py、2026-07-10）
 
 - `explorer/index.html` — 自作の対話的モデル可視化（CDN・外部依存なし）。ckpt_best のプリセット2文（冒頭文・会話文）の全部品活性を `data_neko.js`（約690KB）に事前計算。構造図→部品クリックで中身（ヒートマップ／視線の表＋弧／q・k・v／次の1文字分布）
 - URLハッシュで初期ビュー指定：`#view=attn|heads|structure|predict&layer=&head=&token=&preset=`。デッキには iframe（`loading="lazy"`）で段階違いに埋め込み（qkv／multihead／深く積む／訓練回）
@@ -233,7 +233,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 - `train_neko.py` — 正準訓練スクリプト。`--iters/--tag` で本番(main)・配布(best)を再現。成果物 → `data/runs/neko/`
 - `experiments_chimei.py` / `verify_claims.py` / `verify_embeddings.py` / `make_bungo_test.py` / `bench.py` — 実測ログの再現コード
 - `inspect_attention.py` — 訓練済みモデルの視線の実測（per-head 統計＋ラベル付きヒートマップ＋BertViz HTML）。`attention_maps()` はデッキからも import して使う
-- `export_explorer_data.py` — うちの子エクスプローラ用の活性ダンプ（`explorer/data_neko.js` を再生成。ckpt_best を作り直したら必ず再実行）
+- `export_explorer_data.py` — 自作GPTエクスプローラ用の活性ダンプ（`explorer/data_neko.js` を再生成。ckpt_best を作り直したら必ず再実行）
 - attention 可視化は matplotlib の「視線の表」（スライド内の静止画）＋ **BertViz head_view**（対話的に遊ぶ用、§実測ログ参照）の2段構え
 
 ## 執筆時の申し送り
@@ -242,6 +242,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 - **図・コード・インタラクティブは説明負荷を下げる投資（2026-07-10 追記）**：入れるか迷ったら入れる。特に（1）**関数は形を必ず描く**（softmax・ReLU・−log・e^s・シグモイド・T のように、式が出たらカーブも出す）、（2）**ネットワークは構造図を必ず添える**（コードだけの部品定義を作らない）、（3）対話できるもの（explorer・plotly・BertViz）は静止画の上位互換として積極採用。
 - **前提道具は自己完結で教え直す（2026-07-10 リバイスの中心方針）**：第1コースの道具（softmax・交差エントロピー・3拍子・ミニバッチ・train/val・内積・backprop…）は、**この講義内の初出時に自己完結のエッセンススライド**（`{#peek-◯◯}` アンカー付き）で教え直す。以後の回は `[…](deck.qmd#peek-◯◯){.peek}` で参照。「第1コースの◯◯と同じ」は説明の代役にせず、説明し終えた**後の括弧書き**でのみ使う。
 - **torch API は初出時に挙動デモ**：新しい torch の道具（`backward()`・`multinomial`・`topk`・`stack` 等）は、モデルの中で初めて使う前に「これをやるとこう動く」の極小入出力デモを見せる。
+- **比喩の再アンカー（2026-07-10 追記）**：擬人化・物のたとえは積極的に使ってよい。ただし**回をまたいで再登場させるときは、初出の回名か一言の言い換えを必ず添える**（例：「窓を広げるの回でやった折れ線細工」「視線の表（誰が誰をどれだけ見るかの T×T）」）。読者の記憶は1回ぶんも飛ばない前提で書く — 前回のたとえでも「前回作った」の一言を挟む。また、たとえの中身と矛盾する呼び方をしない（q・k・v は人が持つ小道具＝名札・探しもの・中身であって「3人」ではない。「係」はヘッドの呼称）。
 - **数値の出どころ**：スライドの断定的な数値・観察 callout は §実測ログ にあるものだけ。新しい主張はまず refimpl で測る
 - **デッキのコードとシード**：スライドの echo セルは「学生がそのままコピペして同じ出力を得る」ことが正義。乱数はすべて明示シード。数値を引用する場合はデッキの**そのままのコード**を先に単体実行して確認する（モジュール構築順が変わると init が変わり数値がズレる）
 - **文豪テストの4文**は bungo_test.txt が正本。ckpt_best を作り直したら4文も作り直し、lm-introduction / bungo-project を同時更新
