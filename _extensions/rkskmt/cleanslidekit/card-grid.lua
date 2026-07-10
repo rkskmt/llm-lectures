@@ -44,3 +44,36 @@ function Div(el)
   end
   return nil
 end
+
+-- pdf-gate: the index badge linking to the handouts page. The pdf/
+-- directory is produced by tools/qmd2pdf and gitignored, so on a fresh
+-- clone — or a course that has no handouts yet — the badge would point
+-- at nothing. Keep it only when pdf/ next to the input file actually
+-- holds at least one PDF at render time.
+local function has_handout_pdfs()
+  local dir = pandoc.path.join({
+    pandoc.path.directory(quarto.doc.input_file), "pdf",
+  })
+  local ok, entries = pcall(pandoc.system.list_directory, dir)
+  if not ok then
+    return false
+  end
+  for _, name in ipairs(entries) do
+    if name:lower():match("%.pdf$") then
+      return true
+    end
+  end
+  return false
+end
+
+function Link(el)
+  if not has_class(el, "pdf-gate") then
+    return nil
+  end
+  if has_handout_pdfs() then
+    return nil
+  end
+  io.stderr:write("[cleanslidekit] pdf-gate: no pdf/*.pdf next to "
+    .. quarto.doc.input_file .. " — badge omitted\n")
+  return {}
+end
