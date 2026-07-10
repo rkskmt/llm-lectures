@@ -45,8 +45,21 @@ print(f"最後の文字の出力の差: {diff:.1e}")
 ```
 
 - 差は**ほぼ0（丸め誤差だけ）**。「がねこ」と「ねこが」の区別が付いていない
-- 原因は仕組みそのもの：重み付き平均は**足し算** — 足す順番を替えても答えは同じ
-- 自己注意は文を「文字の**集合**」として見ている。日本語で順序が消えたら大惨事
+
+
+## 犯人は足し算 — 混ぜ物に順番はない
+
+```{.d2 sketch="true" width="80%"}
+direction: right
+A: "ね・こ・が\n（どの順で入れても）" { style.fill: "#e1f5ff" }
+M: "重み付き平均\n（混ぜる）" { shape: hexagon; style.fill: "#fff4e1" }
+B: "同じ1本の\nベクトル" { style.fill: "#d5f5e3" }
+A -> M -> B
+```
+
+- 注意の出力は $v$ の**重み付き平均** — つまり==足し算==。足す順番を替えても合計は変わらない
+- 重みを決めるスコア $q \cdot k$ も1対1の内積で、「何番目か」はどこにも入っていない
+- 自己注意は文を==文字の集合（袋）==として見ている — 「ねこが」も「がねこ」も同じ袋。日本語で順序が消えたら大惨事
 
 
 ## 解決1：位置にも埋め込みを配る
@@ -78,6 +91,41 @@ print(f"位置を足した後の差: {diff:.4f}")
 
 - 差が出た — 同じ「ね」でも**1文字目のね**と**4文字目のね**は別のベクトルになる
 - 位置の表（`pos`）も学習される。「位置の使い方」まで勾配降下まかせ
+
+
+## 学習された「位置の表」を覗く
+
+- では、訓練を終えた表には何が入っているのか。完成品（最終回のモデル）から64本を取り出して比べる
+
+```{python}
+#| echo: false
+import sys
+
+sys.path.append("tools/refimpl")
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import torch
+
+from inspect_attention import load_model
+
+torch.set_num_threads(1)
+model_t, chars_t, stoi_t = load_model()
+Pv = model_t.pos_emb.weight.detach()
+Pn = Pv / Pv.norm(dim=1, keepdim=True)
+S = (Pn @ Pn.T).numpy()
+
+fig, ax = plt.subplots(figsize=(5.4, 4.6))
+im = ax.imshow(S, cmap="RdBu_r", vmin=-1, vmax=1)
+ax.set_xlabel("位置")
+ax.set_ylabel("位置")
+ax.set_title("位置ベクトルどうしの「似ている度」（64×64）", fontsize=11)
+fig.colorbar(im, ax=ax)
+plt.tight_layout()
+plt.show()
+```
+
+- 赤いのは対角線（自分×自分）だけ — ==どの位置とも似ていない、ほぼ直交の「住所札」64本==
+- 隣どうしすら似せていない（隣接位置の平均類似度 0.08）。このモデルに必要だったのは「近さ」ではなく**区別**だった
 
 
 ## 事件2：訓練中の視線は未来を見ている
@@ -115,6 +163,7 @@ print(F.softmax(masked, dim=-1).round(decimals=3))
 
 - softmax を通すと $e^{-\infty} = 0$ — 未来の重みが**きっかり0%**になる
 - 1文字目は自分しか見えない、2文字目は2人まで…… 段々畑の視線になる
+- 前回エクスプローラで見た「視線の表の**右上半分が空**」の正体がこれ — 訓練済みの本物には最初からこのマスクが入っていた
 
 ::: {.callout-note title="なぜ 0 ではなく −∞ を入れる？"}
 スコアに 0 を入れても $e^0 = 1$ で**票が入ってしまう**（3人同点なら33%ずつ）。
@@ -125,6 +174,17 @@ print(F.softmax(masked, dim=-1).round(decimals=3))
 ## 注意ヘッド、完成
 
 - 位置は入口で足すので、注意側の変更はマスクの2行だけ。この形を**ヘッド**（[head]{.en}）と呼ぶ
+
+```{.d2 sketch="true" width="92%"}
+direction: right
+X: "入力 x\n(位置込み)" { style.fill: "#e1f5ff" }
+QKV: "q・k・v を作る\n(行列3枚)" { style.fill: "#fff4e1" }
+S: "視線のスコア\nqkᵀ ÷ √d" { style.fill: "#fdebd0" }
+M: "因果マスク\n(右上を −∞)" { style.fill: "#f5b7b1" }
+SM: "softmax" { shape: hexagon; style.fill: "#f9e79f" }
+O: "v の\n重み付き平均" { style.fill: "#d5f5e3" }
+X -> QKV -> S -> M -> SM -> O
+```
 
 ```{python}
 #| echo: true
@@ -218,8 +278,8 @@ plt.show()
 - 言語モデル用の注意ヘッドが完成 — `Head` クラスはこの先そのまま使う
 
 ::: {.callout-note title="次回予告"}
-ヘッド1本では視線が1系統しかない。**束ねて（マルチヘッド）、積んで（ブロック）**、
-Transformer の全身を組み上げる。部品はあと2つだけ。
+ヘッド1本では視線が1系統しかない — 「直前を見る」と「カッコを見る」は両立できない。
+次回、ヘッドを**束ねて**視線を複線化し、集めた情報に**考える場所**を付ける。
 :::
 
 

@@ -40,6 +40,7 @@ Repo/site name not yet decided — no remote, no `_publish.yml` yet.
 
 ## Reference Docs
 
+- **[doc/handoff-2026-07-10.md](doc/handoff-2026-07-10.md)** — current revision session handoff: writing policies in force, remaining thickening queue, env/render gotchas. **Read first when resuming the revision work.**
 - **[doc/course-arc.md](doc/course-arc.md)** — course narrative, per-lecture specs, measured-facts log, open decisions
 - **[doc/troubleshooting.md](doc/troubleshooting.md)** — CSS/JS layer gotchas (copied from `ai`)
 - **[../ai/doc/engaging-lecture-design.md](../ai/doc/engaging-lecture-design.md)** — the lecture-design playbook both courses follow

@@ -5,6 +5,8 @@ project:
   resources:
     - "imgs/**"
     - "pdf/**"
+    - "explorer/**"
+    - "iframes/**"
     - "favicon.svg"
     - "data/chimei.csv"
     - "data/neko.txt"

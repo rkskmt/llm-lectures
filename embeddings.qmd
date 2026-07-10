@@ -70,7 +70,36 @@ B -> C: 変換
 :::
 
 
+## 32万組を一口ずつ — ミニバッチ {#peek-minibatch}
+
+- 今日の訓練データは『猫』全文の**32万組**。毎歩これ全部で勾配を計算すると、1歩が重すぎる
+- そこで毎回、==ランダムに選んだ1,024組だけ==で損失と勾配を計算して1歩進む — **ミニバッチ**（[mini-batch]{.en}）
+
+```{.d2 sketch="true" width="75%"}
+direction: right
+A: "全32万組" { style.fill: "#e1f5ff" }
+B: "ランダムに\n1,024組" { style.fill: "#fff4e1" }
+C: "損失→勾配→1歩" { style.fill: "#d5f5e3" }
+A -> B: 毎回引き直す
+B -> C
+C -> B: 次の一歩 {style.stroke-dash: 3}
+```
+
+- 一部で測った勾配は「だいたい正しい向き」— ==1歩の質を少し落として、歩数を大量に稼ぐ==作戦
+- 副作用：毎回違う1,024組で測るので、表示される損失は**小刻みに揺れる**。壊れたのではない
+
+
 ## 実験：3,045文字を2次元に押し込む {#peek-emb-train}
+
+```{.d2 sketch="true" width="85%"}
+direction: right
+A: "文字番号\n(1個)" { style.fill: "#e1f5ff" }
+E: "Embedding(V, 2)\n表引き" { style.fill: "#fff4e1" }
+V2: "2次元\nベクトル" { style.fill: "#fdebd0" }
+L: "Linear(2, V)\nスコアに戻す" { style.fill: "#f5b7b1" }
+S: "3,045個の\nスコア" { style.fill: "#d5f5e3" }
+A -> E -> V2 -> L -> S
+```
 
 ```{python}
 #| echo: true
@@ -104,7 +133,8 @@ for it in range(1, 1001):
 ```
 
 - `nn.Embedding(V, 2)` が「表引き」の正式な部品。中身はただの V×2 行列
-- 32万組は多いので**ミニバッチ**（毎回1,024組だけ使う）— MNISTの回と同じ作法
+- `nn.Linear(2, V)` は「掛けて足す」線形の変換（＋バイアス）、`nn.Sequential` は部品を順につなぐ箱
+- ミニバッチの実装は `torch.randint` の1行 — 引いた番号の組だけで損失を計算する
 
 
 ## 609分の1に潰した成績は
@@ -137,13 +167,14 @@ print("フル表の損失:", round(float(-np.log(P[ids[:-1], ids[1:]]).mean()), 
 
 ```{python}
 #| echo: false
-# reuse kernel state (model, chars, text) from the training cell
+#| output: false
+# reuse kernel state (model, chars, stoi, text) from the training cell
+import os
 from collections import Counter
 
-import japanize_matplotlib
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 
-E = model[0].weight.detach()
+E = model[0].weight.detach().numpy()
 cnt = Counter(text)
 
 
@@ -157,27 +188,71 @@ def klass(c):
     return "記号・数字"
 
 
-colors = {"ひらがな": "#e74c3c", "カタカナ": "#2980b9", "漢字": "#95a5a6", "記号・数字": "#27ae60"}
+colors = {"ひらがな": "#e74c3c", "カタカナ": "#2980b9", "漢字": "#5d6d7e", "記号・数字": "#27ae60"}
 freq = [i for i, c in enumerate(chars) if cnt[c] >= 50]
 
-fig, ax = plt.subplots(figsize=(9, 7.2))
+fig = go.Figure()
 for name, col in colors.items():
     idx = [i for i in freq if klass(chars[i]) == name]
-    ax.scatter(E[idx, 0], E[idx, 1], s=14, color=col, label=name, alpha=0.65)
-for c in "一二三十":
-    ax.annotate(c, E[stoi[c]].tolist(), fontsize=16, fontweight="bold", color="#1a5276",
-                bbox=dict(boxstyle="round,pad=0.15", fc="white", ec="#1a5276", alpha=0.85))
-ax.annotate("「吾」は地図の外 (-4.0, 9.1) に一匹だけ", xy=(-3.0, 3.6), xytext=(-2.4, 3.55),
-            fontsize=10, arrowprops=dict(arrowstyle="->", color="#555"))
-ax.set_xlim(-3.2, 3.4)
-ax.set_ylim(-3.4, 4.1)
-ax.legend(loc="lower right")
-ax.set_title("『吾輩は猫である』の文字の地図（50回以上出る525文字）", fontsize=12)
-plt.tight_layout()
-plt.show()
+    fig.add_trace(go.Scatter(
+        x=E[idx, 0], y=E[idx, 1], mode="text", name=name,
+        text=[chars[i] for i in idx],
+        textfont=dict(color=col, size=14),
+        hovertext=[f"「{chars[i]}」 {cnt[chars[i]]:,}回" for i in idx],
+        hoverinfo="text"))
+fig.update_layout(
+    width=920, height=520, plot_bgcolor="white",
+    margin=dict(l=10, r=10, t=10, b=10),
+    xaxis=dict(showgrid=True, gridcolor="#f2f3f4", zeroline=False),
+    yaxis=dict(showgrid=True, gridcolor="#f2f3f4", zeroline=False),
+    legend=dict(orientation="h", yanchor="bottom", y=1.0, x=0))
+os.makedirs("iframes", exist_ok=True)
+fig.write_html("iframes/emb_map.html", include_plotlyjs="directory")
 ```
 
+::: {.plotly-iframe src="iframes/emb_map.html" height="540"}
+:::
+
+- 『猫』で50回以上出る**525文字**の地図。==ドラッグで範囲ズーム==・ダブルクリックで全体・文字に触れると出現回数。凡例クリックで種類ごとに消せる
 - 縦横の軸に意味はない。**近さ**だけが情報
+- 全体を眺めると、雲のはるか外に**一匹だけ**離れた文字がいるはず — 覚えておくこと
+
+```{python}
+#| echo: true
+#| eval: false
+#| code-fold: true
+#| code-summary: "この地図を自分で描くコード（pip install plotly が必要）"
+# 本編の学習コード（model, chars, text）の続きに書く
+from collections import Counter
+
+import plotly.graph_objects as go
+
+E = model[0].weight.detach().numpy()
+cnt = Counter(text)
+
+def klass(c):
+    if "ぁ" <= c <= "ゖ":
+        return "ひらがな"
+    if "ァ" <= c <= "ヶ" or c == "ー":
+        return "カタカナ"
+    if "一" <= c <= "鿿":
+        return "漢字"
+    return "記号・数字"
+
+colors = {"ひらがな": "#e74c3c", "カタカナ": "#2980b9", "漢字": "#5d6d7e", "記号・数字": "#27ae60"}
+freq = [i for i, c in enumerate(chars) if cnt[c] >= 50]
+
+fig = go.Figure()
+for name, col in colors.items():
+    idx = [i for i in freq if klass(chars[i]) == name]
+    fig.add_trace(go.Scatter(
+        x=E[idx, 0], y=E[idx, 1], mode="text", name=name,
+        text=[chars[i] for i in idx], textfont=dict(color=col, size=14),
+        hovertext=[f"「{chars[i]}」 {cnt[chars[i]]:,}回" for i in idx],
+        hoverinfo="text"))
+fig.write_html("emb_map.html")     # 保存された HTML をブラウザで開く
+print("emb_map.html を保存した")
+```
 
 
 ## 地図から見つかるもの
@@ -209,13 +284,13 @@ plt.show()
 
 ## 部品の対応表
 
-| 今日の道具 | 正体 | 初出 |
-|---|---|---|
-| `nn.Embedding(V, d)` | V×d 行列から行を引くだけ | 今日（中身は前回の $W$） |
-| `nn.Linear(d, V)` | アフィン変換でスコアに戻す | 第1コース |
-| ミニバッチ | 毎回データの一部で勾配を出す | MNISTの回 |
+| 今日の道具 | 正体 |
+|---|---|
+| `nn.Embedding(V, d)` | V×d 行列から行を1本引くだけ（前回の $W$ の入口側の役） |
+| `nn.Linear(d, V)` | 掛けて足す変換でスコアに戻す（前回の $W$ の出口側の役） |
+| ミニバッチ | 毎回ランダムな一部だけで勾配を出して1歩進む |
 
-- **新しい概念は「表引きを分解した」ことだけ**。部品は全部知り合い
+- **新しい概念は「表引きを分解した」ことだけ**。ほかは今日までに開けた部品の組み合わせ
 
 
 ## **Tweak** 地図を揺らしてみる {.badge-practice}
@@ -257,11 +332,11 @@ plt.show()
 
 ### 問題1：漢数字の群れを確かめる
 
-本編の地図に「四五六七八九十」を注釈として追加し、漢数字が集まっているか確かめよ。
+地図に「一二三四五六七八九十」だけを**目立つ色の別トレース**として重ね、群れから一番外れている漢数字を挙げよ。
 
-0. [neko.txt](data/neko.txt) を `data/` に配置し、本編のコードで地図の描画まで再現
-1. `for c in "一二三四五六七八九十":` で `ax.annotate` を回す
-2. 集まりから一番外れている漢数字はどれか、目視で挙げる
+0. [neko.txt](data/neko.txt) を `data/` に配置し、本編の学習コード＋地図のコード（折りたたみ）を実行
+1. 漢数字10文字の番号を `stoi` で取り、`fig.add_trace(go.Scatter(mode="text", ...))` で色違いの1本を重ねる
+2. ズームして、群れから一番離れている漢数字を目視で特定
 
 ### 問題2：圧縮率の計算
 
@@ -278,7 +353,11 @@ plt.show()
 #| echo: true
 #| code-fold: true
 #| code-summary: "解答例を見る"
-# 問題1は本編コードに annotate を足すだけ（八と九がやや南に外れる）
+# 問題1は地図のコードにトレースを1本足すだけ（八と九がやや南に外れる）：
+# ix = [stoi[c] for c in "一二三四五六七八九十"]
+# fig.add_trace(go.Scatter(x=E[ix, 0], y=E[ix, 1], mode="text",
+#     text=list("一二三四五六七八九十"), name="漢数字",
+#     textfont=dict(color="black", size=20)))
 
 # 問題2
 V = 3045
@@ -287,3 +366,5 @@ for d in [2, 8]:
     small = V * d + d * V + V
     print(f"d={d}: {small:,} 個 — フル表 {full:,} 個の 約{full // small}分の1")
 ```
+
+- 問題2の含意：$d$ は「文字の性格を書き込む欄の数」。増やすほど表現は豊かに、圧縮は緩くなる — この $d$ が、GPT を組むときに回す主要なツマミ **`n_embd`** の正体

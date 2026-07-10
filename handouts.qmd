@@ -27,7 +27,8 @@
 - [注目という発想](pdf/attention-intuition.pdf){target="_blank"}
 - [Q・K・V を開ける](pdf/attention-qkv.pdf){target="_blank"}
 - [順序とカンニング](pdf/position-mask.pdf){target="_blank"}
-- [部品を束ねる](pdf/transformer-block.pdf){target="_blank"}
+- [束ねて、考える](pdf/multihead-ffn.pdf){target="_blank"}
+- [深く積む](pdf/transformer-block.pdf){target="_blank"}
 - [小さなGPTを訓練する](pdf/gpt-training.pdf){target="_blank"}
 - [生成を操る](pdf/sampling.pdf){target="_blank"}
 - [ChatGPT までの距離](pdf/to-chatgpt.pdf){target="_blank"}

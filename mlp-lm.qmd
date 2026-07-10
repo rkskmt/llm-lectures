@@ -18,7 +18,7 @@ subtitle: "MLP言語モデル — 記憶1文字の壁を越える"
 ## 作戦：直前の数文字をまとめて入れる
 
 - 直前 $n$ 文字の**窓**（[context window]{.en}）を決めて、全部ベクトルにして、**つなげて**1本にする
-- つないだベクトルを第1コースでおなじみの**多層ネットワーク**に通す
+- つないだベクトルを**多層ネットワーク**（MLP）に通す
 
 ```{.d2 sketch="true" width="75%"}
 direction: right
@@ -30,7 +30,125 @@ E: "75文字の\nスコア" { style.fill: "#d5f5e3" }
 A -> B -> C -> D -> E
 ```
 
-- 部品は `Embedding`・`Flatten`・`Linear`・`ReLU` — ==ぜんぶ知り合い==
+- 部品は `Embedding`（前回の表引き）・`Flatten`（つなげるだけ）・そして `Linear` と `ReLU`
+
+
+## 寄り道 — 多層ネットワーク再入門 {#peek-mlp}
+
+- バイグラムのモデルは**線形1枚**（掛けて足すだけ）だった。今日はここに部品を足して「多層」にする
+- なぜ足す必要があるのか — まず線形の弱点を自分の目で確かめる
+
+::: {.callout-important title="クイズ"}
+線形1枚で力不足なら、**線形を2枚重ねれば**賢くなるはず。本当か？
+:::
+
+
+## 実験：線形×線形＝線形
+
+```{python}
+#| echo: true
+import torch
+import torch.nn as nn
+
+torch.manual_seed(0)
+f = nn.Sequential(nn.Linear(2, 2, bias=False), nn.Linear(2, 2, bias=False))
+W = f[1].weight @ f[0].weight        # 2枚の行列を先に掛けて1枚にまとめる
+
+x = torch.randn(3, 2)
+print(f(x))                          # 2枚に順に通した結果
+print(x @ W.T)                       # まとめた1枚に通した結果
+```
+
+- 出力は**完全に一致** — ==何枚重ねても、まとめれば線形1枚と同じ==。表現力は1ミリも増えない
+- 線形の限界：各入力の「持ち点」を**足す**ことしかできない。窓に3文字入れても、==3文字の組み合わせ==（「この並びのときだけ」）には反応できない
+
+
+## 非線形の最小部品 — ReLU
+
+- そこで、線形のあいだに**直線ではない**部品を挟む。最小の候補：負の数を0に折るだけの関数
+
+$$
+\mathrm{ReLU}(x) = \max(0,\ x)
+$$
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(-3, 3, 200)
+fig, ax = plt.subplots(figsize=(5.6, 2.6))
+ax.plot(x, np.maximum(0, x), color="#5dade2", lw=2.5)
+ax.plot([0], [0], "o", color="#e74c3c", ms=8)
+ax.annotate("折り目", xy=(0, 0), xytext=(0.7, 1.6), fontsize=11,
+            arrowprops=dict(arrowstyle="->", color="#555"))
+ax.axhline(0, color="gray", lw=0.5)
+ax.axvline(0, color="gray", lw=0.5)
+ax.set_title("ReLU — 負を0に折る", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+#| echo: true
+import torch
+import torch.nn as nn
+
+x = torch.tensor([[-2.0, -0.5, 0.0, 1.0, 3.0]])
+print(nn.ReLU()(x))          # 負だけ0に折られる
+```
+
+- 名前は **ReLU**（[Rectified Linear Unit]{.en}）。中身はこれだけ — だが0のところに==折り目==がある
+
+
+## 折り目を足すと、曲がった規則が作れる
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+x = np.linspace(-3, 3, 300)
+r = lambda z: np.maximum(0, z)
+h1, h2, h3 = r(x + 2), r(x), r(x - 1)
+y = 1.2 * h1 - 1.8 * h2 + 1.4 * h3
+
+fig, axes = plt.subplots(1, 2, figsize=(9.6, 3.0))
+for h, lab, col in [(h1, "ReLU(x+2)", "#5dade2"), (h2, "ReLU(x)", "#f5b041"),
+                    (h3, "ReLU(x−1)", "#58d68d")]:
+    axes[0].plot(x, h, lw=2, color=col, label=lab)
+axes[0].legend(fontsize=9)
+axes[0].set_title("部品：折り目の位置が違う折れ線3本", fontsize=11)
+
+axes[1].plot(x, y, lw=2.5, color="#e74c3c")
+for x0 in [-2, 0, 1]:
+    axes[1].axvline(x0, color="gray", lw=0.7, ls=":")
+axes[1].set_title("重み付きで足すと：$1.2h_1 - 1.8h_2 + 1.4h_3$", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+- ReLU 1個＝折り目1個。**重み付きで足し合わせる**と、==折り目の数だけ曲がる折れ線==が作れる
+- 折る位置（1枚目の線形）も混ぜ方（2枚目の線形）も、勾配降下で学習される — 折り紙は機械が自分で折る
+
+
+## 線形 → 折る → 線形 ＝ MLP
+
+```{.d2 sketch="true" width="85%"}
+direction: right
+A: "入力" { style.fill: "#e1f5ff" }
+L1: "線形\n（どこで折るかを決める）" { style.fill: "#fff4e1" }
+R: "ReLU\n（折る）" { shape: hexagon; style.fill: "#fdebd0" }
+L2: "線形\n（折れ線を混ぜる）" { style.fill: "#f5b7b1" }
+B: "出力" { style.fill: "#d5f5e3" }
+A -> L1 -> R -> L2 -> B
+```
+
+- この3段重ねが**多層ネットワーク**（**MLP** [multi-layer perceptron]{.en}）
+- 今日の窓モデルは 24次元 → **64**（折り目64本）→ 75クラス
+- ==線形1枚では書けなかった「組み合わせの規則」==（「か」の次は前後しだいで「わ」にも「み」にも）がこれで書ける
 
 
 ## データを窓の形に切り直す
@@ -62,10 +180,13 @@ for x, y in zip(xs, ys):
 - 「・・・→し」は「何もない状態から『し』で始まった」という訓練例になる
 
 
-## 訓練と評価を分けておく
+## 訓練と評価を分けておく {#peek-trainval}
 
-- 今日は「本当に上手くなったか」を測りたいので、最初に**訓練用と評価用**に分ける
-- 第1コースの鉄則：==採点は見せていないデータで==
+- 今日は「本当に上手くなったか」を測りたい。ところが**学習に使ったデータでの成績は当てにならない** — ==丸暗記でも点が取れてしまう==から
+- そこで最初にデータを2つに分ける：
+  - **train**（訓練用）— 学習に使う
+  - **val**（評価用 [validation]{.en}）— 採点だけに使い、モデルには**見せない**
+- 見せていない175件で当てられたら、それは暗記ではなく**実力**
 
 ```{python}
 #| echo: true
@@ -120,6 +241,8 @@ with torch.no_grad():
 
 
 ## 生成して聞き比べる
+
+- 分布からのサイコロは `torch.multinomial(確率, 1)` — bigram の回の `np.random.choice(p=...)` の torch 版
 
 ```{python}
 #| echo: true
@@ -204,16 +327,16 @@ plt.show()
 ```
 
 ::: {.fragment}
-- train は下がり続けるのに、**val は窓2で底を打って悪化に転じる**
-- この2本の線の開き方 — 第1コースの多項式の次数のグラフと**同じ形**
+- train は下がり続けるのに、**val は窓2で底を打って悪化に転じる**（前コースで多項式の次数を上げすぎたときと同じ形）
 :::
 
 
-## 過学習、再会
+## 過学習 — 暗記で点を稼ぎ始めた {#peek-overfit}
 
-- 窓を広げる＝「この5文字の並びのときはこの文字」という**丸暗記**がしやすくなる
-- 名前はたった1,572件。暗記で train の点は稼げるが、新しい名前には通用しない
-- 対策も第1コースと同じ発想が効く：データを増やす、モデルを控えめに、**val を見て早めに止める**
+- 訓練データにだけ細かく合わせすぎて、==初見のデータでかえって下手になる==現象を**過学習**（[overfitting]{.en}）と呼ぶ
+- 窓を広げる＝「この並びのときはこの文字」という**丸暗記**がしやすくなる。名前はたった1,572件 — 暗記で train の点は稼げるが、新しい名前には通用しない
+- グラフの読み方：==train と val の線の開きが、暗記の進み具合==
+- 対策の発想：データを増やす／モデルを控えめに／**val を見て早めに止める**
 
 ::: {.callout-note}
 窓の組数は窓幅によらず**10,288組のまま**（1名前あたり「文字数+1」個）。
@@ -258,9 +381,23 @@ plt.show()
 :::
 
 
+## ベスト新作コンテスト {.badge-practice}
+
+シードを変えながら生成し、**いちばん実在しそうな新作地名**を1つ選んで提出せよ。
+
+0. 生成側の `torch.manual_seed` を変えながら量産
+1. 候補が実在しないことを確認（`"○○" in names` が `False`）
+2. 「名前」と「推しポイントひとこと」をセットで提出
+3. 全員ぶんを並べて投票 — 一番「実在しそう」な名前が優勝
+
+::: {.callout-note}
+最終回には同じ形式で**文豪テスト大会**（偽物の文章で騙し合う）をやる — 今日はその練習試合。
+:::
+
+
 ## まとめ
 
-- 窓＝直前 $n$ 文字を埋め込み→連結→MLP。部品は全部第1コースの持ち物
+- 窓＝直前 $n$ 文字を埋め込み→連結→MLP。部品は埋め込み・線形・ReLU の3つだけ
 - 生成の質は明確に向上（迷子が減る）。ただし val の改善はわずかで、**窓を広げすぎると過学習**
 - 実在名の「丸暗記再現」も出始めた — 上達と暗記は別物
 - 窓には根本的限界：**窓の外は見えない**
@@ -281,7 +418,7 @@ plt.show()
 
 0. 本編のコードで学習まで実行（[chimei.csv](data/chimei.csv) を `data/` に配置）
 1. 3文字を `stoi` で番号にして `model(torch.tensor([番号列]))` でスコアを出す
-2. `F.softmax` で確率にし、`topk(3)` で上位3件を「文字：確率」で表示
+2. `F.softmax` で確率にし、`topk(3)` で上位3件を「文字：確率」で表示（`p.topk(3)` は「上位3つの値と番号」の組を返す）
 3. 「かわさ」「よこは」で試し、直感と合うか確かめる
 
 ### 問題2：窓と組数

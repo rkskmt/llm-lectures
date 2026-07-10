@@ -3,7 +3,7 @@
 [PDF](handouts.qmd){.pdf-gate title="配布資料（PDF）"}
 
 ::: {.idx-lead}
-全14回。「次の1文字を当てる」から始めて、最終回は**推し文豪ボット**（自作GPT）を育てる。
+全15回。「次の1文字を当てる」から始めて、最終回は**推し文豪ボット**（自作GPT）を育てる。
 :::
 
 <div id="lecture-search">
@@ -32,7 +32,8 @@
 - [注目という発想](attention-intuition.qmd)
 - [Q・K・V を開ける](attention-qkv.qmd)
 - [順序とカンニング](position-mask.qmd)
-- [部品を束ねる](transformer-block.qmd)
+- [束ねて、考える](multihead-ffn.qmd)
+- [深く積む](transformer-block.qmd)
 - [小さなGPTを訓練する](gpt-training.qmd)
 - [生成を操る](sampling.qmd)
 - [ChatGPT までの距離](to-chatgpt.qmd)

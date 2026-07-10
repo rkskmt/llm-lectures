@@ -18,7 +18,9 @@ dependencies:
   - torchvision
   - altair
   - vl-convert-python
+  - plotly  # interactive embedding map (embeddings.qmd, plotly-iframe)
   - d2  # diagram rendering for the quarto-d2 extension
   - pip
   - pip:
       - japanize-matplotlib
+      - bertviz  # interactive attention head view (gpt-training); pulls transformers

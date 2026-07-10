@@ -1,27 +1,31 @@
 ---
-title: "部品を束ねる"
-subtitle: "マルチヘッド・FFN・残差・LayerNorm — Transformer の全身を組む"
+title: "深く積む"
+subtitle: "残差と LayerNorm — 勾配を守って、GPT の全身を組む"
 ---
 
 ## 前回の振り返り
 
-- マスク付き注意ヘッドが完成した。今日は残りの部品を全部付けて**全身を組む**
-- 新しい部品は実質2つ（束ねる・整える）。あとは第1コースの持ち物で足りる
+- **マルチヘッド注意**（会議で集める）と **FFN**（席に戻って考える）ができた
+- どちらも==入口と出口が同じ形== — 理屈の上では、いくらでも積み重ねられる
 
-::: {.callout-note}
-今日から行列に**バッチの軸**が付く：入力は（バッチ, 文字数, 次元）の3次元。
-行列積を最後の2軸だけにするため `k.T` を `k.transpose(-2, -1)` と書く — 中身は同じ。
+::: {.callout-important title="クイズ"}
+同じ形だから8段でも96段でも積める。では素朴に積めば、積んだぶんだけ賢くなる？
+:::
+
+::: {.fragment}
+- ならない。深さには税金が2つ：==勾配が入口まで届かない==／==途中のベクトルの大きさが暴れる==
+- 今日はこの2つに保険をかけてから、GPT の全身を組む
 :::
 
 
-## 視線は1系統では足りない
+## 前回の部品を持ってくる
 
-- ヘッド1本＝視線の表1枚。でも読むときの視線は1種類ではない
-  - 「直前の文字」を見る視線、「文の主語」を見る視線、「開きカッコ」を見る視線……
-- 解決は力技：==同じ仕組みを並列に何本も走らせて、結果を横につなぐ==
+- 今日のコードは前回の `Head`・`MultiHead`・`FeedForward` の続き。自分のファイルの続きに書くか、下をコピーして先頭に置く
 
 ```{python}
 #| echo: true
+#| code-fold: true
+#| code-summary: "前回の部品（Head / MultiHead / FeedForward）"
 import math
 import torch
 import torch.nn as nn
@@ -46,50 +50,40 @@ class Head(nn.Module):
 class MultiHead(nn.Module):
     def __init__(self, n_embd, n_head, block_size):
         super().__init__()
-        head_size = n_embd // n_head          # 幅を等分して合計は元どおり
+        head_size = n_embd // n_head
         self.heads = nn.ModuleList(
             Head(n_embd, head_size, block_size) for _ in range(n_head))
-        self.proj = nn.Linear(n_embd, n_embd)  # つないだ結果を混ぜ直す
+        self.proj = nn.Linear(n_embd, n_embd)
 
     def forward(self, x):
         return self.proj(torch.cat([h(x) for h in self.heads], dim=-1))
-```
 
-- **マルチヘッド注意**（[multi-head attention]{.en}）。新しい数学はゼロ — `cat` して `Linear` 1枚
-
-
-## 集めたら、考える — FFN
-
-- 注意は他の文字から情報を**集める**部品。集めた情報を**加工する**場所がまだない
-- 各位置ごとに、小さな2層ネット（第1コースの「変換を重ねる」そのもの）を通す
-
-```{python}
-#| echo: true
 class FeedForward(nn.Module):
     def __init__(self, n_embd):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(n_embd, 4 * n_embd),   # いったん4倍に広げて
-            nn.ReLU(),                       # 折って
-            nn.Linear(4 * n_embd, n_embd))   # 戻す
+            nn.Linear(n_embd, 4 * n_embd), nn.ReLU(), nn.Linear(4 * n_embd, n_embd))
 
     def forward(self, x):
         return self.net(x)
 ```
 
-- 注意＝**会議で情報を集める**、FFN＝**自分の席に戻って考える**。この交互が Transformer のリズム
-- FFN は位置ごとに独立（隣を見ない）— 見る仕事は注意に任せてある
+
+## バックプロパゲーションを30秒で {#peek-backprop}
+
+- 学習に必要なのは「各パラメータを動かすと損失がどう動くか」＝**勾配**。`loss.backward()` が自動で出してくれるやつ
+- 深いネットは変換の連なり。==勾配は、通り道にある傾きの掛け算==で入口まで運ばれる（連鎖律 [chain rule]{.en}）
+
+$$
+\text{入口に届く勾配} = (\text{部品Cの傾き}) \times (\text{部品Bの傾き}) \times (\text{部品Aの傾き})
+$$
+
+- 例：どの部品も傾きが 0.5 なら、3段で $0.5^3 = 0.125$、**10段で $0.5^{10} \approx 0.001$**
+- ==1より小さい傾きが続くだけで、入口の勾配は千分の1に痩せる== — **勾配消失**。深いネットの持病
 
 
-## 深く積むための保険 — 残差接続
+## 保険1：迂回路を付ける — 残差接続
 
-::: {.callout-important title="クイズ"}
-バックプロパゲーションは「微分を**掛けて**貯める」だった。
-小さい数を何十回も掛けると、勾配はどうなる？
-:::
-
-::: {.fragment}
-- 消える（勾配消失）。層を重ねるほど入口に勾配が届かなくなる — 深いネットの持病
 - 対策：部品を**迂回路つき**にする
 
 $$
@@ -98,10 +92,20 @@ $$
 
 - 出力＝「元の $x$」＋「部品の仕事ぶん」。勾配は足し算の枝を**素通り**して入口まで届く
 - **残差接続**（[residual connection]{.en}）。コードでは `x + f(x)` と書くだけ
-:::
+
+```{.d2 sketch="true" width="60%"}
+direction: right
+X: "x" { style.fill: "#e1f5ff" }
+F: "部品 f" { style.fill: "#f5b7b1" }
+P: "+" { shape: circle; style.fill: "#d5f5e3" }
+X -> F -> P
+X -> P: 迂回路（勾配の抜け道）
+```
+
+- 「積む」が「元の情報に**修正を足していく**」に変わる — 深くしても壊れにくい設計
 
 
-## 入力を揃えてから渡す — LayerNorm
+## 保険2：入力を揃えてから渡す — LayerNorm
 
 - 深く積むと、途中のベクトルの大きさがバラバラに育って学習が不安定になる
 - 各位置のベクトルを**平均0・ばらつき1**に揃える部品を、各部品の直前に置く
@@ -119,7 +123,22 @@ print(f"before: mean {x.mean():.2f} / std {x.std():.2f}")
 print(f"after : mean {y.mean():.2f} / std {y.std():.2f}")
 ```
 
-- **LayerNorm**（[layer normalization]{.en}）。やっていることは第1コースの「特徴量の標準化」の親戚
+```{python}
+#| echo: false
+# reuse kernel state: x, y from the cell above
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+
+fig, axes = plt.subplots(1, 2, figsize=(8.8, 2.6), sharey=True)
+axes[0].hist(x.flatten().numpy(), bins=40, color="#f5b041")
+axes[0].set_title("before — 大きさがばらばら", fontsize=11)
+axes[1].hist(y.detach().flatten().numpy(), bins=40, color="#5dade2")
+axes[1].set_title("after — 平均0・ばらつき1に整列", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+- **LayerNorm**（[layer normalization]{.en}）— 「測る前に平均0・ばらつき1へ揃える」**標準化**の仲間（テストの素点を偏差値に直すのと同じ発想）
 - 揃えたあとに掛ける・足す用の小さなパラメータ（γ・β）だけ学習される
 
 
@@ -167,6 +186,18 @@ P1 -> P2: 迂回路
 
 
 ## 全身を組む — これが GPT {#peek-gpt-class}
+
+```{.d2 sketch="true" width="90%"}
+direction: right
+A: "文字番号の列\n(B×T)" { style.fill: "#e1f5ff" }
+E: "埋め込み\n文字＋位置" { style.fill: "#fff4e1" }
+B1: "Block" { style.fill: "#f5b7b1" }
+B2: "Block" { style.fill: "#f5b7b1" }
+LN: "LayerNorm\n(仕上げ)" { style.fill: "#fdebd0" }
+H: "Linear\n96→3,045" { style.fill: "#f9e79f" }
+O: "全位置の\n次の1文字スコア" { style.fill: "#d5f5e3" }
+A -> E -> B1 -> B2 -> LN -> H -> O
+```
 
 ```{python}
 #| echo: true
@@ -225,22 +256,51 @@ for name, mods in parts.items():
 |--|--|
 | `n_layer=2` → `8` | パラメータはどこがどれだけ増える？（内訳の勘定で確認） |
 | `n_embd=96` → `192` | 層を増やすのと次元を増やすの、効き方の違いは？ |
-| `n_head=4` → `5` | エラーで止まる。なぜ96を5等分できないか、`cat` の幅で説明 |
+| `block_size=64` → `128` | 増えるのは1部品だけ。どれ？（内訳の勘定はヒントにならない — なぜ？） |
 :::
 
 ::: {.callout-tip}
 ## ここで観察
 
-- `n_head=5` は `16×95 と 96×96 は掛けられない` と怒られる — head_size = 96÷5 = 19（切り捨て）で、5本つないでも幅95にしかならないから。**n_embd は n_head で割り切れる値にする**のが約束
+- `block_size` を倍にして増えるのは**位置の埋め込み表だけ**：64×96 = 6,144 → 128×96 = 12,288。パラメータ的には安い買い物（ただし視線の表は T×T に広がるので、計算の手間は別勘定）
+- 内訳の勘定で pos_emb は「埋め込み」の行に混ざっている — 増分 6,144 はそこに現れる
+:::
+
+
+## 全身を歩く — うちの子 {.badge-practice}
+
+いま組んだ `GPT` クラスの中身を、訓練済みの実重みで上から下まで歩く。
+
+<iframe src="explorer/index.html#view=structure" width="100%" height="560" loading="lazy" style="border: 1px solid #ccc; border-radius: 6px; background: white;"></iframe>
+
+0. 左の箱を**入力から順に**クリックして、各部品の出力（ヒートマップ）を眺める
+1. 「＋ 残差」の前後でヒートマップの模様が**大きくは変わらない**ことを確認 — 迂回路の実感
+2. 各箱が今日の `GPT` クラスの**どの行**にあたるか、コードと突き合わせる
+
+[エクスプローラを別タブで開く](explorer/index.html#view=structure){target="_blank"}
+
+
+## 本物の中を歩く {.badge-practice}
+
+同じ設計図の**実物大**も歩ける。nanoGPT の中身を3Dで見られる公開デモ：
+
+<iframe src="https://bbycroft.net/llm" width="100%" height="540" loading="lazy" style="border: 1px solid #ccc; border-radius: 6px;"></iframe>
+
+- うちの子の箱と対応する部品を**3つ**見つけて、隣の人に30秒で説明（Embedding／Attention／MLP＝FFN…）
+- ブラウザ内で GPT-2 を動かせる [Transformer Explainer](https://poloclub.github.io/transformer-explainer/) も同じ遊びができる／[LLM Visualization を別タブで開く](https://bbycroft.net/llm){target="_blank"}
+
+::: {.callout-note}
+どちらのデモにも、今日までに自作していない部品は（ほぼ）出てこない。
+「知らない箱」が出たら、それはたいてい名前が違うだけ — 対応表を作れたら勝ち。
 :::
 
 
 ## まとめ
 
-- **マルチヘッド**＝ヘッドを並列に走らせて `cat` → `Linear`。視線が複数系統になる
-- **FFN**＝集めた情報を位置ごとに考える2層ネット。注意と交互に働く
+- 深さの税金は2つ：勾配消失（傾きの掛け算で痩せる）とベクトルの暴れ
 - **残差**＝ $x + f(x)$ の迂回路で勾配を守る。**LayerNorm**＝部品の前でベクトルを揃える
-- ブロックは同じ形で積み放題。埋め込み→ブロック×N→語彙スコアで **GPT の全身が完成**
+- ブロック＝「揃えて会議、揃えて自習、どちらも迂回路つき」。同じ形で積み放題
+- 埋め込み→ブロック×N→語彙スコアで **GPT の全身が完成**。語彙まわりがパラメータの7割
 
 ::: {.callout-note title="次回予告"}
 設計図はできた。次回、『吾輩は猫である』32万字を流し込んで**火を入れる**。
@@ -301,5 +361,5 @@ for v in [3045, 65]:
           f"（うち語彙まわり {n_emb:7,d}）")
 ```
 
-- 問題1：ReLU 10段の掛け算で勾配は目に見えて痩せる。迂回路があると入口まで太いまま届く
+- 問題1：ReLU 10段の掛け算で勾配は目に見えて痩せる（30秒リキャップの $0.5^{10}$ が現物で出る）。迂回路があると入口まで太いまま届く
 - 問題2：ブロック部分は同じなのに全体は3倍近く違う — **大語彙のコストは埋め込みと出口に集中**する。実物の LLM が文字でなくサブワード（BPE）を使う理由のひとつ

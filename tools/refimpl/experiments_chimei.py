@@ -132,6 +132,40 @@ def sample_mlp(model, chars, ctx, n, seed):
     return out
 
 
+def name_nll(P, name, stoi):
+    """Mean -log P over the transitions of ・name・ (the deck's scoring rule)."""
+    seq = [0] + [stoi[c] for c in name] + [0]
+    return -torch.log(torch.tensor(
+        [P[a, b] for a, b in zip(seq, seq[1:])])).mean().item()
+
+
+def likelihood_ranking(names, chars, stoi):
+    """Score every real name with the full-data, unsmoothed bigram table
+    (exactly the P the bigram-counting deck builds). Facts for the
+    地名らしさ採点機 exercise."""
+    N = torch.zeros(len(chars), len(chars))
+    for name in names:
+        seq = [0] + [stoi[c] for c in name] + [0]
+        for a, b in zip(seq, seq[1:]):
+            N[a, b] += 1
+    P = N / N.sum(dim=1, keepdim=True)
+
+    scored = sorted(((name_nll(P, n, stoi), n) for n in set(names)))
+    print("most name-like real names (lowest mean nll):")
+    for s, n in scored[:5]:
+        print(f"  {s:.3f}  {n}")
+    print("least name-like real names (highest mean nll):")
+    for s, n in scored[-10:][::-1]:
+        print(f"  {s:.3f}  {n}")
+
+    print("scores for probe strings:")
+    for probe in ["とうきょう", "きょうと", "らーめん", "ぬぬぬ"]:
+        try:
+            print(f"  {name_nll(P, probe, stoi):.3f}  {probe}")
+        except KeyError as e:
+            print(f"  KeyError({e})  {probe}")
+
+
 def main():
     torch.set_num_threads(4)
     names, chars, stoi = load_names()

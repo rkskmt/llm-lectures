@@ -6,8 +6,8 @@ subtitle: "ニューラル・バイグラム — 「数える」と「学習す�
 ## 前回の振り返り
 
 - 数えて作った75×75の確率表で、架空の地名が作れた
-- でも第1コースを思い出すと、MNIST のときは**数えなかった**
-  - 損失を決めて、勾配降下法で `fit` した
+- でも前コースの分類器は、表を**数えて作らなかった**
+  - 損失を決めて、その損失が減る向きへ数値を少しずつ動かした — **学習**
 
 ::: {.callout-important title="クイズ"}
 前回の表と同じものを、数えずに**勾配降下法だけ**で作れるか？
@@ -21,6 +21,7 @@ subtitle: "ニューラル・バイグラム — 「数える」と「学習す�
 ## 問題を分類器の形に直す
 
 - 「次の1文字を当てる」を、見慣れた形に並べ直す
+- 分類器＝入力から**各選択肢の確率**を出す機械（[30秒リキャップ](lm-introduction.qmd#peek-classifier){.peek}）
 
 | | MNIST | 今日 |
 |---|---|---|
@@ -30,6 +31,52 @@ subtitle: "ニューラル・バイグラム — 「数える」と「学習す�
 | 損失 | 交差エントロピー | ==交差エントロピー== |
 
 - 訓練データは前回のバイグラムの組そのもの：**11,428組**の (いまの文字, 次の文字)
+
+
+## 道具箱の再点検 — PyTorch
+
+- 今日から **PyTorch** を使う。基本の箱は **tensor** — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚
+
+```{python}
+#| echo: true
+import torch
+
+a = torch.tensor([[1.0, 2.0], [3.0, 4.0]])
+b = torch.tensor([10.0, 100.0])
+print(a.shape)          # 形の確認も同じ
+print(a @ b)            # 行列×ベクトルも @ 一発
+```
+
+- ここまでは NumPy と==見た目が違うだけ==。ではなぜわざわざ乗り換えるのか — tensor には決定的な特技が1つある
+
+
+## 微分を自動で出す — autograd {#peek-autograd}
+
+- tensor は==自分がどう計算されたかを覚えている==。だから「結果を入力で微分した傾き」を自動で出せる
+
+```{python}
+#| echo: true
+import torch
+
+x = torch.tensor(3.0, requires_grad=True)   # 「微分を追跡せよ」の印
+y = x ** 2                                   # y = x²
+y.backward()                                 # y を x で微分すると……
+print(x.grad)                                # dy/dx = 2x = 6 が出てくる
+```
+
+```{.d2 sketch="true" width="80%"}
+direction: right
+X: "x = 3.0\n(requires_grad)" { style.fill: "#e1f5ff" }
+OP: "2乗" { shape: hexagon; style.fill: "#fff4e1" }
+Y: "y = 9.0" { style.fill: "#d5f5e3" }
+X -> OP: forward
+OP -> Y
+Y -> X: "backward：傾き 6.0" { style.stroke-dash: 3 }
+```
+
+- forward のたびに「どう計算したか」のメモ（計算グラフ）が残る。`backward()` は==メモを逆走==して傾きを届ける
+- 微分の式 $2x$ を誰も教えていないのに、**傾き 6.0** が出た — この仕組みが **autograd**（自動微分）
+- 何万個のパラメータから作った損失でも、同じ1行で**全員ぶんの傾き**が出る — 今日からの学習は全部これに乗る
 
 
 ## 文字を「ベクトル」にする — one-hot
@@ -54,21 +101,181 @@ print(X[1, :6], "...")                        # 0番の位置だけ 1
 
 ## モデルは行列1枚
 
-- パラメータは 75×75 の行列 $W$ が1枚。one-hot を掛けて75個のスコアを出す
+- パラメータは 75×75 の行列 $W$ が1枚。one-hot を掛けて75個の**スコア**を出す（別名：**ロジット** [logit]{.en}）
 
 $$
-\text{one-hot}(x) \; @ \; W \;=\; \text{75個のスコア（ロジット）} \;\xrightarrow{\text{softmax}}\; \text{確率}
+\text{one-hot}(x) \; @ \; W \;=\; \text{75個のスコア} \;\xrightarrow{\text{softmax}}\; \text{確率}
 $$
 
-- 第1コースの言い方なら：**バイアスなし・活性化なしの线形1層**を75クラス分類に使う
+```{.d2 sketch="true" width="85%"}
+direction: right
+A: "「し」の one-hot\n(75個、1が1つ)" { style.fill: "#e1f5ff" }
+W: "行列 W\n75×75（学習される）" { style.fill: "#fff4e1" }
+S: "スコア\n75個" { style.fill: "#fdebd0" }
+SM: softmax { shape: hexagon; style.fill: "#f5b7b1" }
+P: "確率\n75個・合計1" { style.fill: "#d5f5e3" }
+A -> W: "@"
+W -> S
+S -> SM -> P
+```
+
+- 掛けて足すだけの**線形**（[linear]{.en}）の変換1枚 — バイアスも活性化関数もなしの、最小の分類器
+- スコアはまだ確率ではない：負の数もあるし、合計も1にならない — 確率に直す専門部品が **softmax**
+
+
+## スコアを確率に直す — softmax {#peek-softmax}
+
+- 欲しい変換：==全部正・合計1・スコアの大小はそのまま==
+- 作り方は2手：**$e^s$ を取る**（負でも正になる）→ **合計で割る**（合計が1になる）
+
+$$
+\mathrm{softmax}(s_k) = \frac{e^{s_k}}{\sum_j e^{s_j}}
+$$
+
+```{python}
+#| echo: true
+import torch
+import torch.nn.functional as F
+
+s = torch.tensor([2.0, 1.0, -1.0])     # スコア（負もある）
+p = F.softmax(s, dim=0)
+print(p)                                # 全部正・順位はそのまま
+print(p.sum())                          # 合計はきっかり1
+```
+
+- スコア (2, 1, −1) が確率 (0.71, 0.26, 0.04) になった。順位は保ちつつ、==差は強調される==
+- 前コースの分類器の出力層に住んでいたのと同じ部品 — この講義では出ずっぱりになる
+
+
+## softmax の形 — $e^s$ は差の増幅器
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+fig, axes = plt.subplots(1, 2, figsize=(9.6, 3.2))
+
+s = np.linspace(-4, 3, 200)
+ax = axes[0]
+ax.plot(s, np.exp(s), color="#5dade2", lw=2)
+for x0 in [-2, -1, 0, 1, 2]:
+    ax.plot([x0], [np.exp(x0)], "o", color="#e74c3c", ms=5)
+ax.axhline(0, color="gray", lw=0.6)
+ax.set_title("$e^s$ — 負でも正、1増えるごとに約2.7倍", fontsize=11)
+ax.set_xlabel("スコア $s$")
+
+d = np.linspace(-6, 6, 200)
+ax2 = axes[1]
+ax2.plot(d, np.exp(d) / (np.exp(d) + 1), color="#5dade2", lw=2.5,
+         label="softmax([s, 0]) の1番目")
+ax2.plot(d, 1 / (1 + np.exp(-d)), "--", color="#e74c3c", lw=1.6,
+         label="シグモイド σ(s)")
+ax2.axhline(0.5, color="gray", lw=0.6, ls=":")
+ax2.set_title("2クラスの softmax ＝ シグモイド", fontsize=11)
+ax2.set_xlabel("スコアの差 $s$")
+ax2.set_ylabel("1番目の確率")
+ax2.legend(fontsize=9, loc="upper left")
+plt.tight_layout()
+plt.show()
+```
+
+- 左：$e^s$ はどんな負の数も正に直し、==スコアが1増えるだけで約2.7倍==にする増幅器
+- だから確率の**比**はスコアの**差**だけで決まる：$p_i / p_j = e^{s_i - s_j}$ — 全員に同じ数を足しても出力は不変
+- 右：クラスが2つなら softmax は**シグモイド**（前コースの2クラス分類の出力層に居たS字カーブ）と**完全に一致**
+
+$$
+\mathrm{softmax}(s,\, 0)_1 = \frac{e^{s}}{e^{s} + e^{0}} = \frac{1}{1 + e^{-s}} = \sigma(s)
+$$
+
+- ==softmax はシグモイドの多クラス版== — 新しい部品ではなく、知っている部品の一般形
+
+
+## 答え合わせの罰点 — 交差エントロピー {#peek-xent}
+
+- 「予想（確率分布）と正解1文字」の答え合わせ。ルールは1行：
+
+$$
+\text{損失} = -\log\big(\text{正解に付けた確率}\big)
+$$
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+p = np.linspace(0.005, 1, 300)
+fig, ax = plt.subplots(figsize=(7.2, 3.0))
+ax.plot(p, -np.log(p), color="#5dade2", lw=2.5)
+for px in [0.9, 0.5, 0.01]:
+    ax.plot([px], [-np.log(px)], "o", color="#e74c3c", ms=7)
+ax.annotate("p=0.9 → 罰点 0.11\n（ほぼ確信して正解）", xy=(0.9, 0.105), xytext=(0.55, 1.5),
+            fontsize=10, arrowprops=dict(arrowstyle="->", color="#555"))
+ax.annotate("p=0.01 → 罰点 4.61\n（正解をほぼ無視 → 爆発）", xy=(0.013, 4.55), xytext=(0.12, 4.0),
+            fontsize=10, arrowprops=dict(arrowstyle="->", color="#555"))
+ax.set_xlabel("正解に付けた確率 p")
+ax.set_ylabel("罰点 −log p")
+ax.set_ylim(0, 5.6)
+plt.tight_layout()
+plt.show()
+```
+
+- 自信を持って当てればほぼ無罪（0.9 → 0.11）、五分五分で 0.69、正解を無視していたら重罪（0.01 → 4.61）— この採点法が**交差エントロピー**
+- $W$ を全部0で始めると全スコア0 → softmax は均等割りで各 $1/75$ → 罰点は $-\log(1/75) = 4.3175$
+  - ==学習を始める前に、最初の損失が予言できる==（数分後に答え合わせ）
 
 ::: {.callout-note}
-$W$ をぜんぶ0で初期化すると、softmax の出力は全文字 $1/75$ の**一様分布**。
-「何も知らない」状態の損失は $-\log(1/75) = 4.3175$ — 学習前に予言できる。
+`F.cross_entropy(スコア, 正解)` は softmax とこの罰点を**まとめて**計算する関数。だからコードにはスコアを直接渡す。
 :::
 
 
-## 学習ループ — 3拍子は今日も同じ {#peek-neural-bigram}
+## 学習＝損失の坂を下る {#peek-3beat}
+
+- 損失は $W$（5,625個の数）しだいで変わる。$W$ をどっちに動かせば損失が減る？
+- `backward()` が出す**勾配**（[gradient]{.en}）＝「どちらへ動かすと損失が増えるか」の矢印。==その逆へ少しずつ動かし続ける==のが**勾配降下法**（[gradient descent]{.en}）。1歩の幅が**学習率**（`lr`）
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+w = np.linspace(-4.2, 4.2, 200)
+fig, ax = plt.subplots(figsize=(7.2, 3.2))
+ax.plot(w, w**2, color="#5dade2", lw=2)
+w0 = 3.0
+t = np.linspace(1.4, 4.2, 2)
+ax.plot(t, 2 * w0 * (t - w0) + w0**2, "--", color="#e74c3c", lw=1.5)
+ax.plot([w0], [w0**2], "o", color="#e74c3c", ms=9, zorder=5)
+ax.annotate("", xy=(1.2, 4.4), xytext=(2.8, 8.2),
+            arrowprops=dict(arrowstyle="-|>", color="#27ae60", lw=2.5))
+ax.text(-1.3, 10.8, "傾き(+6)の逆へ1歩 ＝ step", color="#1e8449", fontsize=11)
+ax.text(3.35, 8.6, "いまの値（傾き +6）", fontsize=10)
+ax.set_xlabel("パラメータの値（5,625個のうち1個ぶんの断面）")
+ax.set_ylabel("損失")
+ax.set_xlim(-4.4, 6.2)
+ax.set_ylim(-0.8, 18)
+plt.tight_layout()
+plt.show()
+```
+
+- さっきの autograd の「$x=3$ で傾き $6$」が、まさにこの図。損失でも同じことを==全パラメータの断面で一斉に==やる
+- コードでは毎回この**3拍子**：
+
+| 拍 | コード | やっていること |
+|---|---|---|
+| ① | `opt.zero_grad()` | 前回の矢印を消す（消さないと足し込まれてしまう） |
+| ② | `loss.backward()` | さっきの `x.grad` を**全パラメータぶん一気に**（backprop） |
+| ③ | `opt.step()` | 矢印の逆へ1歩（勾配降下） |
+
+::: {.callout-note}
+オプティマイザ **AdamW** は、歩幅をパラメータごとに自動調整する改良版の勾配降下法。3拍子の型は変わらない。
+:::
+
+
+## 学習ループを回す {#peek-neural-bigram}
 
 ```{python}
 #| echo: true
@@ -204,7 +411,7 @@ for _ in range(5):
 - 「次の1文字」を**75クラス分類**に直した：one-hot × 行列 $W$ → softmax → 交差エントロピー
 - 勾配降下法で学習した表は、**数えた表と一致**した（差は小数第3位以下）
 - 数える作戦は文脈を伸ばすと破綻する。学習はこの先も通用する — だから遠回りに価値がある
-- 学習ループは今日も `zero_grad → backward → step` の3拍子
+- 学習ループは `zero_grad → backward → step` の**3拍子**：autograd が全パラメータの傾きを出し、その逆へ1歩 — この型はこの先ずっと同じ
 
 ::: {.callout-note title="次回予告"}
 one-hot × 行列の計算、実は**行を1本選んでいるだけ**。
@@ -215,6 +422,14 @@ one-hot × 行列の計算、実は**行を1本選んでいるだけ**。
 ## 練習問題
 
 以下の問題を**Pythonコード**で解け。
+
+### 問題0（ウォームアップ）：softmax と罰点の感覚
+
+コードを書く前に頭で答え、そのあと1行ずつコードで検算せよ。
+
+1. スコア $(5, 5, 5)$ を softmax に通すと出てくる確率は？
+2. 正解に確率 $1.0$ を付けたときの交差エントロピーは？
+3. スコア全員に $+100$ して $(102, 101, 99)$ にすると、softmax の出力は $(2, 1, -1)$ のときから変わるか？
 
 ### 問題1：損失2.34の壁の正体
 
@@ -241,6 +456,13 @@ one-hot × 行列の計算、実は**行を1本選んでいるだけ**。
 #| code-summary: "解答例を見る"
 import numpy as np
 import pandas as pd
+import torch
+import torch.nn.functional as F
+
+# 問題0
+print(F.softmax(torch.tensor([5.0, 5.0, 5.0]), dim=0))       # 全員同点 → 均等割り
+print(-torch.log(torch.tensor(1.0)))                          # 罰点0（「-0.」は 0 の浮動小数表示）
+print(F.softmax(torch.tensor([102.0, 101.0, 99.0]), dim=0))   # (2, 1, -1) と同じ
 
 names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
 chars = ["・"] + sorted(set("".join(names)))
@@ -273,5 +495,6 @@ print(f"予想しにくい: {hardest} ({per_char[hardest]:.3f})")
 print(f"予想しやすい: {easiest} ({per_char[easiest]:.3f})")
 ```
 
+- 問題0：同点なら均等割り、全員に同じ数を足しても出力は不変 — softmax は==スコアの「差」だけ==を見ている
 - 問題1：学習は「数えた表」を再発見しただけ — **2.34はバイグラムという作戦自体の限界**。これより下げるには、1文字より多くの文脈を見るしかない（次回以降の伏線）
 - 問題2：最も当てやすいのは「ょ」（ほぼ「う」一択、平均損失0.07）。最難関は境界「・」（3.47）— **名前の1文字目が一番予想がつかない**、という直感どおりの結果

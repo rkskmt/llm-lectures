@@ -50,7 +50,23 @@ print(gen("吾輩は", 60, top_k=1))     # top_k=1 ＝ 常に1位だけ
 
 - 「少々**ぷんぷんぷんぷんぷん**している」 — ==堂々巡りに落ちた==
 - 常に最有力の道だけを歩くと、同じ角を回り続ける。しかもシードを変えても**毎回同じ文**
-- だからサイコロ（確率での抽選）は生成の命綱。問題は「どれくらい揺らすか」
+
+
+## なぜ堂々巡りになるのか
+
+```{.d2 sketch="true" width="80%"}
+direction: right
+A: "同じ窓の中身\n（直近64文字）" { style.fill: "#e1f5ff" }
+B: "同じ確率分布" { style.fill: "#fff4e1" }
+C: "同じ1位の文字" { style.fill: "#f5b7b1" }
+A -> B: モデルは決定的
+B -> C: 常に1位を選ぶ
+C -> A: 尻に足すと、また同じ窓 { style.stroke-dash: 3 }
+```
+
+- モデルは同じ入力に**必ず同じ分布**を返す。1位だけ選ぶなら、次の文字も必ず同じ
+- 生成中に「前に見た窓の中身」へ一度でも戻ると、==そこから先は永遠に同じ道== — 「ぷんぷん」の正体
+- サイコロ（確率での抽選）は、このループを破る**唯一の乱数源**。問題は「どれくらい揺らすか」
 
 
 ## ツマミ1：temperature
@@ -90,23 +106,73 @@ plt.show()
 - 同じモデル・同じ入力でも、$T$ だけで「こ」の確率が **72% ⇄ 16% ⇄ 2%** と変わる
 
 
-## 聞き比べ：T = 0.2 / 0.8 / 2.0
+## T を手計算サイズで確かめる
+
+- softmax の回のスコア (2, 1, −1) を、$T$ で割ってから通すと：
 
 ```{python}
 #| echo: true
-for T in [0.2, 0.8, 2.0]:
-    print(f"--- T = {T} ---")
+import torch
+import torch.nn.functional as F
+
+s = torch.tensor([2.0, 1.0, -1.0])
+for T in [0.5, 1.0, 2.0]:
+    print(f"T={T}:", F.softmax(s / T, dim=0).round(decimals=3))
+```
+
+- $T=0.5$：スコア差が2倍に開いて1位が独走（0.88）。$T=2.0$：差が半分に縮んで接戦（0.55 / 0.33 / 0.12）
+- ==モデルは1ミリも変わっていない==。変わったのは softmax に渡す前の「差の広げ方」だけ
+- $e^s$ は差の増幅器だった — $T$ はその==増幅率のツマミ==
+
+
+## 聞き比べ：どれがどの温度？
+
+::: {.callout-important title="クイズ"}
+T ＝ 0.2・0.8・2.0 のどれかで生成した3つ。どれがどの温度？
+:::
+
+```{python}
+#| echo: false
+for label, T in [("A", 2.0), ("B", 0.2), ("C", 0.8)]:
+    print(f"--- {label} ---")
     print(gen("吾輩は", 80, temperature=T), "\n")
 ```
 
-- **T=0.2**：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）
-- **T=0.8**：ほどよく揺れて、いちばん「漱石風」
-- **T=2.0**：==漢字の豪雨== — 分布の尻尾にいたレア文字が当選しまくる
+::: {.fragment}
+- **A** は T=2.0：==漢字の豪雨== — 分布の尻尾にいたレア文字が当選しまくる
+- **B** は T=0.2：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）
+- **C** は T=0.8：ほどよく揺れて、いちばん「漱石風」
+- 作り方は3つとも `gen("吾輩は", 80, temperature=T)`（種は0で共通）
+:::
 
 
 ## ツマミ2：top-k — 尻尾を切る安全網
 
 - $T$ を上げたいが暴走は困る → **上位 $k$ 文字だけ残して**、あとは $-\infty$ にしてから抽選
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+idx = torch.tensor([[stoi[c] for c in "吾輩は"]])
+with torch.no_grad():
+    logits = model(idx)[0, -1]
+p = F.softmax(logits, dim=0)
+probs, ii = p.topk(12)
+labels = [chars[i] for i in ii.tolist()]
+bar_colors = ["#5dade2" if r < 5 else "#d5dbdb" for r in range(12)]
+fig, ax = plt.subplots(figsize=(8.6, 2.8))
+ax.bar(labels, probs.tolist(), color=bar_colors)
+ax.axvline(4.5, color="#e74c3c", ls="--", lw=1.5)
+ax.text(4.75, float(probs[0]) * 0.8, "top_k=5 なら、ここから右は −∞（0票）", color="#c0392b", fontsize=10)
+ax.set_title("「吾輩は」の次の1文字の分布（上位12）", fontsize=11)
+ax.set_ylabel("確率")
+plt.tight_layout()
+plt.show()
+```
+
 - 票を $-\infty$ で消す — ==因果マスクと同じ手口==（softmax の前に消すのが作法）
 
 ```{python}
@@ -127,20 +193,77 @@ nxt = torch.multinomial(probs, num_samples=1)      # サイコロ
 ```
 
 
+## top-p — 尻尾を「合計」で切る
+
+- top-k の弱点：**常に k 席**の固定枠 — 自信満々の場面では広すぎ、大混戦では狭すぎる
+- **top-p**（[nucleus sampling]{.en}）は席数でなく==得票の合計==で切る：確率の高い順に足していき、合計が $p$ に達したら打ち止め
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import torch.nn.functional as F
+
+fig, ax = plt.subplots(figsize=(8.0, 3.4))
+for ctx, color in [("吾輩は猫であ", "#e74c3c"), ("吾輩は", "#5dade2")]:
+    idx = torch.tensor([[stoi[c] for c in ctx]])
+    with torch.no_grad():
+        logits = model(idx)[0, -1]
+    p = F.softmax(logits, dim=0).sort(descending=True).values
+    cum = p.cumsum(0)
+    k = int((cum < 0.9).sum().item()) + 1
+    ax.plot(range(1, 401), cum[:400], color=color, label=f"「{ctx}」の次 — {k}文字で90%到達")
+    ax.axvline(k, color=color, ls=":", lw=1)
+ax.axhline(0.9, color="#7f8c8d", ls="--", lw=1.2)
+ax.text(355, 0.93, "p = 0.9", color="#7f8c8d")
+ax.set_xlabel("確率の高い順の順位")
+ax.set_ylabel("累積確率")
+ax.set_ylim(0, 1.05)
+ax.legend(loc="lower right")
+plt.tight_layout()
+plt.show()
+```
+
+- 「吾輩は猫であ」の次は**1文字**（「る」92%）で到達、「吾輩は」の次は**299文字** — ==枠の広さが分布の形に追随する==
+- うちの `generate` のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る
+
+
+## サイコロの種 — 揺れを再現する
+
+- 「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は**疑似**乱数で、==種（シード）が同じなら出目の列も同じ==
+
+```{python}
+#| echo: true
+torch.manual_seed(0)
+print(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))
+torch.manual_seed(0)
+print(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))
+```
+
+```{python}
+#| echo: true
+a = gen("吾輩は", 40, temperature=0.8, seed=7)
+b = gen("吾輩は", 40, temperature=0.8, seed=7)   # 同じ種でもう一度
+c = gen("吾輩は", 40, temperature=0.8, seed=8)   # 種を変える
+print(a)
+print("同じ種:", a == b, "／ 違う種:", a == c)
+print(c)
+```
+
+- この講義のセルに毎回 `manual_seed` が入っていた種明かし — ==スライドの出力を君の手元で完全再現するため==
+- 「揺れ」がほしいときは種を変える。「証拠」にしたいときは種を固定して、==種の値も一緒に記録する==（レポートの作法）
+
+
 ## 実物も同じツマミで動いている
 
 | うちのモデル | ChatGPT など実物の API |
 |---|---|
 | `temperature=0.8` | `temperature`（同じ意味・同じ数式） |
-| `top_k=40` | `top_k` / `top_p`（尻尾の切り方の親戚） |
-| シード固定で再現 | `seed` 指定（対応するAPIもある） |
+| `top_k=40` | `top_k` / `top_p`（前のスライドの2種類の尻尾切り） |
+| `seed=7` で再現 | `seed` 指定（対応するAPIもある） |
 
 - 「AIの回答は毎回違う」の正体は、この**サイコロ**
 - 同じ質問に違う答えが返るのは故障ではなく、$T > 0$ の仕様
-
-::: {.callout-note}
-`top_p`（累積確率で切る方式）は top-k の親戚。名前だけ覚えておけば仕様表が読める。
-:::
 
 
 ## **Tweak** ツマミを回しまくる {.badge-practice}
@@ -164,10 +287,10 @@ nxt = torch.multinomial(probs, num_samples=1)      # サイコロ
 
 ## まとめ
 
-- 生成のツマミは2つ：**temperature**（分布を尖らせる/平らにする）と **top-k**（尻尾を切る）
+- 生成のツマミは2つ：**temperature**（分布を尖らせる/平らにする）と **top-k**（尻尾を切る）。実物にはもう1つ **top-p**（合計で切る可変枠）
 - argmax（top_k=1）は堂々巡り、T が高すぎると漢字の豪雨 — ==良い文はそのあいだ==にある
 - 実装は「割る」「-∞で消す」「サイコロ」の3行。ChatGPT の同名パラメータも同じ仕組み
-- 確率的な出力は故障ではなく仕様 — シードで再現もできる
+- 確率的な出力は故障ではなく仕様 — 種（シード）を固定すれば完全再現できる。今日の全セルがそうだった
 
 ::: {.callout-note title="次回予告"}
 自作GPTはここで完成。次回は**このモデルと ChatGPT の距離**を測る —

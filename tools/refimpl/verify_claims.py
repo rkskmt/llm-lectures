@@ -23,6 +23,32 @@ w_scaled = F.softmax(scores / torch.tensor(2.0).sqrt(), dim=0)
 print("scaled softmax:", [round(x, 4) for x in w_scaled.tolist()],
       "-> context", [round(x, 4) for x in (w_scaled @ V).tolist()])
 
+print("\n== essence-slide numbers (self-containedness pass) ==")
+# dot product as similarity (attention-intuition #peek-dot)
+for a, b in [((1., 1.), (2., 2.)), ((1., 1.), (1., -1.)), ((1., 1.), (-1., -1.))]:
+    print(f"dot {a}·{b} = {torch.tensor(a) @ torch.tensor(b):.0f}")
+# softmax worked example (bigram-neural #peek-softmax)
+s = torch.tensor([2.0, 1.0, -1.0])
+print("softmax(2, 1, -1) =", [round(x, 3) for x in F.softmax(s, dim=0).tolist()],
+      "sum =", round(F.softmax(s, dim=0).sum().item(), 6))
+# cross-entropy worked example (bigram-neural #peek-xent)
+for p in [0.9, 0.5, 0.01, 1 / 75]:
+    print(f"-log({p:.4f}) = {-torch.log(torch.tensor(p)).item():.4f}")
+# autograd 3-line demo (bigram-neural #peek-autograd)
+x = torch.tensor(3.0, requires_grad=True)
+y = x ** 2
+y.backward()
+print("d(x^2)/dx at x=3 ->", x.grad.item())
+
+print("\n== why not x@x.T (attention-qkv motivation slide) ==")
+X = torch.tensor([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])
+S = X @ X.T
+print("X @ X.T =", S.tolist(), "(symmetric)")
+W = F.softmax(S / torch.tensor(2.0).sqrt(), dim=1)
+print("row-softmax(/sqrt(2)):")
+for row in W:
+    print("  ", [round(v, 3) for v in row.tolist()])
+
 print("\n== shuffle invariance without positions ==")
 torch.manual_seed(0)
 head = Head(n_embd=8, head_size=4, block_size=16)

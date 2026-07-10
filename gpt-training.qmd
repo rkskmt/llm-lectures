@@ -61,7 +61,8 @@ xb, yb = get_batch(train_data)
 print(xb.shape, yb.shape)     # (32文, 64文字) が2組
 ```
 
-- ランダムな場所から32本切り出す。1バッチ＝32×64＝**2,048問**
+- ランダムな一部だけで1歩、の[ミニバッチ](embeddings.qmd#peek-minibatch){.peek}をここでも使う。1バッチ＝32×64＝**2,048問**
+- `torch.stack` は同じ形のテンソルを**重ねて1段上の次元を作る**：64文字の棒32本 → (32, 64) の板
 
 
 ## 火入れ — 300回だけ回してみる {#peek-gpt-train}
@@ -88,8 +89,9 @@ for it in range(1, 301):
         print(f"更新 {it:3d}回 | Loss: {loss.item():.4f}")
 ```
 
-- 3拍子の学習ループは**一字一句このまま** — モデルが GPT になっただけ
-- 初期損失は約8.2（$=\ln 3045$、何も知らない状態）。そこから一気に転がり落ちる
+- [3拍子](bigram-neural.qmd#peek-3beat){.peek}の学習ループは**一字一句このまま** — モデルが GPT になっただけ
+- `view(-1, V)` は並べ直しだけ：(32, 64, 3045) の答案の束を「2,048行の答案リスト」にして交差エントロピーへ
+- 初期損失は約8.2（$=\ln 3045$、何も知らない状態の罰点）。そこから一気に転がり落ちる
 
 
 ## 生成してみる — 300回時点の実力
@@ -177,7 +179,7 @@ plt.show()
 
 ## 過学習、最終決戦
 
-- 地名MLPの回とまったく同じ形が、GPT でも出た — ==モデルが変わっても病気は同じ==
+- 地名MLPの回とまったく同じ形（[過学習](mlp-lm.qmd#peek-overfit){.peek}）が、GPT でも出た — ==モデルが変わっても病気は同じ==
 - 訓練文の細かい癖に最適化が進み、**初見の文章への実力はむしろ落ちていく**
 - 対策も同じ発想：**val が底を打ったところで止めて、その時点の重みを使う**（早期終了）
 
@@ -211,6 +213,155 @@ print(generate(model, "吾輩は", 100))
 - 同じ `train_neko.py` を3,500回（このPCで約20分）回しただけの重み。**魔法の材料はゼロ**
 
 
+## 育った視線を覗く
+
+- 部品を組んだときの宿題を回収する：==ヘッドはどんな「係」に育ったのか==
+- 訓練済みモデルに冒頭の一文を読ませ、層×ヘッドの**視線の表**を取り出して眺める
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+from inspect_attention import attention_maps
+
+probe = "吾輩は猫である。名前はまだ無い。"
+idx = torch.tensor([[stoi[c] for c in probe]])
+maps = attention_maps(model, idx)
+T = len(probe)
+
+fig, axes = plt.subplots(1, 2, figsize=(9.8, 4.6))
+for ax, (li, hi), title in [(axes[0], (0, 1), "layer 0 head 1"),
+                            (axes[1], (0, 3), "layer 0 head 3")]:
+    ax.imshow(maps[li][hi], cmap="Blues", vmin=0, vmax=1)
+    ax.set_xticks(range(T)); ax.set_yticks(range(T))
+    ax.set_xticklabels(list(probe), fontsize=7)
+    ax.set_yticklabels(list(probe), fontsize=7)
+    ax.set_xlabel("見られる側"); ax.set_ylabel("見る側")
+    ax.set_title(title, fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+- **左（head 1）は副対角線1本**：どの文字も==直前の1文字だけ==を重み約99%で見る係 — バイグラムの再発明
+- **右（head 3）は遠くまで広く薄く**見る係 — 同じ式・同じデータから、正反対の分業が勝手に育った
+
+
+## 「名前はまだ」の視線
+
+```{python}
+#| echo: false
+# reuse kernel state: maps, probe, T
+fig, ax = plt.subplots(figsize=(5.4, 4.8))
+ax.imshow(maps[1][3], cmap="Blues", vmin=0, vmax=1)
+ax.set_xticks(range(T)); ax.set_yticks(range(T))
+ax.set_xticklabels(list(probe), fontsize=7)
+ax.set_yticklabels(list(probe), fontsize=7)
+ax.set_xlabel("見られる側"); ax.set_ylabel("見る側")
+ax.set_title("layer 1 head 3", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+- 「…名前はまだ→（？）」を予測する瞬間（「だ」の行）、この係の視線は==「は」に41%、「名」に22%==
+- 注目という発想の回の手計算（「まだ」から「名前」へ視線が飛ぶ）が、**実物の中で本当に起きている**
+
+
+## 14文字前のカッコを見る係
+
+```{python}
+#| echo: false
+# reuse kernel state: attention_maps, model, stoi
+probe2 = "「どっちの方角へ足が向くかね」と主人は真面目な顔をして、"
+idx2 = torch.tensor([[stoi[c] for c in probe2]])
+maps2 = attention_maps(model, idx2)
+T2 = len(probe2)
+
+fig, ax = plt.subplots(figsize=(6.6, 6.0))
+ax.imshow(maps2[1][2], cmap="Blues", vmin=0, vmax=1)
+ax.set_xticks(range(T2)); ax.set_yticks(range(T2))
+ax.set_xticklabels(list(probe2), fontsize=6.5)
+ax.set_yticklabels(list(probe2), fontsize=6.5)
+ax.set_xlabel("見られる側"); ax.set_ylabel("見る側")
+ax.set_title("layer 1 head 2 — 会話文を読ませたとき", fontsize=11)
+plt.tight_layout()
+plt.show()
+```
+
+- 「「」と「と」の列に**縦の縞** — カッコ・引用の構造を追いかける係
+- 「」」の位置からは、==14文字前の「「」に28%==の視線。「、」からは12文字前の「と」に85%
+- ==窓では届かない距離を、位置ではなく内容で見ている== — 固定の窓を捨てて手に入れたものが、ここに写っている
+
+
+## 視線と対話する — BertViz
+
+- 静止画は1枚ずつしか見られない。**BertViz** というライブラリなら、トークンをなぞって全ヘッドの視線を対話的に眺められる（下の埋め込みで今すぐ試せる）
+
+<iframe src="data/runs/neko/attn_view.html" width="100%" height="430" style="border: 1px solid #ccc; border-radius: 6px; background: white;"></iframe>
+
+```{python}
+#| echo: true
+#| eval: false
+#| code-fold: true
+#| code-summary: "自分の手元で動かすコード（pip install bertviz が必要）"
+import torch
+from bertviz import head_view
+from gpt import GPT
+
+torch.set_num_threads(1)
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])
+model.eval()
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
+
+text = "吾輩は猫である。名前はまだ無い。"        # 語彙にある文字なら何でも
+idx = torch.tensor([[stoi[c] for c in text]])
+
+maps = []                                        # 各ブロックを歩き直して視線を回収
+with torch.no_grad():
+    x = model.tok_emb(idx) + model.pos_emb(torch.arange(idx.shape[1]))
+    for block in model.blocks:
+        h_in = block.ln1(x)
+        layer = []
+        for head in block.sa.heads:
+            q, k = head.query(h_in), head.key(h_in)
+            w = q @ k.transpose(-2, -1) / (k.shape[-1] ** 0.5)
+            w = w.masked_fill(head.tril[:idx.shape[1], :idx.shape[1]] == 0,
+                              float("-inf"))
+            layer.append(torch.softmax(w, dim=-1))
+        maps.append(torch.stack(layer, dim=1))   # (1, ヘッド数, T, T)
+        x = x + block.sa(h_in)
+        x = x + block.ff(block.ln2(x))
+
+html = head_view(maps, list(text), html_action="return")
+open("attn_view.html", "w", encoding="utf-8").write(
+    "<html><head><meta charset='utf-8'></head><body>" + html.data + "</body></html>")
+print("attn_view.html をブラウザで開く")
+```
+
+- 好きな文（語彙にある文字だけ）に差し替えて、==お気に入りのヘッドを1つ見つけて「係の名前」を付ける== — 隣の人と見つけた係を交換
+- 線の濃さ＝視線の重み。左の列でレイヤを切り替えられる
+
+::: {.callout-note}
+表示には d3.js などを CDN から読むためネット接続が要る。`pip install bertviz` は初回のみ。
+:::
+
+
+## 全部品を一望する — うちの子エクスプローラ {.badge-practice}
+
+視線だけでなく、**全部品の中身**を歩ける。埋め込みから次の1文字の予想まで、ぜんぶ訓練済みの実物の数値。
+
+<iframe src="explorer/index.html#view=predict&token=0" width="100%" height="560" loading="lazy" style="border: 1px solid #ccc; border-radius: 6px; background: white;"></iframe>
+
+0. いま開いているのは「吾」だけ読んだ位置の予想 — 1位は「輩」**71.4%**（ことばの地図の回の「吾→輩」がここでも生きている）
+1. 文字を順にクリックして、予想が文脈で変わっていく様子を歩く
+2. 途中の部品（LayerNorm・FFN・残差）も開いて、ヒートマップの模様の移り変わりを眺める
+3. 隣の人に、好きな部品を1つ選んで「この箱は◯◯をしている」と30秒で説明
+
+[エクスプローラを別タブで開く](explorer/index.html#view=predict&token=0){target="_blank"}
+
+
 ## **Tweak** 火加減を変える {.badge-practice}
 
 - [300回訓練のコード](#peek-gpt-train){.peek} を書き換えて、生成まで続けて実行
@@ -236,6 +387,7 @@ print(generate(model, "吾輩は", 100))
 - 学習ループは3拍子のまま。損失 8.2（無知）→ 3.6（val の底）
 - 生成の定点観測：文字 → かな → 単語 → 文 の順に覚えていく
 - **過学習は GPT でも起きる**。val を見張り、底の重みを使う（早期終了）
+- 育った視線は**係に分かれていた**：直前の1文字係・広く見る係・カッコ係 — マルチヘッドの分業は本物だった
 
 ::: {.callout-note title="次回予告"}
 訓練済みモデルを手に入れた。次回は**生成のツマミ**（temperature・top-k）を握って、

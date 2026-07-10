@@ -139,8 +139,17 @@ print("最後:", [(chars[i], N[i, 0]) for i in last])
 
 ## 回数を確率に直す
 
-- 「し」の行の合計で割れば、「し」の次に来る文字の**確率分布**になる
-- MNIST の出力（10クラスの確率）と同じ形。クラスが75個になっただけ
+- 行の合計で割れば、その文字の次に来る文字の**確率分布**になる
+
+```{.d2 sketch="true" width="88%"}
+direction: right
+A: "「ょ」の行（回数）\nう 509 ／ その他 5\n合計 514" { style.fill: "#e1f5ff" }
+B: "÷ 514\n（行の合計で割る）" { shape: hexagon; style.fill: "#fff4e1" }
+C: "「ょ」の行（確率）\nう 0.99 ／ その他 0.01\n合計 1" { style.fill: "#d5f5e3" }
+A -> B -> C
+```
+
+- 前コースの分類器の出力（10クラスの確率）と同じ形。クラスが75個になっただけ
 
 ```{python}
 #| echo: true
@@ -166,7 +175,54 @@ print("P(・|し) =", P[stoi["し"], stoi["・"]].round(4))   # 「し」で終�
 
 ## 確率で1文字選ぶ
 
-- 分布から**確率に比例して**1文字引く — `np.random.choice` がそのまま使える
+- 分布から**確率に比例して**1文字引く。イメージは==区間の広さが確率に比例したルーレット==
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75))
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+P = N / N.sum(axis=1, keepdims=True)
+
+fig, ax = plt.subplots(figsize=(8.8, 2.8))
+palette = ["#5dade2", "#f5b041", "#58d68d", "#ec7063", "#af7ac5", "#f7dc6f", "#76d7c4"]
+for yi, c in enumerate(["か", "ょ"]):
+    row = P[stoi[c]]
+    left, ci = 0.0, 0
+    for i in row.argsort()[::-1]:
+        p = row[i]
+        if p <= 0:
+            break
+        color = palette[ci % len(palette)] if p >= 0.03 else "#d5dbdb"
+        ax.barh(yi, p, left=left, color=color, edgecolor="white", height=0.55)
+        if p >= 0.04:
+            ax.text(left + p / 2, yi, f"{chars[i]}\n{p * 100:.0f}%",
+                    ha="center", va="center", fontsize=9)
+        left += p
+        ci += 1
+ax.axvline(0.62, color="#2c3e50", ls="--", lw=1.3)
+ax.text(0.63, 1.52, "0〜1の乱数の矢 — 刺さった区間の文字に決まる", fontsize=10)
+ax.set_yticks([0, 1])
+ax.set_yticklabels(["「か」の行", "「ょ」の行"])
+ax.set_xlim(0, 1)
+ax.set_ylim(-0.55, 1.85)
+ax.set_xlabel("確率（区間の広さ）")
+plt.tight_layout()
+plt.show()
+```
+
+- 「か」のルーレットは わ・し・み…と割れている。「ょ」はほぼ「う」一色 — ==行ごとに違うルーレット==を回す
+- これをやってくれるのが `np.random.choice(..., p=確率)`
 
 ```{python}
 #| echo: true
@@ -195,6 +251,19 @@ for _ in range(5):
 ## 生成 — 表とサイコロだけで名前を作る {#peek-bigram-gen}
 
 - 「・」から始めて、出た文字を次の入力にして繰り返す。「・」が出たら終わり
+
+```{.d2 sketch="true" width="88%"}
+direction: right
+S: "「・」から\nスタート" { style.fill: "#e1f5ff" }
+R: "表の「いまの文字」の行\n＝ルーレットを選ぶ" { style.fill: "#fff4e1" }
+D: "回す" { shape: hexagon; style.fill: "#fdebd0" }
+C: "出た文字を\n名前に足す" { style.fill: "#d5f5e3" }
+E: "名前の完成" { style.fill: "#f5b7b1" }
+S -> R -> D
+D -> C: 文字が出た
+C -> R: その文字の行へ { style.stroke-dash: 3 }
+D -> E: 「・」が出た
+```
 
 ```{python}
 #| echo: true
@@ -312,6 +381,20 @@ print([f"{a}→{b}:{N[stoi[a], stoi[b]]}" for a, b in zip(seq, seq[1:])])
 74文字のうち、**名前の最後の文字になれるもの**（「・」列の回数が1以上の文字）をすべて挙げよ。何種類あるか（先に予想してから数えること）。
 
 
+## 問題3：地名らしさ採点機
+
+確率表 `P` で任意のよみがなの「地名らしさ」を採点する関数を作り、実在の全市区町村名をランキングせよ（採点が甘い＝地名らしい）。
+
+0. [chimei.csv](data/chimei.csv) を `data/` に配置し、本編のコードで `P` まで作る
+1. 関数 `score(s)`：「・」＋s＋「・」の隣り合う一歩ごとに $-\log P$ を取り、平均を返す（`np.log` を利用）
+2. 自作の架空地名を2〜3個採点し、「とうきょう」とスコアを比較（すべて表示）
+3. 実在1,747件を全部採点し、**最も地名らしくない実在の地名**トップ5をスコアつきで表示（どんな名前が来るか、先に予想すること）
+
+::: {.callout-note}
+表に0のマスを踏むと $-\log 0 = \infty$ — 無限大の罰点。エラーではなく「データに1度もない一歩を踏んだ」という意味。
+:::
+
+
 ## 解答例
 
 ```{python}
@@ -349,3 +432,43 @@ print(f"最後に来られる文字（{len(enders)}種類）:", enders)
 ```
 
 - 1,747件の最後の文字は**6種類だけ** — 市・町・村・区の読みが出口を独占している
+
+
+## 問題3の解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+import numpy as np
+import pandas as pd
+
+names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
+chars = ["・"] + sorted(set("".join(names)))
+stoi = {c: i for i, c in enumerate(chars)}
+N = np.zeros((75, 75))
+for name in names:
+    seq = "・" + name + "・"
+    for a, b in zip(seq, seq[1:]):
+        N[stoi[a], stoi[b]] += 1
+P = N / N.sum(axis=1, keepdims=True)
+
+def score(s):
+    seq = "・" + s + "・"
+    return np.mean([-np.log(P[stoi[a], stoi[b]]) for a, b in zip(seq, seq[1:])])
+
+print(f"とうきょう: {score('とうきょう'):.3f}")
+print(f"ひがわむら: {score('ひがわむら'):.3f}")   # 本編の生成名から1つ
+
+ranked = sorted(set(names), key=score)
+print("最も地名らしい:")
+for s in ranked[:3]:
+    print(f"  {score(s):.2f}  {s}")
+print("最も地名らしくない:")
+for s in ranked[-5:][::-1]:
+    print(f"  {score(s):.2f}  {s}")
+```
+
+- 最も地名らしいのは「かみやまちょう」1.22 — 「〜まちょう」は地名の王道中の王道
+- 最も地名らしくないのは==「ちよだく」3.78==。千代田区・目黒区・練馬区 — **日本で一番有名な住所たちが「地名らしくない」と採点される**。市町村だらけの全国データで数えた表にとって、都会の短い区名は「珍しい響き」だから
+- 「きょうと」を採点すると $\infty$ — 「と」で終わる名前は1,747件に1つもない（問題2の「6種類」の外側）
