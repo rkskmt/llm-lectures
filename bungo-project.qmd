@@ -31,6 +31,18 @@ subtitle: "自分のGPTを育てる — そして文豪テストの種明かし"
 :::
 
 
+## 3段階で仕上げる
+
+| 段階 | 見せるもの | 完了の目印 |
+|---|---|---|
+| **材料検査** | 作家・作品名、字数、語彙サイズ、冒頭200字 | 洗った本文が読める |
+| **試運転** | 500回までの train / val、所要時間 | `my_ckpt_500.pt` ができる |
+| **本番** | 選んだ重み、偽物と本物、生成のツマミ | 選択理由を説明できる |
+
+- 途中で失敗しても、最後に成功した段階から再開する
+- 最終日に初めて訓練するのではなく、段階ごとに動作を確かめる
+
+
 ## 材料選び — 青空文庫
 
 - [青空文庫](https://www.aozora.gr.jp/) は著作権の切れた作品の宝庫（漱石・太宰・芥川・賢治・乱歩……）
@@ -64,6 +76,7 @@ body = body.replace("\r\n", "\n").strip() + "\n"
 
 open("data/mybungo.txt", "w", encoding="utf-8").write(body)
 print(len(body), "字 / 語彙", len(set(body)))
+print(body[:200])
 ```
 
 - 複数作品を使う場合は、この処理を作品ごとに行って `body` を足し合わせる
@@ -78,6 +91,8 @@ print(len(body), "字 / 語彙", len(set(body)))
 ```{python}
 #| echo: true
 #| eval: false
+import time
+
 import torch
 import torch.nn.functional as F
 from gpt import GPT
@@ -100,12 +115,19 @@ torch.manual_seed(42)
 model = GPT(vocab_size=len(chars), n_embd=96, n_head=4, n_layer=2, block_size=64)
 opt = torch.optim.AdamW(model.parameters(), lr=1e-3)
 
-for it in range(1, 3501):
+MAX_ITERS = 1000
+started = time.perf_counter()
+
+for it in range(1, MAX_ITERS + 1):
     xb, yb = get_batch(train_data)
     opt.zero_grad()
     loss = F.cross_entropy(model(xb).view(-1, len(chars)), yb.view(-1))
     loss.backward()
     opt.step()
+    if it == 100:
+        sec_per_iter = (time.perf_counter() - started) / 100
+        print(f"このPCの見込み: 500回 {sec_per_iter * 500 / 60:.1f}分 / "
+              f"1000回 {sec_per_iter * 1000 / 60:.1f}分")
     if it % 250 == 0:
         with torch.no_grad():
             xv, yv = get_batch(val_data)
@@ -117,6 +139,14 @@ for it in range(1, 3501):
 ```
 
 - 250回ごとに val を表示し、**重みを保存**していく — 早期終了は「あとから底を選ぶ」で実現できる
+
+
+## 15〜30分に収める
+
+- 標準は `MAX_ITERS = 1000`。まず100回の表示で、**自分のPCの所要時間**を確認
+- 1000回の見込みが30分を超えるなら `750`、15分未満なら `1500` まで延長してよい
+- **500回の重みができれば試運転は完了** — 時間内に終わらなくても、そこから生成と分析へ進める
+- 速さを競う課題ではない。回数より、train / val を見て重みを選んだ理由が採点対象
 
 
 ## 何回回すべきか — 実測の目安
@@ -146,7 +176,8 @@ import torch
 import torch.nn.functional as F
 from gpt import GPT
 
-blob = torch.load("data/my_ckpt_1000.pt", weights_only=True)   # valの底の重みを選ぶ
+BEST_ITER = 500   # 自分のログで val が最小だった回へ変更
+blob = torch.load(f"data/my_ckpt_{BEST_ITER}.pt", weights_only=True)
 model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
 model.load_state_dict(blob["state_dict"])
 model.eval()
@@ -159,7 +190,7 @@ out = model.generate(idx, 120, temperature=0.8, top_k=40)
 print("".join(chars[i] for i in out[0].tolist()))
 ```
 
-提出物（文豪テスト大会のエントリーシート）：
+本番提出（文豪テスト大会のエントリーシート）：
 
 0. 作家名・使った作品と字数・語彙サイズ
 1. **偽物1本（120字前後）**と、生成に使ったツマミ（temperature / top-k / シード / 書き出し）
@@ -238,6 +269,10 @@ print(len(m), "字:", m)
 
 ::: {.callout-note title="約束の回収"}
 **ブラックボックス、ゼロ。** 文豪テストの偽物は、この表の部品だけで書かれた。
+:::
+
+::: {.small}
+**完成した設計図**　作家の本文 → トークン化 → GPT訓練 → val最良の重み → ==文体をまねた生成文==
 :::
 
 
