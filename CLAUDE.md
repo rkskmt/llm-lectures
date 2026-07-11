@@ -36,7 +36,11 @@ Same rules as `ai`: fresh clone + `conda env create -f environment.yml` + `quart
 
 ## Deploy
 
-Repo/site name not yet decided — no remote, no `_publish.yml` yet.
+```bash
+quarto publish gh-pages
+```
+
+https://rkskmt.github.io/llm-lectures/
 
 ## Reference Docs
 

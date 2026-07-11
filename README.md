@@ -3,6 +3,8 @@
 「次の1文字を当てる」から小さなGPTの自作まで — Transformer・言語モデルに関するQuartoスライド。
 [AI Lectures](https://rkskmt.github.io/ai-lectures/)（分類→勾配降下→NN→MNIST自作）の続編。
 
+🔗 **ライブ版 → https://rkskmt.github.io/llm-lectures/**
+
 ## セットアップ
 
 ### 必要なもの
@@ -32,7 +34,7 @@ quarto preview --port 4322
 
 ```bash
 quarto render            # _site/ に出力
-quarto publish gh-pages  # GitHub Pages へデプロイ（リポジトリ公開後）
+quarto publish gh-pages  # GitHub Pages へデプロイ
 ```
 
 ## データ
