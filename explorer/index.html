@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>自作GPTエクスプローラ</title>
+<style>
+  :root {
+    --blue: #2980b9; --lightblue: #5dade2; --red: #e74c3c;
+    --border: #d5dbdb; --bg: #fdfefe; --ink: #2c3e50;
+    --h0: #e74c3c; --h1: #2980b9; --h2: #27ae60; --h3: #f39c12;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink);
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif; font-size: 13px; }
+  #app { display: flex; flex-direction: column; height: 100vh; padding: 8px 10px; gap: 6px; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 14px; margin: 0; }
+  header .hint { color: #7f8c8d; font-size: 11px; }
+  select { font-size: 12px; padding: 1px 4px; }
+
+  /* token strip with attention arcs */
+  #tokenbar { position: relative; padding-top: 46px; flex: none; }
+  #arcs { position: absolute; left: 0; top: 0; width: 100%; height: 46px; pointer-events: none; }
+  #tokens { display: flex; gap: 2px; flex-wrap: nowrap; overflow-x: auto; }
+  .tok { min-width: 26px; padding: 3px 2px; text-align: center; border: 1px solid var(--border);
+    border-radius: 4px; cursor: pointer; background: white; user-select: none; }
+  .tok small { display: block; color: #b2babb; font-size: 9px; }
+  .tok.sel { border-color: var(--blue); background: #eaf2f8; font-weight: bold; }
+  .tok.future { opacity: 0.35; }
+
+  #main { display: flex; gap: 10px; flex: 1; min-height: 0; }
+  #map { width: 300px; flex: none; overflow-y: auto; padding-right: 4px; }
+  #detail { flex: 1; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px;
+    background: white; padding: 10px 12px; }
+
+  .node { border: 1px solid var(--border); border-radius: 6px; background: white;
+    padding: 5px 8px; margin: 0 0 4px 0; cursor: pointer; display: flex;
+    justify-content: space-between; align-items: center; gap: 6px; }
+  .node:hover { border-color: var(--lightblue); }
+  .node.open { border-color: var(--blue); background: #eaf2f8; }
+  .node .shape { color: #95a5a6; font-size: 10px; font-family: monospace; }
+  .arrowline { text-align: center; color: #b2babb; line-height: 0.8; margin: 0 0 4px; font-size: 10px; }
+  .blockbox { border: 1.5px dashed #aab7b8; border-radius: 8px; padding: 6px 6px 2px; margin: 0 0 4px; }
+  .blockbox > .blocktitle { font-weight: bold; font-size: 12px; color: #566573; margin: 0 0 4px 2px; }
+  .headchips { display: flex; gap: 4px; margin: 4px 0 2px; }
+  .chip { border: 2px solid transparent; border-radius: 4px; cursor: pointer; padding: 1px; background: white; }
+  .chip.open { border-color: var(--blue); }
+  .chip canvas { display: block; }
+  .chip .cl { font-size: 9px; text-align: center; color: #7f8c8d; }
+  .residual { color: #27ae60; font-size: 11px; }
+
+  #detail h2 { font-size: 14px; margin: 0 0 6px; }
+  #detail .note { color: #7f8c8d; font-size: 11px; margin: 4px 0; }
+  #detail canvas { border: 1px solid var(--border); image-rendering: pixelated; }
+  table.attn { border-collapse: collapse; margin-top: 6px; }
+  table.attn td, table.attn th { border: 1px solid #eee; text-align: center; padding: 0;
+    font-size: 10px; font-weight: normal; }
+  table.attn th { background: #f8f9f9; min-width: 20px; height: 18px; }
+  table.attn td { width: 20px; height: 20px; cursor: default; }
+  table.attn tr.sel th { background: #d6eaf8; font-weight: bold; }
+  .bars { margin-top: 8px; }
+  .bar { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  .bar .ch { width: 30px; text-align: center; font-weight: bold; border: 1px solid var(--border);
+    border-radius: 4px; background: #f8f9f9; }
+  .bar .fill { height: 16px; background: var(--lightblue); border-radius: 3px; }
+  .bar .p { color: #7f8c8d; font-size: 11px; }
+  .qkv { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+  .qkv figure { margin: 0; }
+  .qkv figcaption { font-size: 11px; color: #566573; text-align: center; }
+  .legend { font-size: 11px; color: #7f8c8d; margin-top: 6px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>自作GPTエクスプローラ</h1>
+    <select id="preset"></select>
+    <span class="hint">左の箱をクリック＝部品の中身を開く／上の文字をクリック＝その場所の視線と予想に切り替え</span>
+  </header>
+  <div id="tokenbar">
+    <svg id="arcs"></svg>
+    <div id="tokens"></div>
+  </div>
+  <div id="main">
+    <div id="map"></div>
+    <div id="detail"></div>
+  </div>
+</div>
+<script src="data_neko.js"></script>
+<script>
+"use strict";
+const DATA = window.EXPLORER_DATA;
+const HEADCOL = ["#e74c3c", "#2980b9", "#27ae60", "#f39c12"];
+
+// ---- state (initialised from the URL hash) ----
+const S = { preset: 0, token: -1, open: { kind: "predict", layer: 0, head: 0 } };
+function parseHash() {
+  const p = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (p.has("preset")) S.preset = Math.min(+p.get("preset") || 0, DATA.presets.length - 1);
+  if (p.has("token")) S.token = +p.get("token");
+  const layer = Math.min(+ (p.get("layer") || 0), DATA.cfg.n_layer - 1);
+  const head = Math.min(+ (p.get("head") || 0), DATA.cfg.n_head - 1);
+  const v = p.get("view") || "predict";
+  if (v === "attn") S.open = { kind: "head", layer, head };
+  else if (v === "heads") S.open = { kind: "sa", layer, head: 0 };
+  else if (v === "structure") S.open = { kind: null };
+  else if (["emb-tok", "emb-pos", "x0", "ln1", "res1", "ln2", "ffn", "res2", "lnf"].includes(v))
+    S.open = { kind: v, layer, head: 0 };
+  else S.open = { kind: "predict", layer: 0, head: 0 };
+  if (S.token < 0 || S.token >= DATA.presets[S.preset].tokens.length)
+    S.token = DATA.presets[S.preset].tokens.length - 1;
+}
+parseHash();
+window.addEventListener("hashchange", () => { S.token = -1; parseHash(); renderAll(); });
+function P() { return DATA.presets[S.preset]; }
+function T() { return P().tokens.length; }
+if (S.token < 0 || S.token >= T()) S.token = T() - 1;
+
+// ---- colour helpers ----
+function divergeColor(v, vmax) {
+  const s = Math.max(-1, Math.min(1, v / (vmax || 1)));
+  const t = Math.abs(s);                                   // 0=white, 1=full colour
+  const target = s >= 0 ? [231, 76, 60] : [41, 128, 185];  // red / blue
+  const c = target.map(x => Math.round(255 * (1 - t) + x * t));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+function blueAlpha(w) { return `rgba(41, 128, 185, ${Math.min(1, w)})`; }
+
+// ---- canvas heat map for a T x D matrix ----
+function heatCanvas(M, cell, highlightRow, opts) {
+  const o = opts || {};
+  const cellW = o.cellW || cell, cellH = o.cellH || cell;
+  const labels = o.rowLabels || null;
+  const gutter = labels ? Math.max(18, cellH + 2) : 0;
+  const rows = M.length, cols = M[0].length;
+  const c = document.createElement("canvas");
+  c.width = gutter + cols * cellW; c.height = rows * cellH;
+  const g = c.getContext("2d");
+  let vmax = 0;
+  for (const row of M) for (const v of row) vmax = Math.max(vmax, Math.abs(v));
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++) {
+      g.fillStyle = divergeColor(M[i][j], vmax);
+      g.fillRect(gutter + j * cellW, i * cellH, cellW, cellH);
+    }
+  if (labels) {
+    g.fillStyle = "#566573";
+    g.font = `${Math.min(12, cellH - 3)}px sans-serif`;
+    g.textAlign = "center"; g.textBaseline = "middle";
+    labels.forEach((ch, i) => g.fillText(ch, gutter / 2, i * cellH + cellH / 2));
+  }
+  if (highlightRow != null) {
+    g.strokeStyle = "#2c3e50"; g.lineWidth = 1.5;
+    g.strokeRect(gutter + 0.5, highlightRow * cellH + 0.5, cols * cellW - 1, cellH - 1);
+  }
+  return c;
+}
+function attnThumb(A, size) {
+  const n = A.length;
+  const c = document.createElement("canvas");
+  c.width = size; c.height = size;
+  const g = c.getContext("2d"), cell = size / n;
+  g.fillStyle = "white"; g.fillRect(0, 0, size, size);
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j <= i; j++) {
+      g.fillStyle = blueAlpha(A[i][j]);
+      g.fillRect(j * cell, i * cell, Math.ceil(cell), Math.ceil(cell));
+    }
+  return c;
+}
+
+// ---- token strip + attention arcs ----
+function renderTokens() {
+  const box = document.getElementById("tokens");
+  box.innerHTML = "";
+  P().tokens.forEach((ch, i) => {
+    const d = document.createElement("div");
+    d.className = "tok" + (i === S.token ? " sel" : "") + (i > S.token ? " future" : "");
+    d.innerHTML = `${ch}<small>${i}</small>`;
+    d.onclick = () => { S.token = i; renderAll(); };
+    box.appendChild(d);
+  });
+}
+function renderArcs() {
+  const svg = document.getElementById("arcs");
+  svg.innerHTML = "";
+  const toks = document.querySelectorAll("#tokens .tok");
+  if (!toks.length) return;
+  const base = document.getElementById("tokenbar").getBoundingClientRect();
+  const cx = i => toks[i].getBoundingClientRect().left - base.left + toks[i].offsetWidth / 2;
+  const y0 = 44;
+  const draw = (weights, color) => {
+    for (let j = 0; j <= S.token; j++) {
+      const w = weights[j];
+      if (w < 0.02) continue;
+      const x1 = cx(S.token), x2 = cx(j);
+      const mid = (x1 + x2) / 2, lift = Math.min(40, 6 + Math.abs(x1 - x2) / 4);
+      const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("d", `M ${x1} ${y0} Q ${mid} ${y0 - lift} ${x2} ${y0}`);
+      p.setAttribute("fill", "none");
+      p.setAttribute("stroke", color);
+      p.setAttribute("stroke-opacity", (0.15 + 0.85 * w).toFixed(2));
+      p.setAttribute("stroke-width", (1 + 3 * w).toFixed(1));
+      svg.appendChild(p);
+    }
+  };
+  if (S.open.kind === "head")
+    draw(P().blocks[S.open.layer].heads[S.open.head].attn[S.token], HEADCOL[S.open.head]);
+  else if (S.open.kind === "sa")
+    P().blocks[S.open.layer].heads.forEach((h, hi) => draw(h.attn[S.token], HEADCOL[hi]));
+}
+
+// ---- structure map ----
+function node(label, shape, kind, layer, extra) {
+  const d = document.createElement("div");
+  const isOpen = S.open.kind === kind && (layer == null || S.open.layer === layer);
+  d.className = "node" + (isOpen ? " open" : "");
+  d.innerHTML = `<span>${label}</span><span class="shape">${shape}</span>`;
+  d.onclick = () => { S.open = { kind, layer: layer || 0, head: S.open.head }; renderAll(); };
+  if (extra) d.appendChild(extra);
+  return d;
+}
+const ARROW = () => { const a = document.createElement("div"); a.className = "arrowline"; a.textContent = "↓"; return a; };
+function renderMap() {
+  const m = document.getElementById("map");
+  const t = T();
+  m.innerHTML = "";
+  m.appendChild(node(`入力（${t}文字）`, `${t}`, "input"));
+  m.appendChild(ARROW());
+  m.appendChild(node("文字埋め込み", `${t}×96`, "emb-tok"));
+  m.appendChild(node("位置埋め込み", `${t}×96`, "emb-pos"));
+  m.appendChild(node("足して合流", `${t}×96`, "x0"));
+  DATA.presets[S.preset].blocks.forEach((blk, b) => {
+    m.appendChild(ARROW());
+    const box = document.createElement("div");
+    box.className = "blockbox";
+    box.innerHTML = `<div class="blocktitle">ブロック ${b + 1}</div>`;
+    box.appendChild(node("LayerNorm（揃える）", `${t}×96`, "ln1", b));
+    const sa = node("マルチヘッド注意（会議）", `4ヘッド`, "sa", b);
+    box.appendChild(sa);
+    const chips = document.createElement("div");
+    chips.className = "headchips";
+    blk.heads.forEach((h, hi) => {
+      const chip = document.createElement("div");
+      chip.className = "chip" + (S.open.kind === "head" && S.open.layer === b && S.open.head === hi ? " open" : "");
+      chip.style.borderColor = (S.open.kind === "head" && S.open.layer === b && S.open.head === hi) ? HEADCOL[hi] : "transparent";
+      chip.appendChild(attnThumb(h.attn, 44));
+      const cl = document.createElement("div"); cl.className = "cl"; cl.textContent = `head ${hi}`;
+      chip.appendChild(cl);
+      chip.onclick = (e) => { e.stopPropagation(); S.open = { kind: "head", layer: b, head: hi }; renderAll(); };
+      chips.appendChild(chip);
+    });
+    box.appendChild(chips);
+    box.appendChild(node("＋ 残差（迂回路と合流）", `${t}×96`, "res1", b));
+    box.appendChild(node("LayerNorm（揃える）", `${t}×96`, "ln2", b));
+    box.appendChild(node("FFN（考える）", `${t}×96`, "ffn", b));
+    box.appendChild(node("＋ 残差（迂回路と合流）", `${t}×96`, "res2", b));
+    m.appendChild(box);
+  });
+  m.appendChild(ARROW());
+  m.appendChild(node("LayerNorm（仕上げ）", `${t}×96`, "lnf"));
+  m.appendChild(ARROW());
+  m.appendChild(node("語彙スコア → softmax → 次の1文字", `${t}×3045`, "predict"));
+}
+
+// ---- detail panel ----
+function matrixDetail(title, M, note) {
+  const d = document.getElementById("detail");
+  d.innerHTML = `<h2>${title}</h2>`;
+  const panelW = Math.max(560, d.clientWidth - 30);
+  const cellW = Math.max(5, Math.floor((panelW - 24) / M[0].length));
+  const cellH = Math.max(12, Math.min(18, Math.floor(430 / M.length)));
+  d.appendChild(heatCanvas(M, 0, S.token,
+    { cellW, cellH, rowLabels: P().tokens }));
+  const n = document.createElement("div");
+  n.className = "note";
+  n.innerHTML = `行＝文字（枠線＝選択中の「${P().tokens[S.token]}」）、列＝${M[0].length}個の次元。赤＝正・青＝負。${note || ""}`;
+  d.appendChild(n);
+}
+function headDetail() {
+  const { layer, head } = S.open;
+  const h = P().blocks[layer].heads[head];
+  const d = document.getElementById("detail");
+  d.innerHTML = `<h2>視線の表 — ブロック${layer + 1} / <span style="color:${HEADCOL[head]}">head ${head}</span></h2>
+    <div class="note">行＝見る側、列＝見られる側。各行の合計が1。上の文字列には選択中の行（「${P().tokens[S.token]}」の視線）が弧で出ている。</div>`;
+  const tb = document.createElement("table");
+  tb.className = "attn";
+  const toks = P().tokens;
+  let html = "<tr><th></th>" + toks.map(c => `<th>${c}</th>`).join("") + "</tr>";
+  h.attn.forEach((row, i) => {
+    html += `<tr${i === S.token ? ' class="sel"' : ""}><th>${toks[i]}</th>` + row.map((w, j) =>
+      `<td style="background:${j <= i ? blueAlpha(w) : "#fafafa"}" title="${toks[i]}→${toks[j]}: ${(w * 100).toFixed(1)}%">${w >= 0.35 && j <= i ? Math.round(w * 100) : ""}</td>`).join("") + "</tr>";
+  });
+  tb.innerHTML = html;
+  d.appendChild(tb);
+  const qkv = document.createElement("div");
+  qkv.className = "qkv";
+  [["q（探しもの）", h.q], ["k（名札）", h.k], ["v（持ってる情報）", h.v]].forEach(([cap, M]) => {
+    const f = document.createElement("figure");
+    f.appendChild(heatCanvas(M, 0, S.token, { cellW: 8, cellH: 13, rowLabels: P().tokens }));
+    const fc = document.createElement("figcaption"); fc.textContent = `${cap} ${M.length}×${M[0].length}`;
+    f.appendChild(fc);
+    qkv.appendChild(f);
+  });
+  d.appendChild(qkv);
+  const lg = document.createElement("div");
+  lg.className = "legend";
+  lg.textContent = "この表は softmax(qkᵀ/√24) そのもの。数字入りのマスは重み35%以上。";
+  d.appendChild(lg);
+}
+function saDetail() {
+  const b = S.open.layer;
+  const d = document.getElementById("detail");
+  d.innerHTML = `<h2>マルチヘッド注意 — ブロック${b + 1} の4系統の視線</h2>
+    <div class="note">同じ入力から4枚の「視線の表」。それぞれ何の係に見えるか？（クリックで拡大。上の文字列には4色の弧＝選択中の文字の視線）</div>`;
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:flex;gap:14px;flex-wrap:wrap";
+  P().blocks[b].heads.forEach((h, hi) => {
+    const f = document.createElement("figure");
+    f.style.cssText = "margin:0;cursor:pointer";
+    f.appendChild(attnThumb(h.attn, 150));
+    const fc = document.createElement("figcaption");
+    fc.style.cssText = `font-size:11px;text-align:center;color:${HEADCOL[hi]};font-weight:bold`;
+    fc.textContent = `head ${hi}`;
+    f.appendChild(fc);
+    f.onclick = () => { S.open = { kind: "head", layer: b, head: hi }; renderAll(); };
+    grid.appendChild(f);
+  });
+  d.appendChild(grid);
+  const lg = document.createElement("div");
+  lg.className = "legend";
+  lg.textContent = "4本の出力は横につながれ（cat）、Linear 1枚で混ぜ直されてから残差に合流する。";
+  d.appendChild(lg);
+}
+function predictDetail() {
+  const d = document.getElementById("detail");
+  const t = S.token;
+  const ctx = P().tokens.slice(0, t + 1).join("");
+  d.innerHTML = `<h2>次の1文字の予想</h2>
+    <div class="note">「${ctx}」までを読んだ位置の出力。3,045字への確率分布のうち上位8つ。</div>`;
+  const bars = document.createElement("div");
+  bars.className = "bars";
+  const top = P().top[t];
+  top.forEach(({ ch, p }) => {
+    const row = document.createElement("div");
+    row.className = "bar";
+    const disp = ch === "\n" ? "⏎" : (ch === "　" ? "␣" : ch);
+    row.innerHTML = `<span class="ch">${disp}</span><span class="fill" style="width:${Math.max(2, p * 420)}px"></span><span class="p">${(p * 100).toFixed(1)}%</span>`;
+    bars.appendChild(row);
+  });
+  d.appendChild(bars);
+  const lg = document.createElement("div");
+  lg.className = "legend";
+  lg.textContent = "文字をクリックすると別の位置の予想に切り替わる。因果マスクのおかげで、どの位置の予想もその位置までしか見ていない。";
+  d.appendChild(lg);
+}
+function inputDetail() {
+  const d = document.getElementById("detail");
+  d.innerHTML = `<h2>入力</h2>
+    <div class="note">文字はまず番号（トークンID）になる。ここから先はぜんぶ数の計算。</div>
+    <div style="font-family:monospace;font-size:12px;line-height:1.9">` +
+    P().tokens.map((c, i) => `${c}→${P().ids[i]}`).join("　") + `</div>`;
+}
+function renderDetail() {
+  const p = P();
+  const k = S.open.kind;
+  if (k === "head") return headDetail();
+  if (k === "sa") return saDetail();
+  if (k === "predict") return predictDetail();
+  if (k === "input") return inputDetail();
+  const b = p.blocks[S.open.layer] || p.blocks[0];
+  const map = {
+    "emb-tok": ["文字埋め込み — 表引きされた各文字のベクトル", p.tok_emb, "同じ文字なら（位置が違っても）同じ行になる。"],
+    "emb-pos": ["位置埋め込み — 「何文字目か」のベクトル", p.pos_emb, "文字によらず、位置だけで決まる。"],
+    "x0": ["文字＋位置 — ブロックへの入力", p.x0, "「3文字目の『は』」のような合成ベクトルになった。"],
+    "ln1": [`LayerNorm — ブロック${S.open.layer + 1}の会議前`, b.ln1, "各行が平均0・ばらつき1に揃えられている。"],
+    "res1": [`残差合流後 — ブロック${S.open.layer + 1}（入力＋注意の仕事ぶん）`, b.res1, "元の情報に「会議の成果」が足されたところ。"],
+    "ln2": [`LayerNorm — ブロック${S.open.layer + 1}の自習前`, b.ln2, ""],
+    "ffn": [`FFN の出力 — ブロック${S.open.layer + 1}（位置ごとに考えた結果）`, b.ffn_out, "FFN は自分の行しか見ない（見る仕事は注意の担当）。"],
+    "res2": [`残差合流後 — ブロック${S.open.layer + 1}の出口`, b.res2, "これが次のブロック（または仕上げ）への入力。"],
+    "lnf": ["LayerNorm（仕上げ） — 語彙スコア直前", p.ln_f, "この直後に 96次元 → 3,045字のスコアに変換される。"],
+  };
+  const [title, M, note] = map[k] || map["x0"];
+  matrixDetail(title, M, note);
+}
+
+function renderAll() { renderTokens(); renderMap(); renderDetail(); renderArcs(); }
+
+// ---- preset selector ----
+(function initPreset() {
+  const sel = document.getElementById("preset");
+  DATA.presets.forEach((p, i) => {
+    const o = document.createElement("option");
+    o.value = i;
+    o.textContent = p.text.length > 18 ? p.text.slice(0, 18) + "…" : p.text;
+    sel.appendChild(o);
+  });
+  sel.value = S.preset;
+  sel.onchange = () => { S.preset = +sel.value; S.token = T() - 1; renderAll(); };
+})();
+
+window.addEventListener("resize", renderArcs);
+renderAll();
+</script>
+</body>
+</html>

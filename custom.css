@@ -1,0 +1,1147 @@
+.reveal {
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", "Meiryo", sans-serif;
+}
+.reveal .slides section:not(.stack):not(.break-slide) > .slide-body {
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 28px 55px 18px !important;
+  box-sizing: border-box !important;
+}
+.reveal .slides section:not(.stack):not(.break-slide) > h2 {
+  padding-left: 18px;
+  padding-bottom: 7px;
+  box-sizing: border-box;
+}
+.reveal #title-slide > * {
+  padding-left: 80px;
+  box-sizing: border-box;
+}
+/* Force scrollbar visibility on macOS/mobile */
+.reveal .slides section,
+.reveal .slides section.present {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(0,0,0,0.3) rgba(0,0,0,0.1) !important;
+}
+.reveal .slides section::-webkit-scrollbar,
+.reveal .slides section.present::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  -webkit-appearance: none !important;
+}
+.reveal .slides section::-webkit-scrollbar-track,
+.reveal .slides section.present::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-radius: 5px !important;
+}
+.reveal .slides section::-webkit-scrollbar-thumb,
+.reveal .slides section.present::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-radius: 5px !important;
+  border: 2px solid transparent !important;
+  background-clip: content-box !important;
+}
+.reveal .slides section::-webkit-scrollbar-thumb:hover,
+.reveal .slides section.present::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+.callout.callout-note {
+    font-size: 1.5rem;
+    line-height: 1.4;
+}
+.callout.callout-note .callout-title {
+    font-size: 2.3rem;
+}
+.reveal .callout.callout-tip {
+    font-size: 1.5rem;
+    line-height: 1.4;
+}
+.reveal .callout.callout-tip .callout-title {
+    font-size: 2.3rem;
+}
+.reveal .callout pre code {
+    font-size: 1.25rem !important;
+}
+.reveal h2 {
+    font-weight: bold !important;
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #000;
+}
+/* A **bold** word placed directly in a slide title renders as a solid label
+   chip — white text on the title's own near-black (#131516 = the text color),
+   like a textbook section label. Deliberately NOT a content color: blue/teal/
+   coral all belong to body content (code, links, table numbers), so a colored
+   chip competes with the content; near-black reads as title *structure*.
+   Weight 600 (not 700) keeps the small white-on-dark type from bloating.
+   Generic — it keys off position (direct child of h2), not any specific word —
+   so `## **Tweak** …`, `## **重要** …`, `## **例** …` all get the chip,
+   showing whatever word was bolded. Bold is otherwise meaningless in an
+   already-bold title, so nothing is displaced. Kept inline (not inline-block)
+   and smaller than the title's line box, so a title on the slide's first row
+   is not clipped at the top by the slide's overflow.
+   `> ` (direct child) is deliberate: <strong> nested in .en (the abbreviation
+   spell-out, e.g. `## LUT（[**Look-Up Table**]{.en}）`) is a grandchild and
+   stays untouched. */
+.reveal h2 > strong {
+    font-size: 0.55em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    white-space: nowrap;        /* a label never line-breaks inside its chip */
+    color: #fff;
+    background: #131516;
+    border-radius: 4px;
+    padding: 0.3em 0.75em;
+    margin-right: 0.55em;
+    vertical-align: 0.28em;     /* optical center against the 2.5rem title glyphs */
+    -webkit-text-stroke: 0;     /* same guard as .en strong: no double-weighting */
+}
+.reveal h3 {
+    font-style: normal !important;
+    font-weight: bold !important;
+    font-size: 2.3rem;
+    background-color: #5dade2;
+    color: white;
+    padding: 20px 12px;
+    margin: 12px;
+    border-radius: 5px;
+}
+.reveal .slide-body-heading {
+    font-style: normal !important;
+    font-weight: bold !important;
+    font-size: 2.3rem;
+    background-color: #5dade2;
+    color: white;
+    padding: 10px 25px;
+    margin: 12px;
+    border-radius: 5px;
+}
+.reveal p {
+    line-height: 1.6;
+    margin: 0 0;
+}
+.cell details {
+    margin: 4px 0;
+    font-size: 1.5rem;
+}
+.cell details summary {
+    margin-bottom: 0px;
+    padding: 4px;
+}
+.cell-output pre {
+  font-size: 2.0rem;
+}
+/* Execution results: a light dashed outline (no fill) with a small "Result" tag, top-left */
+.cell-output-stdout pre {              /* descendant: also matches pre wrapped by the zoom scaffold */
+  position: relative;
+  background-color: transparent !important;
+  /* widely-spaced dashed outline drawn per edge (CSS `dashed` can't set dash length) */
+  background-image:
+    repeating-linear-gradient(to right,  #9aa1ab 0 14px, transparent 14px 26px),
+    repeating-linear-gradient(to right,  #9aa1ab 0 14px, transparent 14px 26px),
+    repeating-linear-gradient(to bottom, #9aa1ab 0 14px, transparent 14px 26px),
+    repeating-linear-gradient(to bottom, #9aa1ab 0 14px, transparent 14px 26px);
+  background-position: left top, left bottom, left top, right top;
+  background-size: 100% 1px, 100% 1px, 1px 100%, 1px 100%;
+  background-repeat: no-repeat;
+  border: none;
+  padding: 0.7em 0.95em 0.5em !important;
+  margin-top: 0.4em;
+  margin-bottom: 0.9em;
+}
+.cell-output-stdout pre::before {
+  content: "Result";
+  position: absolute;
+  top: 0.2em;
+  left: 0.7em;
+  font-size: 0.72rem;
+  color: #9aa1ab;
+  letter-spacing: 0.04em;
+}
+.reveal pre,
+.reveal div.sourceCode {
+  margin-left: 0.8rem;
+  margin-right: 0.8rem;
+  max-width: calc(100% - 1.6rem);
+  box-sizing: border-box;
+}
+/* div.sourceCode and pre are nested (scaffold > div.sourceCode > pre) and BOTH
+   match the margin rule above, doubling the inset to 1.6rem — while bare <pre>
+   blocks (text/output) get 0.8rem. Zero the inner margin so every code/output
+   box is inset exactly 0.8rem; the copy/expand button offsets rely on this. */
+.reveal div.sourceCode pre {
+  margin-left: 0;
+  margin-right: 0;
+  max-width: 100%;
+}
+.reveal pre code {
+  font-size: 1.35rem !important;
+}
+.reveal details pre code {
+  font-size: 1.2rem !important;
+}
+.reveal img {
+  max-height: 500px;
+  width: auto;
+  height: auto;
+  /* When an image has an explicit width (e.g. {width="50%"}) and its natural
+     height at that width exceeds max-height, the height gets clamped while the
+     width stays fixed — which would distort the aspect ratio (tall images
+     placed wide turn into squashed ellipses). object-fit keeps the bitmap's
+     aspect ratio inside whatever box the width/max-height constraints produce. */
+  object-fit: contain;
+}
+/* A .fig wrapper (see figscale.lua) centers its figure — pairs with
+   ::: {.fig width="50%"} so sizing and centering are one mechanism.
+   margin:auto (not text-align) so it survives the left text-align that
+   Quarto sets on the output <p>. */
+.reveal .fig img { display: block; margin-left: auto; margin-right: auto; }
+.reveal p.caption {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  font-size: 0.8em;
+  color: #444;
+  font-family: inherit;
+  font-weight: lighter;
+}
+/* Caption that annotates whatever sits directly above it — a table, a figure,
+   or a code cell's output. A bordered serif "legend" chip, deliberately unlike
+   the sans-serif body bullets, so trailing explanation never reads as another
+   main point. System fonts only, NO web-font download: Latin → Georgia,
+   Japanese → an installed mincho if present else the generic serif fallback. */
+.reveal .caption-note {
+  text-align: center;
+  margin-top: 0.3em;             /* small, element-agnostic gap (table OR code output above) */
+  margin-bottom: 0.6em;
+}
+.reveal .caption-note p {
+  display: inline-block;
+  margin: 0 !important;
+  padding: 0.3em 1.2em;
+  border: 1px solid #c7ccd4;
+  border-radius: 8px;
+  background: #f7f8fa;
+  font-family: Georgia, Cambria, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif !important;
+  font-size: 0.72em !important;
+  color: #555 !important;
+  font-weight: normal !important;
+}
+.fig-small img {
+  max-height: 300px !important;
+}
+.fig-medium img {
+  max-height: 400px !important;
+}
+table {
+  width: 100%;
+  margin-top: 1.1em !important;     /* vertical breathing room — reveal sets table{margin:auto} → 0 top/bottom */
+  margin-bottom: 1.1em !important;
+  border-bottom: none !important;
+}
+.reveal table.dataframe {
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+.reveal table.dataframe th,
+.reveal table.dataframe td {
+  text-align: center;
+  padding-left: 0.7em;
+  padding-right: 0.7em;
+}
+table tbody {
+  border-bottom: none !important;
+}
+table tr:last-child,
+table tr:last-child td {
+  border-bottom: none !important;
+}
+table th:first-child,
+table td:first-child {
+  font-weight: bold;
+  border-right: 2px solid #aaa;
+}
+/* Tweak slides: hands-on "change one line & see" practice.
+   Each action is its OWN numbered row-band:  [#] | intent → key.  The left number
+   is auto-generated (CSS counter) so steps are countable; the coral arrow links the
+   intent to the exact code to type. Header hidden (kept for screen readers); the
+   slide intro gives the context. Palette = the practice badge: coral accents,
+   neutral bands. Value tweaks → 2-col table (intent | `code`). Task → bullet list. */
+/* Exercise prompt (問題文) — a plain rounded frame around the task statement
+   on 演習 slides. Deliberately neutral: typed callouts carry colored-header
+   emphasis and .caption-note annotates the element above it — this frame just
+   marks "this paragraph is the problem". Usage: ::: {.prompt} 問題文 ::: */
+.reveal .prompt {
+  border: 1.5px solid #b9c2cf;
+  border-radius: 10px;
+  background: #fafbfd;
+  padding: 0.5em 0.9em;
+  margin: 0.35em 0 0.75em;
+}
+.reveal .prompt p {
+  margin: 0;
+}
+.reveal .prompt p + p {
+  margin-top: 0.4em;
+}
+.tweak {
+  width: fit-content;
+  max-width: 96%;
+  margin: 0.45em auto 0;
+}
+.tweak table {
+  width: auto;
+  margin: 0 auto;
+  border-collapse: separate;
+  border-spacing: 0 0.6em;       /* vertical gaps between row-bands */
+  font-size: 0.92em;
+  counter-reset: tw;             /* step numbers restart per table */
+}
+.tweak table thead { display: none; }   /* labels kept for a11y; visually self-evident */
+.tweak table td {
+  background: #fff;
+  border-top: 1px solid #e2e4e8;
+  border-bottom: 1px solid #e2e4e8;
+  padding: 0.66em 1.1em;
+  vertical-align: middle;
+  box-shadow: 0 2px 4px rgba(60, 60, 70, 0.10);     /* bottom lift only — no shadow on the seam */
+}
+.tweak table td:first-child {           /* number segment + やりたいこと (intent) */
+  position: relative;
+  text-align: left;
+  font-weight: 600;
+  border-left: 1px solid #e2e4e8;
+  border-right: none;                    /* drop the global first-col gray divider */
+  border-top-left-radius: 11px;
+  border-bottom-left-radius: 11px;
+  padding-left: 3.6em;                   /* room for the number segment */
+  padding-right: 1.1em;
+}
+.tweak table td:first-child::before {   /* auto step number, partitioned off on the left */
+  counter-increment: tw;
+  content: counter(tw);
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2.4em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: 11px;
+  border-bottom-left-radius: 11px;
+  background: #fbeee9;                  /* faint coral tint — the tint alone separates the number */
+  color: #f76d5e;
+  font-weight: 700;
+}
+.tweak table td:last-child {            /* the code, in its own cell split by a vertical bar */
+  text-align: center;
+  border-left: 2px solid #b9bfc8;        /* clear vertical divider between intent and code */
+  border-right: 1px solid #e2e4e8;
+  border-top-right-radius: 11px;
+  border-bottom-right-radius: 11px;
+  padding-left: 1.2em;
+  padding-right: 1.2em;
+  box-shadow: 2px 2px 4px rgba(60, 60, 70, 0.10);   /* right + bottom lift on the band's right end */
+}
+.tweak table td code {                   /* plain code inside the cell — no box of its own */
+  font-size: 1.05em;
+}
+/* Task-type tweak: each action is its own numbered band too */
+.tweak ul { margin: 0; padding: 0; list-style: none !important; counter-reset: tw; }
+.tweak li {
+  counter-increment: tw;
+  position: relative;
+  background: #fff;
+  border: 1px solid #e2e4e8;
+  border-radius: 11px;
+  padding: 0.66em 1.4em 0.66em 3.8em;   /* room for the number segment on the left */
+  margin: 0 0 0.6em;
+  box-shadow: 2px 2px 4px rgba(60, 60, 70, 0.10);   /* slight lift, right + bottom */
+}
+.tweak li:last-child { margin-bottom: 0; }
+/* high specificity to beat the deck's masked-circle bullet (.slide-body ul > li::before) */
+.reveal .slide-body .tweak li::before {  /* auto step number, partitioned off on the left */
+  content: counter(tw);
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 2.6em;
+  height: auto;                  /* override theme bullet's height:0.58em so top/bottom stretch */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top-left-radius: 11px;
+  border-bottom-left-radius: 11px;
+  color: #f76d5e;
+  font-weight: 700;
+  background: #fbeee9;                  /* faint coral tint — the tint alone separates the number */
+  -webkit-mask: none;
+  mask: none;
+  margin: 0;
+}
+.reveal .cite {
+  position: absolute;
+  bottom: 6px;
+  right: 6px;
+  font-size: 0.4em;
+  background: rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.9);
+  padding: 2px 6px;
+  border-radius: 3px;
+  z-index: 2;
+}
+.reveal .cite p {
+  margin: 0;
+  line-height: 1.4;
+}
+.reveal .cite a {
+  color: rgba(255,255,255,0.9);
+}
+.reveal .content-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  padding: 20px 30px;
+  border-radius: 8px;
+  max-width: 60%;
+  box-sizing: border-box;
+  width: max-content;
+}
+.reveal .content-box.pos-br {
+  position: absolute;
+  bottom: 60px;
+  right: 60px;
+  top: auto;
+  left: auto;
+  transform: none;
+  text-align: left;
+}
+.reveal .content-box.pos-cl {
+  position: absolute;
+  top: 50%;
+  left: 60px;
+  transform: translateY(-50%);
+  text-align: left;
+}
+.reveal .fig-cite {
+  position: relative;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+/* Home button: same translucent-circle style as the search button,
+   stacked directly above it in the top-right corner. */
+#home-btn {
+  position: fixed;
+  bottom: 56px;          /* moved to bottom-right: top-right is badge-only */
+  right: 14px;
+  z-index: 100;
+  width: 34px;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  color: #666;
+  text-decoration: none;
+  opacity: 0.82;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+#home-btn:hover, #home-btn:focus {
+  opacity: 1;
+  background: white;
+  transform: scale(1.06);
+  color: #2980b9;
+}
+#home-btn svg { width: 18px; height: 18px; display: block; pointer-events: none; }
+/* Search button (created by search-ui.js at top:54px) moved to the bottom-right
+   so the top-right corner is reserved for the badge. */
+#search-btn { top: auto !important; bottom: 14px !important; }
+.reveal > .footer {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  height: auto !important;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+#slide-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+#slide-nav button {
+  background: transparent;
+  color: #f6b394;             /* badge peach (was theme blue) */
+  border: 1px solid #f6b394;
+  border-radius: 4px;
+  padding: 4px 14px;
+  font-size: 1rem;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#slide-nav button:active {
+  background: rgba(246, 179, 148, 0.25);
+}
+#slide-nav button.nav-disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+#nav-counter {
+  font-size: 0.9rem;
+  min-width: 56px;
+  text-align: center;
+  color: #a8a8a8;             /* muted, so the page number doesn't read as body text */
+}
+.reveal .slide-number {
+  display: none !important;
+}
+pre.shell code > span > a:first-child::before {
+  content: "$" !important;
+  color: #888 !important;
+  user-select: none !important;
+}
+.code-copy-outer-scaffold {
+  position: relative !important;
+  margin-top: 0.3em !important;
+}
+.code-expand-scaffold {
+  position: relative !important;
+}
+/* The scaffolds span the full content width while the visible box (<pre>) is
+   inset 0.8rem (see the sourceCode margin rules), so anchor the buttons to the
+   box edge, not the scaffold edge — otherwise they float outside the box. */
+.reveal .code-copy-outer-scaffold > .code-copy-button {
+  right: 0.8rem !important;
+}
+.code-expand-button {
+  position: absolute;
+  right: calc(0.8rem + 6px);
+  bottom: 6px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 2px solid rgba(0,0,0,0.25);
+  border-radius: 50%;
+  background: rgba(255,255,255,0.92);
+  color: #666;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0.82;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  touch-action: manipulation;
+}
+.code-expand-button:hover,
+.code-expand-button:focus {
+  opacity: 1;
+  background: white;
+  transform: scale(1.04);
+}
+.code-expand-button svg {
+  width: 21px;
+  height: 21px;
+  display: block;
+  pointer-events: none;
+}
+#code-zoom-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 4vw;
+  background: rgba(0,0,0,0.72);
+  box-sizing: border-box;
+}
+#code-zoom-modal.code-zoom-open {
+  display: flex;
+}
+#code-zoom-panel {
+  position: relative;
+  width: min(92vw, 1500px);
+  max-height: 88vh;
+  --code-zoom-font-size: 2.2rem;
+  padding: 32px 22px 22px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.35);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+#code-zoom-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.75);
+  color: #333;
+  padding: 0;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: none;
+}
+#code-zoom-close:hover,
+#code-zoom-close:focus {
+  background: rgba(245,245,245,0.98);
+  border-color: rgba(0,0,0,0.28);
+  color: #111;
+}
+#code-zoom-copy {
+  position: absolute;
+  top: 6px;
+  right: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(0,0,0,0.14);
+  border-radius: 4px;
+  background: rgba(255,255,255,0.75);
+  padding: 0;
+  cursor: pointer;
+  box-shadow: none;
+}
+#code-zoom-copy:hover,
+#code-zoom-copy:focus {
+  background: rgba(245,245,245,0.98);
+  border-color: rgba(0,0,0,0.28);
+}
+#code-zoom-copy::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background-color: rgb(90, 99, 104);
+  -webkit-mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>') no-repeat center / 16px 16px;
+  mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>') no-repeat center / 16px 16px;
+}
+#code-zoom-copy:hover::before,
+#code-zoom-copy:focus::before {
+  background-color: rgb(16, 120, 149);
+}
+#code-zoom-copy.copied::before {
+  -webkit-mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>') no-repeat center / 16px 16px;
+  mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/></svg>') no-repeat center / 16px 16px;
+  background-color: rgb(18, 128, 60);
+}
+#code-zoom-content pre {
+  max-height: none !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+#code-zoom-content pre > code.sourceCode {
+  white-space: pre !important;
+}
+#code-zoom-content {
+  max-height: calc(88vh - 80px);
+  overflow: auto;
+  box-sizing: border-box;
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(0,0,0,0.3) rgba(0,0,0,0.1) !important;
+}
+#code-zoom-content.code-zoom-pan-mode {
+  cursor: grab;
+  user-select: none;
+}
+#code-zoom-content.code-zoom-pan-mode * {
+  cursor: grab !important;
+  user-select: none;
+}
+#code-zoom-content.code-zoom-dragging {
+  cursor: grabbing;
+}
+#code-zoom-content.code-zoom-dragging * {
+  cursor: grabbing !important;
+}
+#code-zoom-content::-webkit-scrollbar {
+  width: 10px !important;
+  height: 10px !important;
+  -webkit-appearance: none !important;
+}
+#code-zoom-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-radius: 5px !important;
+}
+#code-zoom-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.25) !important;
+  border-radius: 5px !important;
+  border: 2px solid transparent !important;
+  background-clip: content-box !important;
+}
+#code-zoom-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+#code-zoom-content .sourceCode {
+  max-width: none;
+  overflow: visible !important;
+}
+#code-zoom-content div.sourceCode {
+  display: inline-block;
+  min-width: 100%;
+  border: 1px solid rgba(0,0,0,0.18);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+#code-zoom-content pre.sourceCode {
+  width: fit-content;
+  min-width: calc(100% - 2px);
+}
+#code-zoom-content pre.numberSource {
+  margin-left: 5.4em !important;
+  margin-right: -5.4em !important;
+  min-width: calc(100% - 2px);
+  padding-left: 0 !important;
+}
+#code-zoom-content pre.numberSource code > span {
+  left: -4em !important;
+}
+#code-zoom-content pre.numberSource code > span > a:first-child::before {
+  left: -1em !important;
+}
+#code-zoom-content pre code {
+  font-family: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace !important;
+  font-size: var(--code-zoom-font-size) !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
+  word-spacing: normal !important;
+  font-variant-ligatures: none !important;
+}
+.reveal .columns.columns-tight {
+  max-width: 1050px;
+  margin-left: auto;
+  margin-right: auto;
+  align-items: center;
+}
+.reveal .columns.columns-tight .column {
+  text-align: center;
+}
+.reveal .column.mermaid-compact .cell {
+  max-width: 460px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.reveal .column.mermaid-compact svg {
+  max-width: 100% !important;
+  height: auto !important;
+}
+.reveal .mermaid .nodeLabel,
+.reveal .mermaid foreignObject div {
+  text-align: center !important;
+  font-weight: 700 !important;
+}
+.code-copy-outer-scaffold:has(pre.python)::before,
+.code-copy-outer-scaffold:has(pre.shell)::before {
+  position: absolute;
+  top: 2px;
+  left: 22px;
+  font-size: 10px;
+  color: #bbb;
+  pointer-events: none;
+  z-index: 2;
+}
+.code-copy-outer-scaffold:has(pre.python)::before {
+  content: "Code";
+}
+.code-copy-outer-scaffold:has(pre.shell)::before {
+  content: "Shell";
+}
+a[href]::after {
+  content: "";
+  display: inline-block;
+  width: 0.6em;
+  height: 0.6em;
+  margin-left: 0.3em;
+  vertical-align: middle;
+  opacity: 0.5;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M290.4 19.8C295.4 7.8 307.1 0 320 0h160c17.7 0 32 14.3 32 32v160c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9L400 157.3 246.6 310.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L354.7 112l-57.3-57.4c-9.2-9.2-11.9-22.9-6.9-34.9zM0 176c0-44.2 35.8-80 80-80h80c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-8.8 0-16 7.2-16 16v256c0 8.8 7.2 16 16 16h256c8.8 0 16-7.2 16-16v-80c0-17.7 14.3-32 32-32s32 14.3 32 32v80c0 44.2-35.8 80-80 80H80c-44.2 0-80-35.8-80-80V176z'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M290.4 19.8C295.4 7.8 307.1 0 320 0h160c17.7 0 32 14.3 32 32v160c0 12.9-7.8 24.6-19.8 29.6s-25.7 2.2-34.9-6.9L400 157.3 246.6 310.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L354.7 112l-57.3-57.4c-9.2-9.2-11.9-22.9-6.9-34.9zM0 176c0-44.2 35.8-80 80-80h80c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-8.8 0-16 7.2-16 16v256c0 8.8 7.2 16 16 16h256c8.8 0 16-7.2 16-16v-80c0-17.7 14.3-32 32-32s32 14.3 32 32v80c0 44.2-35.8 80-80 80H80c-44.2 0-80-35.8-80-80V176z'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+.reveal .slide-menu-button a[href]::after,
+.slide-menu-wrapper a[href]::after,
+#home-btn[href]::after,
+a.lightbox[href]::after {
+  content: none !important;
+  display: none !important;
+}
+.reveal .hl {
+  color: rgba(255,255,255,1);
+  font-weight: bold;
+  font-family: monospace;
+  text-shadow:
+    -3px  0   0 #0099cc,
+    -3px -1px 0 #0099cc,
+    -2px -2px 0 #0099cc,
+    -1px -3px 0 #0099cc,
+     0   -3px 0 #0099cc,
+     1px -3px 0 #0099cc,
+     2px -2px 0 #0099cc,
+     3px -1px 0 #0099cc,
+     3px  0   0 #0099cc,
+     3px  1px 0 #0099cc,
+     2px  2px 0 #0099cc,
+     1px  3px 0 #0099cc,
+     0    3px 0 #0099cc,
+    -1px  3px 0 #0099cc,
+    -2px  2px 0 #0099cc,
+    -3px  1px 0 #0099cc;
+}
+/* English co-notation of a Japanese technical term, e.g. 過学習（[overfitting]{.en}）.
+   Serif Latin against the gothic Japanese makes it read as a foreign term and
+   stand out subtly without bold — the serif alone carries the distinction.
+   Color is left to inherit on purpose: it stays readable on colored
+   backgrounds (e.g. the h3 blue banner) and tracks any future theme-color
+   change with zero per-context maintenance. */
+.reveal .en {
+  font-family: Georgia, Cambria, "Times New Roman", serif;
+  font-weight: normal;
+  /* Georgia only ships 400/700, so 500/600 round to bold. For a true
+     "just a touch heavier" we thicken the regular face with a hairline
+     stroke in the inherited color — font- and theme-independent. */
+  -webkit-text-stroke: 0.02em currentColor;
+  letter-spacing: 0.01em;
+}
+/* Spelled-out form of an abbreviation is just bold: write it as Markdown
+   **…** inside .en, e.g. DNN（[**Deep Neural Network**]{.en}）. The <strong>
+   child would otherwise inherit .en's hairline text-stroke and look
+   double-weighted, so zero the stroke on it. (No .abbr class: Pandoc rewrites
+   {.abbr} to <abbr> and drops the .en class along with it.) */
+.reveal .en strong {
+  -webkit-text-stroke: 0;
+}
+.break-slide h2 { border: none !important; }
+.break-slide p { margin: 0 !important; }
+.break-slide .break-title {
+  display: block;
+  width: 860px;
+  max-width: calc(100% - 310px);
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #333;
+  border-bottom: 0.5px solid #999;
+  margin-left: 190px !important;
+  margin-right: auto !important;
+  padding: 0 0 0.24em;
+  text-align: left;
+}
+.slide-body ul {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.reveal .slide-body ul { /* level 1 */
+  list-style: none;
+  padding-left: 1.45em;
+}
+.reveal .slide-body ul ul { /* level 2 */
+  padding-left: 1.0em;
+}
+.reveal .slide-body ul ul ul { /* level 3 */
+  padding-left: 0.0em;
+}
+.reveal .slide-body ul > li::before {
+  content: "";
+  display: inline-block;
+  width: 0.58em;
+  height: 0.58em;
+  margin-left: -1.2em;
+  margin-right: 0.62em;
+  vertical-align: 0.1em;
+  background-color: #0099cc;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+.reveal .slide-body ul ul > li::before,
+.reveal .slide-body ol ul > li::before {
+  content: "";
+  display: inline-block;
+  width: 1.1em;
+  height: 0.7em;
+  margin-left: -1.55em;
+  margin-right: 0.45em;
+  vertical-align: 0.02em;
+  background-color: #0099cc;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 28'%3E%3Cpath d='M2 14h37M29 4l10 10-10 10' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 28'%3E%3Cpath d='M2 14h37M29 4l10 10-10 10' fill='none' stroke='black' stroke-width='4.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+.reveal .slide ul li, .reveal .slide ol li {
+    margin-top: 0.3em;
+    margin-bottom: 0.3em;
+}
+
+.reveal .slide-body ul ul ul > li::before {
+  content: "";
+  display: inline-block;
+  width: 0.42em;
+  height: 0.62em;
+  margin-left: -0.92em;
+  margin-right: 0.5em;
+  vertical-align: 0.02em;
+  background-color: #6aaec6;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 32'%3E%3Cpath d='M3 3l18 13L3 29z' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 32'%3E%3Cpath d='M3 3l18 13L3 29z' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+}
+.reveal strong {
+  padding: 0 0.1em;
+}
+.cell:has(details.code-fold) {
+  display: flex;
+  flex-direction: column;
+}
+.cell:has(details.code-fold) details.code-fold {
+  order: 1;
+}
+.cell-output.cell-output-display .quarto-figure {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+.cell-output.cell-output-display a.lightbox {
+  display: block;
+}
+.cell-output.cell-output-display figure p {
+  margin-bottom: 0 !important;
+}
+.cell details.code-fold {
+  margin-left: 1.6em;
+  font-size: 1.2rem;
+}
+/* Code-fold summary ("解答例を見る" / "コードを表示"): render as a light rounded
+   button so the clickable area is visible. The native disclosure marker is
+   replaced with a custom triangle (inside the button, rotates when open) —
+   the default marker sits outside the border box and can't be styled per-theme. */
+.reveal summary {
+  cursor: pointer;
+}
+.reveal details.code-fold > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  width: fit-content;
+  padding: 0.32em 0.85em;
+  border: 1px solid #d9e1ea;
+  border-radius: 9px;
+  background: #f5f8fb;
+  color: #3d4b5c;
+  list-style: none;
+  transition: background 0.13s, border-color 0.13s;
+}
+.reveal details.code-fold > summary::-webkit-details-marker {
+  display: none;
+}
+.reveal details.code-fold > summary::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.5em;
+  height: 0.65em;
+  background-color: #6a7a8c;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 32'%3E%3Cpath d='M3 3l18 13L3 29z' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 32'%3E%3Cpath d='M3 3l18 13L3 29z' fill='black'/%3E%3C/svg%3E") no-repeat center / contain;
+  transition: transform 0.13s;
+}
+.reveal details.code-fold[open] > summary::before {
+  transform: rotate(90deg);
+}
+.reveal details.code-fold > summary:hover {
+  background: #eaf1f8;
+  border-color: #b9cde4;
+}
+.reveal details.code-fold[open] > summary {
+  margin-bottom: 0.35em;
+}
+.reveal :not(pre) > code {
+  color: #005cc5;
+  font-weight: bold;
+  font-size: 1.1em;
+  padding: 0 0.15em;
+  font-family: monospace, serif;
+  text-shadow: none;
+}
+/* Rosette preset badges (injected by badge-ui.js). The top-right corner is
+   reserved for badges (home/search buttons live at the bottom-right), so the
+   badge can be big and slightly tilted — overflowing the corner a little is
+   intentional. Absolutely positioned within the section so it tracks the
+   title's right shoulder, not the viewport corner. Title gets right-padding
+   (set inline by the script) so a long heading wraps before the badge zone. */
+.reveal .slides section > .slide-badge-group {
+  position: absolute;
+  top: 2px;              /* high in the corner, head fully visible (no top bleed) */
+  right: 22px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  z-index: 6;
+  pointer-events: none;
+}
+.reveal .slides section > .slide-badge-group svg {
+  display: block;
+  transform: rotate(-8deg);    /* tilt each badge about ITS OWN center */
+  transform-origin: 50% 39%;   /* 39% of the 256-tall viewBox = rosette center (y=100) */
+}
+.reveal .slides section > .slide-badge-group text {
+  font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", "Meiryo", sans-serif;
+}
+/* ---- Callouts: unified "solid colored header bar + white text + white icon" ----
+   The title row is a solid block in each type's color; the body stays plain.
+   Icons are whitened with a filter so we keep Quarto's per-type glyphs.
+   Colours are chosen so white text stays legible AND the five types stay
+   distinct: important is violet (no longer red), so warning shifts to a deep
+   orange and caution to red (amber + white text is unreadable). */
+.reveal .callout .callout-title { color: #fff !important; }
+.reveal .callout .callout-title p,
+.reveal .callout .callout-title strong,
+.reveal .callout .callout-title code { color: #fff !important; }   /* code in a header bar must be white too */
+.reveal .callout .callout-icon::before { filter: brightness(0) invert(1) !important; }
+
+.reveal .callout-note      .callout-title { background: #1c7ed6 !important; }
+.reveal .callout-note      { border-left-color: #1864ab !important; }
+.reveal .callout-tip       .callout-title { background: #2f9e44 !important; }
+.reveal .callout-tip       { border-left-color: #2b8a3e !important; }
+.reveal .callout-important .callout-title { background: #7c3aed !important; }
+.reveal .callout-important { border-left-color: #5f3dc4 !important; }
+.reveal .callout-warning   .callout-title { background: #e8590c !important; }
+.reveal .callout-warning   { border-left-color: #d9480f !important; }
+.reveal .callout-caution   .callout-title { background: #e03131 !important; }
+.reveal .callout-caution   { border-left-color: #c92a2a !important; }
+
+/* =========================================================================
+   Lecture index / handouts — card-grid component
+   Used by index.qmd (cards link to .qmd) and handouts.qmd (cards link to PDF,
+   add .dl to the grids). Structure:
+     ::: {.lectures}  ### Name {.sec .cat1}  ::: {.grid .cat1}  - [t](x)  :::  :::
+   Auto-numbered (CSS counter); per-category accent via .cat1..5; .app = ◦.
+   ========================================================================= */
+.reveal .pdf-gate{position:absolute;top:10px;right:0;display:inline-flex;align-items:center;gap:.34em;
+  text-decoration:none!important;color:#bb4a3f!important;font-size:.5em;font-weight:700;letter-spacing:.04em;
+  border:1.5px solid #e6c4bf;border-radius:10px;padding:.55em .85em;background:#fdf6f4;z-index:20;line-height:1}
+.reveal .pdf-gate:hover{background:#fbeeec;border-color:#dca99f}
+.reveal .pdf-gate::before{content:"";width:.95em;height:1.15em;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bb4a3f' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3C/svg%3E") no-repeat center/contain}
+.reveal .pdf-gate svg,.reveal .pdf-gate i{display:none!important}
+.reveal .pdf-gate::after{content:none!important}
+.reveal a.backlink{position:absolute;top:0;right:0;font-size:.46em;font-weight:600;color:#2a76dd!important;text-decoration:none!important;z-index:20}
+.reveal .idx-lead{color:#8a93a0!important;font-size:.5em;margin:.1em 0 1em}
+.reveal #lecture-search{margin:.5em 0 1.1em}
+.reveal #search-input{width:100%;font-size:1.4rem;padding:8px 14px;border:2px solid #5dade2;border-radius:6px;box-sizing:border-box;background:#fff}
+.reveal .lectures{counter-reset:lec}
+.reveal .lectures .sec{background:none!important;font-size:.62em!important;font-weight:700;color:#6b7280;
+  letter-spacing:.03em;margin:1em 0 .5em!important;padding:0 0 .35em!important;border:none!important;
+  border-bottom:2px solid #eef2f8!important;text-align:left}
+.reveal .lectures .sec .sub{color:#9aa3af;font-weight:600;font-size:.8em;margin-left:.5em}
+.reveal .lectures .grid ul{list-style:none!important;display:grid!important;
+  grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:10px;margin:0!important;padding:0!important}
+/* The <a> is the card interior: it fills the li (padding/gap live on the a,
+   the number chip is a::before) so the entire card is the link's hit area. */
+.reveal .lectures .grid li{display:flex!important;margin:0!important;padding:0!important;
+  border:1px solid #e8ebf0;border-radius:10px;background:#fff;counter-increment:lec;transition:.13s}
+.reveal .lectures .grid li::before{content:none!important}  /* kill theme bullet */
+.reveal .lectures .grid li>a{flex:1;display:flex;align-items:center;gap:.79em;padding:.6em .86em;
+  text-decoration:none!important;color:#1f2d3d!important;font-size:.7em;font-weight:600;line-height:1.3}
+.reveal .lectures .grid li>a::after{content:none!important}
+.reveal .lectures .grid li>a::before{content:counter(lec,decimal-leading-zero)!important;flex:0 0 auto;
+  width:2.2em;height:2.2em;display:flex!important;align-items:center;justify-content:center;
+  font-size:1.03em;font-weight:700;color:#6b7280;background:#eef0f3;border-radius:7px!important;
+  margin:0!important;letter-spacing:.02em;-webkit-mask:none!important;mask:none!important}
+.reveal .lectures a svg,.reveal .lectures a i{display:none!important}
+.reveal .lectures .grid.app li{counter-increment:none}
+.reveal .lectures .grid.app li>a::before{content:"\25E6"!important;color:#9aa3af!important;background:#f0f2f5!important}
+/* handout variant — red PDF doc icon on each card */
+.reveal .lectures .grid.dl li>a::after{content:""!important;flex:0 0 auto;position:static!important;
+  width:1.36em!important;height:1.71em!important;margin:0!important;opacity:.5;-webkit-mask:none!important;mask:none!important;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23bb4a3f' stroke-width='2' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3C/svg%3E") no-repeat center/contain!important}
+.reveal .lectures .grid.dl li:hover>a::after{opacity:.95}
+/* per-category accent colors (header underline + number chip + hover) */
+.reveal .lectures .sec.cat1{color:#2a6fd6!important;border-bottom-color:#d3e3fb!important}
+.reveal .lectures .grid.cat1 li>a::before{color:#2a6fd6!important;background:#e9f1fd!important}
+.reveal .lectures .grid.cat1 li:hover{border-color:#b9d3f6!important;background:#f5f9ff!important}
+.reveal .lectures .sec.cat2{color:#1c9b76!important;border-bottom-color:#cdecdf!important}
+.reveal .lectures .grid.cat2 li>a::before{color:#1c9b76!important;background:#e6f6f0!important}
+.reveal .lectures .grid.cat2 li:hover{border-color:#a9e0cd!important;background:#f2fbf7!important}
+.reveal .lectures .sec.cat3{color:#cd7a1f!important;border-bottom-color:#f4ddbf!important}
+.reveal .lectures .grid.cat3 li>a::before{color:#cd7a1f!important;background:#fcf1e2!important}
+.reveal .lectures .grid.cat3 li:hover{border-color:#eecb97!important;background:#fdf8f0!important}
+.reveal .lectures .sec.cat4{color:#7a55cf!important;border-bottom-color:#e0d4f6!important}
+.reveal .lectures .grid.cat4 li>a::before{color:#7a55cf!important;background:#f0eafb!important}
+.reveal .lectures .grid.cat4 li:hover{border-color:#cbb8ef!important;background:#f8f4fd!important}
+.reveal .lectures .sec.cat5{color:#c44d6e!important;border-bottom-color:#f6d6df!important}
+.reveal .lectures .grid.cat5 li>a::before{color:#c44d6e!important;background:#fcebf0!important}
+.reveal .lectures .grid.cat5 li:hover{border-color:#eeb6c6!important;background:#fdf4f7!important}
+
+/* =========================================================================
+   Compact tabset — restyles Quarto's native .panel-tabset (works in reveal
+   decks via Tabby) into a small segmented control, so alternate views
+   (e.g. an index split into 前期/後期) don't stack on one slide.
+     :::: {.panel-tabset}  ### 前期 …  ### 後期 …  ::::
+   Only direct-child headings become tabs; headings nested in divs (like the
+   card-grid .sec headers) stay inside the pane. Selectors are doubled
+   ([role=…] + .panel-tabset-tabby) because Tabby assigns roles at runtime.
+   ========================================================================= */
+.reveal .panel-tabset [role=tablist],
+.reveal .panel-tabset .panel-tabset-tabby{display:inline-flex;gap:3px;width:auto!important;
+  list-style:none!important;margin:0 0 .45em!important;padding:3px!important;
+  border:none!important;background:#eef0f4;border-radius:10px}
+.reveal .panel-tabset [role=tablist] li,
+.reveal .panel-tabset .panel-tabset-tabby li{display:inline-block;margin:0!important;padding:0!important}
+.reveal .panel-tabset .panel-tabset-tabby li::before{content:none!important}
+.reveal .panel-tabset [role=tab],
+.reveal .panel-tabset .panel-tabset-tabby a{display:block;margin:0!important;border:none!important;
+  border-radius:8px;padding:.32em 1.15em!important;font-size:.5em;font-weight:700;line-height:1.25;
+  letter-spacing:.05em;color:#8a93a0!important;text-decoration:none!important;transition:.13s}
+.reveal .panel-tabset [role=tab]::after,
+.reveal .panel-tabset .panel-tabset-tabby a::after{content:none!important}
+.reveal .panel-tabset [role=tab]:hover:not([aria-selected=true]){border:none!important;color:#5b6472!important}
+.reveal .panel-tabset [role=tab][aria-selected=true]{background:#fff!important;border:none!important;
+  color:#2a6fd6!important;box-shadow:0 1px 3px rgba(25,45,80,.18)}
+.reveal .panel-tabset .tab-content{padding:0!important;border:none!important}
+
+/* Standalone images center on slides. Quarto wraps captioned figures in
+   .quarto-figure-center, but a bare image alone in its own paragraph — e.g.
+   the quarto-d2 filter's output, or a plain ![](img) line, with or without
+   a lightbox anchor — stays an inline-left <img>. Center those. */
+.reveal .slides p:has(> img:only-child),
+.reveal .slides p:has(> a:only-child > img){text-align:center}
+
+/* Scroll hint — a "more content below" nudge (created by slide-ui.js).
+   When a slide taller than the frame is first shown, a chevron at the
+   bottom center dips twice, then fades out. It lives in .slides (NOT the
+   section) so it stays put while the section scrolls beneath it. The CSS
+   animation owns the whole lifecycle: slide-ui.js removes the node on
+   animationend. Self-centered via margin, keeping transform free for
+   the dips; bottom offset clears the footer nav (◀ n/m ▶). */
+#scroll-hint{position:absolute;left:50%;bottom:46px;margin-left:-20px;width:40px;height:40px;
+  border-radius:50%;background:rgba(41,128,185,.82);box-shadow:0 2px 8px rgba(25,45,80,.28);
+  display:flex;align-items:center;justify-content:center;color:#fff;pointer-events:none;
+  z-index:40;opacity:0;animation:scroll-hint-nudge 2.8s ease-in-out forwards}
+#scroll-hint svg{width:22px;height:22px;display:block}
+@keyframes scroll-hint-nudge{
+  0%{opacity:0;transform:translateY(-6px)}
+  12%{opacity:1;transform:translateY(0)}
+  30%{transform:translateY(9px)}
+  46%{transform:translateY(0)}
+  62%{transform:translateY(9px)}
+  80%{opacity:1;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(0)}
+}
+/* The dips are decorative; with reduced motion just fade in and out. */
+@media (prefers-reduced-motion:reduce){
+  #scroll-hint{animation:scroll-hint-still 2.2s ease forwards}
+}
+@keyframes scroll-hint-still{0%{opacity:0}15%{opacity:1}80%{opacity:1}100%{opacity:0}}

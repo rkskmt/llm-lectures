@@ -1,0 +1,12 @@
+{
+ "iters": 3500,
+ "params": 817125,
+ "total_sec": 470.3,
+ "threads": 1,
+ "batch": 32,
+ "lr": 0.001,
+ "n_embd": 96,
+ "n_head": 4,
+ "n_layer": 2,
+ "block_size": 64
+}

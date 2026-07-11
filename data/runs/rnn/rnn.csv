@@ -1,0 +1,2 @@
+params,train_nll,val_nll,best_val_nll,best_step,train_sec,fwd_rnn_ms,fwd_gpt_ms
+10211,1.7990,2.8167,2.3655,500,365.1,1692.4,436.7
