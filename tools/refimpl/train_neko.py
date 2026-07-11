@@ -30,19 +30,23 @@ EVAL_EVERY = 500
 SNAPSHOT_AT = [0, 50, 200, 500, 1000, 2000, 5000, 10000]
 
 
-def get_batch(data, block_size, batch_size, generator):
+def get_batch(data, block_size, batch_size, generator, device=None):
     ix = torch.randint(len(data) - block_size - 1, (batch_size,), generator=generator)
     x = torch.stack([data[i:i + block_size] for i in ix])
     y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])
+    if device is not None:
+        x = x.to(device)
+        y = y.to(device)
     return x, y
 
 
 @torch.no_grad()
 def eval_loss(model, data, block_size, generator, n_batches=10):
     model.eval()
+    device = next(model.parameters()).device
     losses = []
     for _ in range(n_batches):
-        x, y = get_batch(data, block_size, 32, generator)
+        x, y = get_batch(data, block_size, 32, generator, device=device)
         logits = model(x)
         losses.append(F.cross_entropy(logits.view(-1, logits.shape[-1]), y.view(-1)).item())
     model.train()
@@ -50,10 +54,10 @@ def eval_loss(model, data, block_size, generator, n_batches=10):
 
 
 def sample(model, itos, n_chars=150, seed=0, temperature=1.0, top_k=None, prompt="\n"):
-    g = torch.Generator().manual_seed(seed)
     torch.manual_seed(seed)  # multinomial uses global rng
     stoi = {c: i for i, c in enumerate(itos)}
-    idx = torch.tensor([[stoi[c] for c in prompt]])
+    device = next(model.parameters()).device
+    idx = torch.tensor([[stoi[c] for c in prompt]], device=device)
     out = model.generate(idx, n_chars, temperature=temperature, top_k=top_k)
     return "".join(itos[i] for i in out[0].tolist())[len(prompt):]
 

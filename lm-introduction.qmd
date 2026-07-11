@@ -309,3 +309,41 @@ for c, n in nxt.most_common(5):
 機械は「あ」という文字をそのままでは食べられない。
 まず、ことばを**数**にする — 下ごしらえの回。文豪テストの機械への第一歩。
 :::
+
+
+## 練習問題
+
+以下の問題を**Pythonコード**で解け。
+
+### 問題1：尖りと平らを実測する
+
+『吾輩は猫である』で、「であ」の次に来る文字と「、」の次に来る文字をそれぞれ数え、**候補の種類数**と**1位の文字とその確率**を表示せよ。
+
+0. [neko.txt](data/neko.txt) を `data/` に置く（演習と同じ）
+1. 演習のコードの「猫」を「であ」「、」に替えて数える（次の文字の位置は `i + len(文脈)`）
+2. 種類数は `len(nxt)`、1位は `nxt.most_common(1)` で取り、「種類数」「1位の文字：確率」を表示
+3. どちらが「こんにち」型で、どちらが「晩ご飯」型か、本編の図と見比べる
+
+
+## 解答例
+
+```{python}
+#| echo: true
+#| code-fold: true
+#| code-summary: "解答例を見る"
+from collections import Counter
+
+text = open("data/neko.txt", encoding="utf-8").read()
+
+for ctx in ["であ", "、"]:
+    nxt = Counter()
+    i = text.find(ctx)
+    while i != -1:
+        j = i + len(ctx)
+        if j < len(text):
+            nxt[text[j]] += 1
+        i = text.find(ctx, i + 1)
+    total = sum(nxt.values())
+    c, n = nxt.most_common(1)[0]
+    print(f"「{ctx}」の次: {len(nxt)}種類 | 1位「{c}」 {n / total:.1%}")
+```

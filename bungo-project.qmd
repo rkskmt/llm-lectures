@@ -73,6 +73,7 @@ print(len(body), "字 / 語彙", len(set(body)))
 ## 育てる — 道具はすべて手元にある
 
 - 訓練コードは**小さなGPTの回のものを1行だけ差し替える**：読み込むファイル名だけ
+- [gpt.py](tools/refimpl/gpt.py) を自分のスクリプトと同じフォルダに置く（小さなGPTの回と同じ配置）
 
 ```{python}
 #| echo: true

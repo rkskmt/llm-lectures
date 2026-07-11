@@ -228,6 +228,20 @@ plt.show()
 - 自作GPTの `generate` のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る
 
 
+## 分布の形を、実物で歩く {.badge-practice}
+
+- top-p のカーブが要約していたもの — ==位置ごとの分布の形== — をエクスプローラで1つずつ覗ける
+
+<iframe src="explorer/index.html#view=predict&token=2" width="100%" height="560" loading="lazy" style="border: 1px solid #ccc; border-radius: 6px; background: white;"></iframe>
+
+0. いま開いているのは「吾輩は」まで読んだ位置 — 低い棒がずらり（お手上げ型。1位「こ」でも 15.5%）
+1. 「あ」（吾輩は猫であ）の位置をクリック — 「る」が **92%** でそびえる（確信型）
+2. プリセットを会話文に替えて、いちばん平らな位置といちばん尖った位置を探す
+3. 見つけた2箇所で「top-p ($p=0.9$) の枠に何文字入るか」を目分量で予想 — 尖りは1桁、平らは3桁
+
+[エクスプローラを別タブで開く](explorer/index.html#view=predict&token=2){target="_blank"}
+
+
 ## サイコロの種 — 揺れを再現する
 
 - 「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は**疑似**乱数で、==種（シード）が同じなら出目の列も同じ==
