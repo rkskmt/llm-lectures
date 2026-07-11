@@ -38,7 +38,7 @@
 ### 参考資料 [回数外]{.sub} {.sec}
 ::: {.grid .app .dl}
 - [BPEトークナイザを自作する](pdf/bpe-appendix.pdf){target="_blank"}
-- [RNN小史 — 前任者の物語](pdf/rnn-history-appendix.pdf){target="_blank"}
+- [RNN小史 — 記憶を手渡す機械](pdf/rnn-history-appendix.pdf){target="_blank"}
 - [スケーリング則の直感](pdf/scaling-appendix.pdf){target="_blank"}
 :::
 

@@ -43,7 +43,7 @@
 ### 参考資料 [回数外]{.sub} {.sec}
 ::: {.grid .app}
 - [BPEトークナイザを自作する](bpe-appendix.qmd)
-- [RNN小史 — 前任者の物語](rnn-history-appendix.qmd)
+- [RNN小史 — 記憶を手渡す機械](rnn-history-appendix.qmd)
 - [スケーリング則の直感](scaling-appendix.qmd)
 :::
 
