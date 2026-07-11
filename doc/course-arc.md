@@ -64,8 +64,8 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 ### 回数外（参考資料）
 
 - `bpe-appendix.qmd` — BPE トークナイザ自作。20マージで「主人」「吾輩」「云う」が単語として出現（実測） — 完
-- `rnn-history-appendix.qmd` — RNN・LSTM 小史（なぜ主役を降りたか） — 未
-- `scaling-appendix.qmd` — スケーリング則の直感（なぜ大きいほど強いのか） — 未
+- `rnn-history-appendix.qmd` — RNN・LSTM 小史（なぜ主役を降りたか） — 完
+- `scaling-appendix.qmd` — スケーリング則の直感（なぜ大きいほど強いのか） — 完
 
 ## 全回共通の装置（第1コースから継承）
 
@@ -129,6 +129,23 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 - **配布チェックポイント `ckpt_best.pt`**：同一スクリプト 3,500 iter（val 3.62、底とほぼ同じ）。`ckpt_main.pt`（過学習版）は author-side（gitignore）
 - スナップショット（`snapshots_main.txt`）：iter0 漢字スープ → 50 かな出現 → 500 言葉のかけら → 2000 文の形 → 10000 長い文。**「文字→かな→単語→文」の順に覚える**
 - 過学習しても**逐語再現はしない**（greedy でも「吾輩は猫である。名前はまだ無い。」の続きを再現できず）— 0.8M params は 32万字を丸暗記できない。デッキでは「初見への弱体化」として扱う（「丸暗記の吐き出し」とは書かない）
+
+### RNN小史（experiments_rnn.py、2026-07-11）
+
+- 地名 Elman RNN（10,211 params、窓16、batch256、3,000歩）：val の底は **500歩・2.37**。最終は train 1.80 / val 2.82 — MLP窓2（2.59）には底で勝つが、回し続けると過学習で負ける
+- 未訓練RNNへ最後の位置だけから勾配を流すと、64文字前の勾配は最後の位置の **10⁻²⁰ 倍**。訓練済みGPTは約 **10⁻³ 倍**
+- 幅96・長さ64・batch32のCPU forward：RNN 1層の逐次ループ **1,692.4ms**、GPT 2ブロック全身 **436.7ms**（1スレッド）。RNNは3〜4倍遅い
+- 生成15件と曲線・勾配は `data/runs/rnn/` に保存。デッキの断定値はこの成果物から読む
+
+### 幅スケーリング実験（experiments_scaling.py、2026-07-11）
+
+- 『猫』、2ブロック・4ヘッド・block64、batch32、AdamW lr1e-3、seed42、各2,000歩。変えるのは `n_embd = 12, 24, 48, 96, 192` だけ。RTX 4070 Ti SUPER・PyTorch 2.11.0+cu128で5台を同条件測定
+- パラメータ数：**80,613 / 165,093 / 354,789 / 817,125 / 2,073,573**（幅16倍で約25.7倍）
+- 最良 val loss：**4.3971 / 4.1348 / 3.9086 / 3.6175 / 3.5575** — 5点で単調改善
+- 最大モデルは500歩ですでに val **3.7624**。1,500歩で底 **3.5575**、2,000歩では **3.6338** に悪化。一方、最終 train は **2.5287** — 大きいモデルほど速く学び、固定データでは早く過学習する
+- 2,000歩の最終 val だけなら幅96（3.6175）が幅192（3.6338）に勝つ。比較には最終値でなく各モデルの best val を使う
+- float32重みだけの容量：幅12 **0.32MB** / 幅96 **3.27MB** / 幅192 **8.29MB**。学習時は勾配・optimizer状態・活性が加わる
+- 成績・500歩ごとの曲線・同一条件の生成文・実行環境は `data/runs/scaling/` に保存
 
 ### 文豪テスト素材（`data/runs/neko/bungo_test.txt`）
 
@@ -231,7 +248,7 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 
 - `gpt.py` — 教える対象そのもの（Head/MultiHead/FeedForward/Block/GPT、ReLU・dropoutなし・ヘッドごとLinear）。デッキのクラスとこのファイルは**同一に保つ**
 - `train_neko.py` — 正準訓練スクリプト。`--iters/--tag` で本番(main)・配布(best)を再現。成果物 → `data/runs/neko/`
-- `experiments_chimei.py` / `verify_claims.py` / `verify_embeddings.py` / `make_bungo_test.py` / `bench.py` — 実測ログの再現コード
+- `experiments_chimei.py` / `experiments_rnn.py` / `experiments_scaling.py` / `verify_claims.py` / `verify_embeddings.py` / `make_bungo_test.py` / `bench.py` — 実測ログの再現コード
 - `inspect_attention.py` — 訓練済みモデルの視線の実測（per-head 統計＋ラベル付きヒートマップ＋BertViz HTML）。`attention_maps()` はデッキからも import して使う
 - `export_explorer_data.py` — 自作GPTエクスプローラ用の活性ダンプ（`explorer/data_neko.js` を再生成。ckpt_best を作り直したら必ず再実行）
 - attention 可視化は matplotlib の「視線の表」（スライド内の静止画）＋ **BertViz head_view**（対話的に遊ぶ用、§実測ログ参照）の2段構え
@@ -252,6 +269,6 @@ RNN/LSTM は本編から**完全カット**（MLP言語モデルの「固定窓�
 
 - **リポジトリ名／サイトタイトル**（ディレクトリ名は `llm`、サイトタイトルは仮に「LLM Lectures」／index 見出し「大規模言語モデル」。決まり次第 `_quarto.yml`・README を更新し `_publish.yml` を作る）
 - **回数**：2026-07-10 のリバイスで「部品を束ねる」を2回に分割し**全15回**に（1回4部品の詰め込みを解消）。削る必要が出たら「生成を操る」を訓練回に吸収する手が残っている
-- 回数外の残り2本（RNN小史・スケーリング則）を書くか
+- 回数外の参考資料3本（BPE・RNN小史・スケーリング則）は完成済み
 
 （解決済み：外部デモへのリンクアウトは「深く積む」の締めに採用。BertViz は検証のうえ採用 — §実測ログ参照）

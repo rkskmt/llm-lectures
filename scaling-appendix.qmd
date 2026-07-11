@@ -1,0 +1,258 @@
+---
+title: "スケーリング則の直感"
+subtitle: "参考資料 — 大きくすると、なぜ強くなるのか"
+---
+
+## この資料について
+
+- 自作GPTは **約82万パラメータ**。ChatGPT までの距離の回では、GPT-3 がその約21万倍だと見た
+- 残った問い：==部品を増やすだけで、本当に予測は上手くなるのか？==
+- 同じ『吾輩は猫である』・同じGPT・同じ訓練歩数で、**幅だけ**を変えた5台を競わせる
+
+
+## クイズ：幅だけ広げると？
+
+データも訓練歩数も同じまま、モデルの幅を16倍にする。初見の文章を当てる val loss はどうなると思う？
+
+| 予想 | 起きそうなこと |
+|---|---|
+| A | 小さい方が有利 — 大きいモデルは学びきれない |
+| B | 大きい方が有利 — 複雑な規則を持てる |
+| C | 途中までは改善するが、大きすぎると逆転する |
+
+::: {.callout-important}
+先に1つ選べ。答えは**実測した5点**で決める。
+:::
+
+
+## 「大きくする」＝ ベクトルの幅を広げる
+
+- 自作GPTの各文字は、幅 $d$ のベクトルで旅をする — コードでは `n_embd=d`
+- 幅が広いほど、1文字について**同時に持てる手がかり**を増やせる
+- 行列は「幅 × 幅」のマスを持つため、幅を広げると部品は急に増える
+- 層数・ヘッド数・窓の長さは固定し、今回はこの幅だけを変える
+
+```{.d2 sketch="true" width="90%"}
+direction: right
+small: "細い通路\nd = 12\n12個の数で表す" { style.fill: "#eaf2f8" }
+same: "同じ2ブロック\n同じ4ヘッド\n同じ64文字の窓" { style.fill: "#fff4e1" }
+large: "広い通路\nd = 192\n192個の数で表す" { style.fill: "#d5f5e3" }
+small -> same: "幅だけ変更"
+same -> large: "16倍"
+```
+
+
+## 幅16倍、部品は約26倍
+
+```{python}
+#| echo: false
+import japanize_matplotlib
+import matplotlib.pyplot as plt
+import pandas as pd
+
+scaling = pd.read_csv("data/runs/scaling/scaling.csv")
+
+fig, ax = plt.subplots(figsize=(7.2, 2.9))
+bars = ax.bar(scaling["n_embd"].astype(str), scaling["params"], color="#5dade2")
+ax.set_yscale("log")
+ax.set_xlabel("ベクトルの幅 d")
+ax.set_ylabel("パラメータ数（対数目盛）")
+for bar, n in zip(bars, scaling["params"]):
+    ax.text(bar.get_x() + bar.get_width() / 2, n * 1.10, f"{n / 1e6:.2f}M",
+            ha="center", va="bottom", fontsize=10)
+ax.grid(axis="y", alpha=0.25)
+plt.tight_layout()
+plt.show()
+```
+
+- $d$: 12 → 192 は **16倍** ／ パラメータ: 80,613 → 2,073,573 は **約25.7倍**
+
+
+## 公平に競わせる
+
+| 固定するもの | 5台すべて同じ |
+|---|---|
+| データ | 『吾輩は猫である』321,139字、先頭90%で訓練・末尾10%で検証 |
+| GPTの骨格 | 2ブロック・4ヘッド・64文字の窓 |
+| 学習 | batch 32・AdamW・学習率0.001・2,000歩・seed 42 |
+| 採点 | 500歩ごとの val loss、その中の**最小値** |
+
+- 変えるのは `n_embd = 12, 24, 48, 96, 192` だけ
+- [実験コード](tools/refimpl/experiments_scaling.py) ／ [実測CSV](data/runs/scaling/scaling.csv)
+
+
+## 結果：大きいほど、底が下がった
+
+```{python}
+#| echo: false
+fig, ax = plt.subplots(figsize=(7.2, 3.35))
+ax.plot(scaling["params"], scaling["best_val_loss"], "o-",
+        color="#2980b9", lw=2.5, ms=7)
+ax.set_xscale("log")
+ax.set_xlabel("パラメータ数（対数目盛）")
+ax.set_ylabel("最良 val loss（低いほどよい）")
+for _, row in scaling.iterrows():
+    ax.annotate(f"d={int(row['n_embd'])}\n{row['best_val_loss']:.3f}",
+                (row["params"], row["best_val_loss"]),
+                xytext=(0, 10), textcoords="offset points", ha="center", fontsize=9)
+ax.grid(True, alpha=0.3)
+ax.margins(x=0.08, y=0.18)
+plt.tight_layout()
+plt.show()
+```
+
+- クイズの答えは、**「最良点」で比べれば B**
+
+
+## 耳でも比べる
+
+同じ「吾輩は」から、同じ温度・同じシードで80文字生成した実物：
+
+| 幅 | 生成の冒頭 |
+|---:|---|
+| 12 | 吾輩はある。「も、これ事だらうものだだないから、おっていい。… |
+| 96 | 吾輩はただ一人も多少なものだろう。それだけはこの時はこっちであるからも、… |
+| 192 | 吾輩は吾輩を知らぬにこの事だと同意した。その後学肉はこれから四畳を重んで… |
+
+- どれも意味は怪しい。それでも幅12の**助詞の崩れ**から、幅96・192では**長い文の型**へ進んだ
+- loss の差は、文章の「音」にも現れる — [5台の全文](data/runs/scaling/scaling_samples.txt)
+
+
+## 大きいモデルは、早く下がる
+
+```{python}
+#| echo: false
+curve = pd.read_csv("data/runs/scaling/scaling_curve.csv")
+fig, ax = plt.subplots(figsize=(7.2, 2.9))
+colors = plt.cm.viridis([0.05, 0.27, 0.50, 0.72, 0.94])
+for color, (width, group) in zip(colors, curve.groupby("n_embd")):
+    ax.plot(group["iter"], group["val_loss"], "o-", color=color,
+            label=f"d={width}", lw=2, ms=5)
+ax.set_xlabel("訓練ステップ")
+ax.set_ylabel("val loss")
+ax.legend(ncol=3)
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+- わずか500歩で、幅192は **3.762**。幅12が2,000歩かけた **4.397** をすでに追い越す
+
+
+## ただし最大モデルだけ、Uターン
+
+```{python}
+#| echo: false
+largest = curve[curve["n_embd"] == 192]
+fig, ax = plt.subplots(figsize=(7.0, 2.9))
+ax.plot(largest["iter"], largest["val_loss"], "o-", color="#e74c3c", lw=2.5, ms=7)
+best = largest.loc[largest["val_loss"].idxmin()]
+ax.scatter([best["iter"]], [best["val_loss"]], s=150, facecolors="none",
+           edgecolors="#2ecc71", linewidths=3, zorder=3)
+ax.annotate("底 3.558", (best["iter"], best["val_loss"]),
+            xytext=(-55, -35), textcoords="offset points",
+            arrowprops={"arrowstyle": "->", "color": "#2ecc71"})
+ax.set_xlabel("訓練ステップ")
+ax.set_ylabel("val loss")
+ax.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+```
+
+- 幅192は1,500歩で **3.558**、2,000歩では **3.634** に悪化。一方、train loss は2,000歩まで下がり続けた
+
+
+## 同じ2,000歩でも、公平とは限らない
+
+- 容量が大きいほど、同じ1冊の細部まで覚えやすい — [早期終了](gpt-training.qmd#peek-earlystop){.peek}が早く必要になる
+- 2,000歩の**最後だけ**で順位を決めると、幅96が幅192に勝つ。クイズの C も半分正しかった
+- 各モデルの **best val** を比べれば、幅192が優勝 — 保存したチェックポイントから底を選ぶ
+
+
+## 幅が増えると、何が増える？
+
+- 細いモデルは、限られたベクトルに「直前の文字」「引用の中」「登場人物」などを押し込む
+- 幅を広げると、より多くの手がかりを**別々の方向**として持てる
+- 幅×幅の行列も広がり、手がかり同士の組み合わせを作る「つまみ」が増える
+
+```{.d2 sketch="true" width="88%"}
+direction: right
+narrow: "細いモデル\n少ない方向へ詰め込む\n\n直前＋引用\n人物＋リズム" { style.fill: "#fce4ec" }
+wide: "広いモデル\n別々の方向で持つ\n\n直前 ｜ 引用 ｜ 人物 ｜ リズム" { style.fill: "#d5f5e3" }
+narrow -> wide: "幅を広げる"
+```
+
+
+## 本物の「スケーリング則」
+
+- 多数のモデルを測ると、loss は**モデル規模 $N$・データ量 $D$・計算量 $C$**に対して、なめらかな**べき乗則**（[power law]{.en}）を示す
+
+$$L(N) \approx L_{\infty} + A N^{-\alpha}\qquad (\alpha > 0)$$
+
+- $N$ を増やすほど loss は下がる。ただし右へ行くほど改善幅は小さくなる
+- この経験則が**スケーリング則**（[scaling law]{.en}） — 大型化する前に、必要な資源と期待できるlossを予測する地図
+- 原論文：[Scaling Laws for Neural Language Models](https://arxiv.org/abs/2001.08361)（Kaplanほか、2020）
+
+
+## この5点は「法則のミニチュア」
+
+- 今回固定したもの：データ量 $D$ と訓練歩数。変えたもの：モデル規模 $N$ だけ
+- 8万〜207万パラメータの5点でも、対数目盛の横軸に対して**おおむね滑らかな右下がり**が現れた
+- ただし5点の小実験から、実物LLMにも通用する指数 $\alpha$ は決められない
+- 本物の研究は桁の違う多数のモデル・データ量・計算量を測る — ==方向を体験したのであって、万能な式を証明したのではない==
+
+
+## 大きい脳には、読む本も増やす
+
+- 今回の最大モデルは、同じ『猫』1冊を早く覚えすぎて過学習した
+- モデルだけ大きくしてデータを据え置くと、容量を使い切れない
+- **Chinchilla** の実験は、限られた計算量を使うなら、モデル規模と訓練トークン数を**一緒に増やす**のがよいと示した
+- 原論文：[Training Compute-Optimal Large Language Models](https://arxiv.org/abs/2203.15556)（Hoffmannほか、2022）
+
+::: {.callout-note}
+「一番大きいモデル」ではなく、==モデル・データ・計算の釣り合いがよいモデル==が強い。
+:::
+
+
+## 大きさの請求書
+
+| 幅 | パラメータ | 重みだけの容量（float32） |
+|---:|---:|---:|
+| 12 | 80,613 | 0.32 MB |
+| 96 | 817,125 | 3.27 MB |
+| 192 | 2,073,573 | 8.29 MB |
+
+- 訓練中は重みだけでなく、勾配・AdamWの状態・途中の活性も持つため、必要メモリはさらに増える
+- 推論でも、モデルが大きいほど保存容量・計算・電力・待ち時間が増える
+- scaling law は「大きくすれば無料で勝てる法則」ではなく、==追加コストを払ったときの改善を予測する法則==
+
+
+## 読み解きクイズ
+
+[学習曲線CSV](data/runs/scaling/scaling_curve.csv) と成績表を見て答えよ。
+
+1. 500歩時点で最も val loss が低い幅
+2. 全測定点で最も低い val loss と、その幅・歩数
+3. 2,000歩の最終値だけで比べた優勝モデル
+4. 2と3の答えが違う理由
+
+
+## 答え合わせ
+
+1. 500歩：**幅192、3.762**
+2. 全体の底：**幅192、1,500歩、3.558**
+3. 最終値：**幅96、3.618**（幅192は3.634）
+4. 幅192は学習が速く、2,000歩までに**過学習**へ入ったため
+
+::: {.callout-important}
+モデルの比較では「同じ最終歩」だけでなく、各モデルの**最良 val**を比べる。チェックポイントを保存する理由もここにある。
+:::
+
+
+## まとめ
+
+- 幅を16倍にするとパラメータは約26倍になり、最良 val loss は **4.397 → 3.558** に改善した
+- 大きいモデルは**より低い地点へ、より速く**到達した — 複雑な手がかりを持つ容量が増える
+- ただし最大モデルは同じ1冊を早く覚えすぎた — **早期終了と十分なデータ**が必要
+- スケーリング則は、モデル $N$・データ $D$・計算 $C$ を増やしたときの改善を予測する経験則
+- 「大きければ正義」ではない。==3つの資源の釣り合い==まで含めて設計する

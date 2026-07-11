@@ -75,6 +75,7 @@ def main():
 
     RUN.mkdir(parents=True, exist_ok=True)
     rows = []
+    curve_rows = []
     samples = []
     for width in args.widths:
         torch.manual_seed(42)
@@ -100,6 +101,7 @@ def main():
                 va = eval_loss(model, val_data, cfg["block_size"],
                                torch.Generator().manual_seed(2))
                 best_val = min(best_val, va)
+                curve_rows.append((width, it, round(va, 4)))
                 print(f"d={width:3d} iter {it:5d} | val {va:.4f}", flush=True)
         synchronize(device)
         total = time.time() - t0
@@ -119,6 +121,10 @@ def main():
     with open(RUN / "scaling.csv", "w", encoding="utf-8") as f:
         f.write("n_embd,params,train_loss,val_loss,best_val_loss,ms_per_iter,total_sec\n")
         for r in rows:
+            f.write(",".join(map(str, r)) + "\n")
+    with open(RUN / "scaling_curve.csv", "w", encoding="utf-8") as f:
+        f.write("n_embd,iter,val_loss\n")
+        for r in curve_rows:
             f.write(",".join(map(str, r)) + "\n")
     with open(RUN / "scaling_samples.txt", "w", encoding="utf-8") as f:
         for i, (width, n_params, s) in enumerate(samples):
