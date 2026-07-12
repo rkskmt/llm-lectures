@@ -30,6 +30,16 @@ conda activate llm
 quarto preview --port 4322
 ```
 
+CSS・テーマの見た目だけを素早く確認するときは、対象デッキ1本に絞り、
+Pythonセルを実行しない軽量プレビューを使う：
+
+```bash
+tools/preview-style attention-qkv.qmd
+```
+
+このモードでは計算セルの出力を生成しない。コードや図の変更を確認するときは
+通常の `quarto preview`、公開前は `quarto render` を使う。
+
 ### ビルド・デプロイ
 
 ```bash

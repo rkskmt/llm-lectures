@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 || "$1" != *.qmd ]]; then
+  echo "Usage: tools/preview-style <deck.qmd> [quarto preview options]" >&2
+  exit 2
+fi
+
+project_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+deck="$1"
+shift
+
+cd "$project_dir"
+
+if [[ ! -f "$deck" ]]; then
+  echo "Deck not found: $deck" >&2
+  exit 2
+fi
+
+exec quarto preview "$deck" --no-execute --port 4322 "$@"
