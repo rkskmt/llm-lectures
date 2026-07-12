@@ -44,6 +44,8 @@
       // the inline link marker: dotted underline + magnifier, "preview" cursor
       'a.peek {',
       '  text-decoration: none; border-bottom: 2px dotted currentColor;',
+      '  padding: 0 0.15em;',
+      '  margin: 0 0.25em;',
       '  cursor: zoom-in;',
       '}',
       'a.peek::after { content: " \\1F50D"; font-size: 0.72em; opacity: 0.7; }',
