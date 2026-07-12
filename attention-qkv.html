@@ -251,16 +251,11 @@ rkskmt
 <ul>
 <li>変換などせず、==埋め込み <span class="math inline">\(x\)</span> どうしの内積==を関連度にすればよさそうに見える：スコア <span class="math inline">\(= XX^\top\)</span></li>
 </ul>
-<div id="bbc2c2ff" class="cell" data-execution_count="1">
+<div id="76501831" class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])   <span class="co"># 3文字ぶんの埋め込み</span></span>
 <span id="cb1-4"><a></a><span class="bu">print</span>(X <span class="op">@</span> X.T)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[[1. 0. 1.]
- [0. 1. 1.]
- [1. 1. 2.]]</code></pre>
-</div>
 </div>
 <ul>
 <li>対角（自分×自分）が最有力 — 自分の埋め込みに一番似ているのは自分。<span class="hl">視線が自分に吸い付いて</span>、他人の情報がほとんど混ざらない</li>
@@ -323,24 +318,19 @@ rkskmt
 <ul>
 <li>文が <span class="math inline">\(T\)</span> 文字なら、埋め込みを縦に積んだ行列 <span class="math inline">\(X\)</span>（<span class="math inline">\(T\)</span> 行）に掛ければ<strong>全文字ぶん一度に</strong>変換できる — 行列積は<span class="hl">内積の一括処理機</span></li>
 </ul>
-<div id="c72534e2" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-2"><a></a></span>
-<span id="cb3-3"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>],     <span class="co"># 3文字ぶんの埋め込み（おもちゃサイズ）</span></span>
-<span id="cb3-4"><a></a>              [<span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
-<span id="cb3-5"><a></a>              [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb3-6"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb3-7"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb3-8"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb3-9"><a></a></span>
-<span id="cb3-10"><a></a>Q, K, V <span class="op">=</span> X <span class="op">@</span> Wq, X <span class="op">@</span> Wk, X <span class="op">@</span> Wv</span>
-<span id="cb3-11"><a></a>scores <span class="op">=</span> Q <span class="op">@</span> K.T                  <span class="co"># ① 全ペアの関連度を一撃で</span></span>
-<span id="cb3-12"><a></a><span class="bu">print</span>(scores)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[[1. 0. 1.]
- [2. 1. 3.]
- [3. 1. 4.]]</code></pre>
-</div>
+<div id="be63ce6e" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-2"><a></a></span>
+<span id="cb2-3"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>],     <span class="co"># 3文字ぶんの埋め込み（おもちゃサイズ）</span></span>
+<span id="cb2-4"><a></a>              [<span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb2-5"><a></a>              [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb2-6"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb2-7"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb2-8"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb2-9"><a></a></span>
+<span id="cb2-10"><a></a>Q, K, V <span class="op">=</span> X <span class="op">@</span> Wq, X <span class="op">@</span> Wk, X <span class="op">@</span> Wv</span>
+<span id="cb2-11"><a></a>scores <span class="op">=</span> Q <span class="op">@</span> K.T                  <span class="co"># ① 全ペアの関連度を一撃で</span></span>
+<span id="cb2-12"><a></a><span class="bu">print</span>(scores)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li><code>Q @ K.T</code> の <span class="math inline">\((i, j)\)</span> 成分＝「<span class="math inline">\(i\)</span> 文字目の探しもの」と「<span class="math inline">\(j\)</span> 文字目の名札」の内積</li>
@@ -366,33 +356,26 @@ rkskmt
 </div>
 </div>
 </div>
-<div id="f67cbb4a" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb5-2"><a></a></span>
-<span id="cb5-3"><a></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
-<span id="cb5-4"><a></a><span class="cf">for</span> d <span class="kw">in</span> [<span class="dv">2</span>, <span class="dv">64</span>]:</span>
-<span id="cb5-5"><a></a>    dots <span class="op">=</span> [rng.standard_normal(d) <span class="op">@</span> rng.standard_normal(d) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)]</span>
-<span id="cb5-6"><a></a>    <span class="bu">print</span>(<span class="ss">f"d=</span><span class="sc">{</span>d<span class="sc">:3d}</span><span class="ss">: 内積の典型的な大きさ = </span><span class="sc">{</span>np<span class="sc">.</span>std(dots)<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="3774a216" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-2"><a></a></span>
+<span id="cb3-3"><a></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb3-4"><a></a><span class="cf">for</span> d <span class="kw">in</span> [<span class="dv">2</span>, <span class="dv">64</span>]:</span>
+<span id="cb3-5"><a></a>    dots <span class="op">=</span> [rng.standard_normal(d) <span class="op">@</span> rng.standard_normal(d) <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1000</span>)]</span>
+<span id="cb3-6"><a></a>    <span class="bu">print</span>(<span class="ss">f"d=</span><span class="sc">{</span>d<span class="sc">:3d}</span><span class="ss">: 内積の典型的な大きさ = </span><span class="sc">{</span>np<span class="sc">.</span>std(dots)<span class="sc">:.2f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div class="cell fragment" data-execution_count="3">
-<div class="cell-output cell-output-stdout">
-<pre><code>d=  2: 内積の典型的な大きさ = 1.43
-d= 64: 内積の典型的な大きさ = 7.92</code></pre>
-</div>
+<div class="cell fragment">
+
 </div>
 <div class="fragment">
 <ul>
 <li>足し合わせる項が <span class="math inline">\(d\)</span> 個あるので <span class="math inline">\(\sqrt{d}\)</span> 倍で膨らむ（2→64 で約5.7倍）</li>
 <li>スコアが大きすぎると softmax が<strong>一極集中</strong>して、視線が1点に固まってしまう：</li>
 </ul>
-<div id="2952d300" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a>s <span class="op">=</span> np.array([<span class="fl">8.0</span>, <span class="fl">0.0</span>, <span class="op">-</span><span class="fl">8.0</span>])            <span class="co"># d=64 スケールの生スコア</span></span>
-<span id="cb7-2"><a></a>e <span class="op">=</span> np.exp(s)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"そのまま:"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span>
-<span id="cb7-3"><a></a>e <span class="op">=</span> np.exp(s <span class="op">/</span> <span class="dv">8</span>)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"÷√64  :"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>そのまま: [9.997e-01 3.000e-04 0.000e+00]
-÷√64  : [0.6652 0.2447 0.09  ]</code></pre>
-</div>
+<div id="f0061b65" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a>s <span class="op">=</span> np.array([<span class="fl">8.0</span>, <span class="fl">0.0</span>, <span class="op">-</span><span class="fl">8.0</span>])            <span class="co"># d=64 スケールの生スコア</span></span>
+<span id="cb4-2"><a></a>e <span class="op">=</span> np.exp(s)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"そのまま:"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span>
+<span id="cb4-3"><a></a>e <span class="op">=</span> np.exp(s <span class="op">/</span> <span class="dv">8</span>)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"÷√64  :"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>だからスコアを <span class="math inline">\(\sqrt{d}\)</span> で割ってから softmax する — それだけの話</li>
@@ -443,32 +426,24 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="peek-qkv-full" class="slide level2">
 <h2>通しで動かす</h2>
 <div class="slide-body">
-<div id="f969cffa" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb9-2"><a></a></span>
-<span id="cb9-3"><a></a><span class="kw">def</span> softmax_rows(S):</span>
-<span id="cb9-4"><a></a>    e <span class="op">=</span> np.exp(S <span class="op">-</span> S.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
-<span id="cb9-5"><a></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb9-6"><a></a></span>
-<span id="cb9-7"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb9-8"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb9-9"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb9-10"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb9-11"><a></a></span>
-<span id="cb9-12"><a></a>Q, K, V <span class="op">=</span> X <span class="op">@</span> Wq, X <span class="op">@</span> Wk, X <span class="op">@</span> Wv</span>
-<span id="cb9-13"><a></a>weights <span class="op">=</span> softmax_rows(Q <span class="op">@</span> K.T <span class="op">/</span> np.sqrt(<span class="dv">2</span>))   <span class="co"># 視線の表（各行の合計が1）</span></span>
-<span id="cb9-14"><a></a>out <span class="op">=</span> weights <span class="op">@</span> V                              <span class="co"># 各文字の「混ぜた結果」</span></span>
-<span id="cb9-15"><a></a></span>
-<span id="cb9-16"><a></a><span class="bu">print</span>(weights.<span class="bu">round</span>(<span class="dv">3</span>))</span>
-<span id="cb9-17"><a></a><span class="bu">print</span>(out.<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>[[0.401 0.198 0.401]
- [0.284 0.14  0.576]
- [0.306 0.074 0.62 ]]
-[[0.802 0.599]
- [0.86  0.716]
- [0.926 0.694]]</code></pre>
-</div>
+<div id="a2725359" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb5-2"><a></a></span>
+<span id="cb5-3"><a></a><span class="kw">def</span> softmax_rows(S):</span>
+<span id="cb5-4"><a></a>    e <span class="op">=</span> np.exp(S <span class="op">-</span> S.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb5-5"><a></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-6"><a></a></span>
+<span id="cb5-7"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb5-8"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb5-9"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb5-10"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb5-11"><a></a></span>
+<span id="cb5-12"><a></a>Q, K, V <span class="op">=</span> X <span class="op">@</span> Wq, X <span class="op">@</span> Wk, X <span class="op">@</span> Wv</span>
+<span id="cb5-13"><a></a>weights <span class="op">=</span> softmax_rows(Q <span class="op">@</span> K.T <span class="op">/</span> np.sqrt(<span class="dv">2</span>))   <span class="co"># 視線の表（各行の合計が1）</span></span>
+<span id="cb5-14"><a></a>out <span class="op">=</span> weights <span class="op">@</span> V                              <span class="co"># 各文字の「混ぜた結果」</span></span>
+<span id="cb5-15"><a></a></span>
+<span id="cb5-16"><a></a><span class="bu">print</span>(weights.<span class="bu">round</span>(<span class="dv">3</span>))</span>
+<span id="cb5-17"><a></a><span class="bu">print</span>(out.<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>出力は<strong>文字ごとに1本</strong>：3文字入れたら、視線済みベクトルが3本返る</li>
@@ -479,15 +454,6 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="視線の表を絵にする" class="slide level2">
 <h2>視線の表を絵にする</h2>
 <div class="slide-body">
-<div id="a1c325e8" class="cell" data-execution_count="6">
-<div class="cell-output cell-output-display">
-<div>
-<figure>
-<p><a href="attention-qkv_files/figure-revealjs/cell-7-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="attention-qkv_files/figure-revealjs/cell-7-output-1.png" width="388" height="372"></a></p>
-</figure>
-</div>
-</div>
-</div>
 <ul>
 <li>3文字目は3文字目自身を62%見ている、など<strong>視線の配分が読める</strong></li>
 <li>この先、本物のモデルの視線もこの絵で覗く</li>
@@ -529,31 +495,28 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <ul>
 <li>あとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が <code>nn.Module</code>：==<code>__init__</code> に持ち物（層）、<code>forward</code> に計算手順==を書けば、<code>sa(x)</code> と呼べる部品になる</li>
 </ul>
-<div id="895f9b89" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb11-2"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
-<span id="cb11-3"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb11-4"><a></a></span>
-<span id="cb11-5"><a></a><span class="kw">class</span> SelfAttention(nn.Module):</span>
-<span id="cb11-6"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd, head_size):</span>
-<span id="cb11-7"><a></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb11-8"><a></a>        <span class="va">self</span>.query <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wq</span></span>
-<span id="cb11-9"><a></a>        <span class="va">self</span>.key   <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wk</span></span>
-<span id="cb11-10"><a></a>        <span class="va">self</span>.value <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wv</span></span>
-<span id="cb11-11"><a></a></span>
-<span id="cb11-12"><a></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):                       <span class="co"># x: (文字数 T, n_embd)</span></span>
-<span id="cb11-13"><a></a>        q, k, v <span class="op">=</span> <span class="va">self</span>.query(x), <span class="va">self</span>.key(x), <span class="va">self</span>.value(x)</span>
-<span id="cb11-14"><a></a>        w <span class="op">=</span> q <span class="op">@</span> k.T <span class="op">/</span> k.shape[<span class="op">-</span><span class="dv">1</span>] <span class="op">**</span> <span class="fl">0.5</span>        <span class="co"># ① 関連度 ＋ ①′ 補正</span></span>
-<span id="cb11-15"><a></a>        w <span class="op">=</span> F.softmax(w, dim<span class="op">=-</span><span class="dv">1</span>)                <span class="co"># ② 割合にする</span></span>
-<span id="cb11-16"><a></a>        <span class="cf">return</span> w <span class="op">@</span> v                            <span class="co"># ③ 混ぜる</span></span>
-<span id="cb11-17"><a></a></span>
-<span id="cb11-18"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
-<span id="cb11-19"><a></a>sa <span class="op">=</span> SelfAttention(n_embd<span class="op">=</span><span class="dv">8</span>, head_size<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb11-20"><a></a>x <span class="op">=</span> torch.randn(<span class="dv">5</span>, <span class="dv">8</span>)                           <span class="co"># 5文字・8次元</span></span>
-<span id="cb11-21"><a></a><span class="bu">print</span>(sa(x).shape)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>torch.Size([5, 4])</code></pre>
-</div>
+<div id="bba58039" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a></a><span class="im">import</span> torch</span>
+<span id="cb6-2"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb6-3"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb6-4"><a></a></span>
+<span id="cb6-5"><a></a><span class="kw">class</span> SelfAttention(nn.Module):</span>
+<span id="cb6-6"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd, head_size):</span>
+<span id="cb6-7"><a></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb6-8"><a></a>        <span class="va">self</span>.query <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wq</span></span>
+<span id="cb6-9"><a></a>        <span class="va">self</span>.key   <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wk</span></span>
+<span id="cb6-10"><a></a>        <span class="va">self</span>.value <span class="op">=</span> nn.Linear(n_embd, head_size, bias<span class="op">=</span><span class="va">False</span>)   <span class="co"># Wv</span></span>
+<span id="cb6-11"><a></a></span>
+<span id="cb6-12"><a></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):                       <span class="co"># x: (文字数 T, n_embd)</span></span>
+<span id="cb6-13"><a></a>        q, k, v <span class="op">=</span> <span class="va">self</span>.query(x), <span class="va">self</span>.key(x), <span class="va">self</span>.value(x)</span>
+<span id="cb6-14"><a></a>        w <span class="op">=</span> q <span class="op">@</span> k.T <span class="op">/</span> k.shape[<span class="op">-</span><span class="dv">1</span>] <span class="op">**</span> <span class="fl">0.5</span>        <span class="co"># ① 関連度 ＋ ①′ 補正</span></span>
+<span id="cb6-15"><a></a>        w <span class="op">=</span> F.softmax(w, dim<span class="op">=-</span><span class="dv">1</span>)                <span class="co"># ② 割合にする</span></span>
+<span id="cb6-16"><a></a>        <span class="cf">return</span> w <span class="op">@</span> v                            <span class="co"># ③ 混ぜる</span></span>
+<span id="cb6-17"><a></a></span>
+<span id="cb6-18"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb6-19"><a></a>sa <span class="op">=</span> SelfAttention(n_embd<span class="op">=</span><span class="dv">8</span>, head_size<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb6-20"><a></a>x <span class="op">=</span> torch.randn(<span class="dv">5</span>, <span class="dv">8</span>)                           <span class="co"># 5文字・8次元</span></span>
+<span id="cb6-21"><a></a><span class="bu">print</span>(sa(x).shape)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>forward は実質3行。<code>bias=False</code> は「行列1枚」を式のとおりに書いただけ</li>
@@ -660,38 +623,33 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="558f9860" class="cell" data-execution_count="8">
+<div id="ca08bd88" class="cell">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb13-2"><a></a><span class="im">import</span> torch</span>
-<span id="cb13-3"><a></a></span>
-<span id="cb13-4"><a></a><span class="co"># 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4</span></span>
-<span id="cb13-5"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
-<span id="cb13-6"><a></a>sa2 <span class="op">=</span> SelfAttention(n_embd<span class="op">=</span><span class="dv">8</span>, head_size<span class="op">=</span><span class="dv">4</span>)</span>
-<span id="cb13-7"><a></a>x <span class="op">=</span> torch.randn(<span class="dv">5</span>, <span class="dv">8</span>)</span>
-<span id="cb13-8"><a></a>q, k, v <span class="op">=</span> sa2.query(x), sa2.key(x), sa2.value(x)</span>
-<span id="cb13-9"><a></a><span class="bu">print</span>(q.shape, (q <span class="op">@</span> k.T).shape, sa2(x).shape)</span>
-<span id="cb13-10"><a></a></span>
-<span id="cb13-11"><a></a><span class="co"># 問題2</span></span>
-<span id="cb13-12"><a></a><span class="kw">def</span> softmax_rows(S):</span>
-<span id="cb13-13"><a></a>    e <span class="op">=</span> np.exp(S <span class="op">-</span> S.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
-<span id="cb13-14"><a></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb13-15"><a></a></span>
-<span id="cb13-16"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb13-17"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb13-18"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb13-19"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
-<span id="cb13-20"><a></a>weights <span class="op">=</span> softmax_rows((X <span class="op">@</span> Wq) <span class="op">@</span> (X <span class="op">@</span> Wk).T <span class="op">/</span> np.sqrt(<span class="dv">2</span>))</span>
-<span id="cb13-21"><a></a><span class="bu">print</span>(<span class="st">"行の合計:"</span>, weights.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>).<span class="bu">round</span>(<span class="dv">3</span>))</span>
-<span id="cb13-22"><a></a><span class="bu">print</span>(<span class="st">"列の合計:"</span>, weights.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>).<span class="bu">round</span>(<span class="dv">3</span>))</span>
-<span id="cb13-23"><a></a><span class="co"># softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb7-2"><a></a><span class="im">import</span> torch</span>
+<span id="cb7-3"><a></a></span>
+<span id="cb7-4"><a></a><span class="co"># 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4</span></span>
+<span id="cb7-5"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb7-6"><a></a>sa2 <span class="op">=</span> SelfAttention(n_embd<span class="op">=</span><span class="dv">8</span>, head_size<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb7-7"><a></a>x <span class="op">=</span> torch.randn(<span class="dv">5</span>, <span class="dv">8</span>)</span>
+<span id="cb7-8"><a></a>q, k, v <span class="op">=</span> sa2.query(x), sa2.key(x), sa2.value(x)</span>
+<span id="cb7-9"><a></a><span class="bu">print</span>(q.shape, (q <span class="op">@</span> k.T).shape, sa2(x).shape)</span>
+<span id="cb7-10"><a></a></span>
+<span id="cb7-11"><a></a><span class="co"># 問題2</span></span>
+<span id="cb7-12"><a></a><span class="kw">def</span> softmax_rows(S):</span>
+<span id="cb7-13"><a></a>    e <span class="op">=</span> np.exp(S <span class="op">-</span> S.<span class="bu">max</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb7-14"><a></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb7-15"><a></a></span>
+<span id="cb7-16"><a></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb7-17"><a></a>Wq <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb7-18"><a></a>Wk <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb7-19"><a></a>Wv <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])</span>
+<span id="cb7-20"><a></a>weights <span class="op">=</span> softmax_rows((X <span class="op">@</span> Wq) <span class="op">@</span> (X <span class="op">@</span> Wk).T <span class="op">/</span> np.sqrt(<span class="dv">2</span>))</span>
+<span id="cb7-21"><a></a><span class="bu">print</span>(<span class="st">"行の合計:"</span>, weights.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>).<span class="bu">round</span>(<span class="dv">3</span>))</span>
+<span id="cb7-22"><a></a><span class="bu">print</span>(<span class="st">"列の合計:"</span>, weights.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">0</span>).<span class="bu">round</span>(<span class="dv">3</span>))</span>
+<span id="cb7-23"><a></a><span class="co"># softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
-<div class="cell-output cell-output-stdout">
-<pre><code>torch.Size([5, 4]) torch.Size([5, 5]) torch.Size([5, 4])
-行の合計: [1. 1. 1.]
-列の合計: [0.991 0.412 1.597]</code></pre>
-</div>
 </div>
 
 

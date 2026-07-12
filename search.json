@@ -683,7 +683,7 @@
     "href": "attention-qkv.html#なぜ変換が要るのか-埋め込みそのままだと",
     "title": "Q・K・V を開ける",
     "section": "なぜ変換が要るのか — 埋め込みそのままだと",
-    "text": "なぜ変換が要るのか — 埋め込みそのままだと\n\n\n変換などせず、==埋め込み \\(x\\) どうしの内積==を関連度にすればよさそうに見える：スコア \\(= XX^\\top\\)\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])   # 3文字ぶんの埋め込み\nprint(X @ X.T)\n\n[[1. 0. 1.]\n [0. 1. 1.]\n [1. 1. 2.]]\n\n\n\n対角（自分×自分）が最有力 — 自分の埋め込みに一番似ているのは自分。視線が自分に吸い付いて、他人の情報がほとんど混ざらない\nしかも内積は対称：「AがBを見る強さ」＝「BがAを見る強さ」。だが言語の関係は非対称 — 「まだ」には「名前」が要るが、「名前」に「まだ」は要らない\n結論：「私が探すもの」と「私が掲げる看板」は別物にしたい — だから変換を挟む"
+    "text": "なぜ変換が要るのか — 埋め込みそのままだと\n\n\n変換などせず、==埋め込み \\(x\\) どうしの内積==を関連度にすればよさそうに見える：スコア \\(= XX^\\top\\)\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])   # 3文字ぶんの埋め込み\nprint(X @ X.T)\n\n\n対角（自分×自分）が最有力 — 自分の埋め込みに一番似ているのは自分。視線が自分に吸い付いて、他人の情報がほとんど混ざらない\nしかも内積は対称：「AがBを見る強さ」＝「BがAを見る強さ」。だが言語の関係は非対称 — 「まだ」には「名前」が要るが、「名前」に「まだ」は要らない\n結論：「私が探すもの」と「私が掲げる看板」は別物にしたい — だから変換を挟む"
   },
   {
     "objectID": "attention-qkv.html#人の作り方-行列を1枚ずつ",
@@ -697,14 +697,14 @@
     "href": "attention-qkv.html#全位置いっせいに",
     "title": "Q・K・V を開ける",
     "section": "全位置いっせいに",
-    "text": "全位置いっせいに\n\n\n文が \\(T\\) 文字なら、埋め込みを縦に積んだ行列 \\(X\\)（\\(T\\) 行）に掛ければ全文字ぶん一度に変換できる — 行列積は内積の一括処理機\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0],     # 3文字ぶんの埋め込み（おもちゃサイズ）\n              [0.0, 1.0],\n              [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nscores = Q @ K.T                  # ① 全ペアの関連度を一撃で\nprint(scores)\n\n[[1. 0. 1.]\n [2. 1. 3.]\n [3. 1. 4.]]\n\n\n\nQ @ K.T の \\((i, j)\\) 成分＝「\\(i\\) 文字目の探しもの」と「\\(j\\) 文字目の名札」の内積\n==\\(T \\times T\\) の「視線の表」==が1回の行列積で出る"
+    "text": "全位置いっせいに\n\n\n文が \\(T\\) 文字なら、埋め込みを縦に積んだ行列 \\(X\\)（\\(T\\) 行）に掛ければ全文字ぶん一度に変換できる — 行列積は内積の一括処理機\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0],     # 3文字ぶんの埋め込み（おもちゃサイズ）\n              [0.0, 1.0],\n              [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nscores = Q @ K.T                  # ① 全ペアの関連度を一撃で\nprint(scores)\n\n\nQ @ K.T の \\((i, j)\\) 成分＝「\\(i\\) 文字目の探しもの」と「\\(j\\) 文字目の名札」の内積\n==\\(T \\times T\\) の「視線の表」==が1回の行列積で出る"
   },
   {
     "objectID": "attention-qkv.html#スケーリング-内積は次元で膨らむ",
     "href": "attention-qkv.html#スケーリング-内積は次元で膨らむ",
     "title": "Q・K・V を開ける",
     "section": "スケーリング — 内積は次元で膨らむ",
-    "text": "スケーリング — 内積は次元で膨らむ\n\n\n\n\n\n\n\n\nクイズ\n\n\nベクトルの次元 \\(d\\) を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？\n\n\n\n\n\nimport numpy as np\n\nrng = np.random.default_rng(0)\nfor d in [2, 64]:\n    dots = [rng.standard_normal(d) @ rng.standard_normal(d) for _ in range(1000)]\n    print(f\"d={d:3d}: 内積の典型的な大きさ = {np.std(dots):.2f}\")\n\n\n\nd=  2: 内積の典型的な大きさ = 1.43\nd= 64: 内積の典型的な大きさ = 7.92\n\n\n\n\n足し合わせる項が \\(d\\) 個あるので \\(\\sqrt{d}\\) 倍で膨らむ（2→64 で約5.7倍）\nスコアが大きすぎると softmax が一極集中して、視線が1点に固まってしまう：\n\n\ns = np.array([8.0, 0.0, -8.0])            # d=64 スケールの生スコア\ne = np.exp(s); print(\"そのまま:\", (e / e.sum()).round(4))\ne = np.exp(s / 8); print(\"÷√64  :\", (e / e.sum()).round(4))\n\nそのまま: [9.997e-01 3.000e-04 0.000e+00]\n÷√64  : [0.6652 0.2447 0.09  ]\n\n\n\nだからスコアを \\(\\sqrt{d}\\) で割ってから softmax する — それだけの話"
+    "text": "スケーリング — 内積は次元で膨らむ\n\n\n\n\n\n\n\n\nクイズ\n\n\nベクトルの次元 \\(d\\) を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？\n\n\n\n\n\nimport numpy as np\n\nrng = np.random.default_rng(0)\nfor d in [2, 64]:\n    dots = [rng.standard_normal(d) @ rng.standard_normal(d) for _ in range(1000)]\n    print(f\"d={d:3d}: 内積の典型的な大きさ = {np.std(dots):.2f}\")\n\n\n\n\n\n\n足し合わせる項が \\(d\\) 個あるので \\(\\sqrt{d}\\) 倍で膨らむ（2→64 で約5.7倍）\nスコアが大きすぎると softmax が一極集中して、視線が1点に固まってしまう：\n\n\ns = np.array([8.0, 0.0, -8.0])            # d=64 スケールの生スコア\ne = np.exp(s); print(\"そのまま:\", (e / e.sum()).round(4))\ne = np.exp(s / 8); print(\"÷√64  :\", (e / e.sum()).round(4))\n\n\nだからスコアを \\(\\sqrt{d}\\) で割ってから softmax する — それだけの話"
   },
   {
     "objectID": "attention-qkv.html#完成形-論文の式と3ステップ",
@@ -718,21 +718,21 @@
     "href": "attention-qkv.html#peek-qkv-full",
     "title": "Q・K・V を開ける",
     "section": "通しで動かす",
-    "text": "通しで動かす\n\n\nimport numpy as np\n\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nweights = softmax_rows(Q @ K.T / np.sqrt(2))   # 視線の表（各行の合計が1）\nout = weights @ V                              # 各文字の「混ぜた結果」\n\nprint(weights.round(3))\nprint(out.round(3))\n\n[[0.401 0.198 0.401]\n [0.284 0.14  0.576]\n [0.306 0.074 0.62 ]]\n[[0.802 0.599]\n [0.86  0.716]\n [0.926 0.694]]\n\n\n\n出力は文字ごとに1本：3文字入れたら、視線済みベクトルが3本返る\nどの文字も「自分の探しもの」で全員を見た — これを自己注意（self-attention）と呼ぶ"
+    "text": "通しで動かす\n\n\nimport numpy as np\n\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nweights = softmax_rows(Q @ K.T / np.sqrt(2))   # 視線の表（各行の合計が1）\nout = weights @ V                              # 各文字の「混ぜた結果」\n\nprint(weights.round(3))\nprint(out.round(3))\n\n\n出力は文字ごとに1本：3文字入れたら、視線済みベクトルが3本返る\nどの文字も「自分の探しもの」で全員を見た — これを自己注意（self-attention）と呼ぶ"
   },
   {
     "objectID": "attention-qkv.html#視線の表を絵にする",
     "href": "attention-qkv.html#視線の表を絵にする",
     "title": "Q・K・V を開ける",
     "section": "視線の表を絵にする",
-    "text": "視線の表を絵にする\n\n\n\n\n\n\n\n\n\n\n\n3文字目は3文字目自身を62%見ている、など視線の配分が読める\nこの先、本物のモデルの視線もこの絵で覗く"
+    "text": "視線の表を絵にする\n\n\n3文字目は3文字目自身を62%見ている、など視線の配分が読める\nこの先、本物のモデルの視線もこの絵で覗く"
   },
   {
     "objectID": "attention-qkv.html#pytorch-部品にしておく",
     "href": "attention-qkv.html#pytorch-部品にしておく",
     "title": "Q・K・V を開ける",
     "section": "PyTorch 部品にしておく",
-    "text": "PyTorch 部品にしておく\n\n\nあとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が nn.Module：==__init__ に持ち物（層）、forward に計算手順==を書けば、sa(x) と呼べる部品になる\n\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)   # Wq\n        self.key   = nn.Linear(n_embd, head_size, bias=False)   # Wk\n        self.value = nn.Linear(n_embd, head_size, bias=False)   # Wv\n\n    def forward(self, x):                       # x: (文字数 T, n_embd)\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = q @ k.T / k.shape[-1] ** 0.5        # ① 関連度 ＋ ①′ 補正\n        w = F.softmax(w, dim=-1)                # ② 割合にする\n        return w @ v                            # ③ 混ぜる\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)                           # 5文字・8次元\nprint(sa(x).shape)\n\ntorch.Size([5, 4])\n\n\n\nforward は実質3行。bias=False は「行列1枚」を式のとおりに書いただけ"
+    "text": "PyTorch 部品にしておく\n\n\nあとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が nn.Module：==__init__ に持ち物（層）、forward に計算手順==を書けば、sa(x) と呼べる部品になる\n\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)   # Wq\n        self.key   = nn.Linear(n_embd, head_size, bias=False)   # Wk\n        self.value = nn.Linear(n_embd, head_size, bias=False)   # Wv\n\n    def forward(self, x):                       # x: (文字数 T, n_embd)\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = q @ k.T / k.shape[-1] ** 0.5        # ① 関連度 ＋ ①′ 補正\n        w = F.softmax(w, dim=-1)                # ② 割合にする\n        return w @ v                            # ③ 混ぜる\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)                           # 5文字・8次元\nprint(sa(x).shape)\n\n\nforward は実質3行。bias=False は「行列1枚」を式のとおりに書いただけ"
   },
   {
     "objectID": "attention-qkv.html#tweak-行列をいじって視線を操る",
@@ -760,7 +760,7 @@
     "href": "attention-qkv.html#解答例",
     "title": "Q・K・V を開ける",
     "section": "解答例",
-    "text": "解答例\n\n\n\n解答例を見る\nimport numpy as np\nimport torch\n\n# 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4\ntorch.manual_seed(0)\nsa2 = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)\nq, k, v = sa2.query(x), sa2.key(x), sa2.value(x)\nprint(q.shape, (q @ k.T).shape, sa2(x).shape)\n\n# 問題2\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\nweights = softmax_rows((X @ Wq) @ (X @ Wk).T / np.sqrt(2))\nprint(\"行の合計:\", weights.sum(axis=1).round(3))\nprint(\"列の合計:\", weights.sum(axis=0).round(3))\n# softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由\n\n\ntorch.Size([5, 4]) torch.Size([5, 5]) torch.Size([5, 4])\n行の合計: [1. 1. 1.]\n列の合計: [0.991 0.412 1.597]"
+    "text": "解答例\n\n\n\n解答例を見る\nimport numpy as np\nimport torch\n\n# 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4\ntorch.manual_seed(0)\nsa2 = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)\nq, k, v = sa2.query(x), sa2.key(x), sa2.value(x)\nprint(q.shape, (q @ k.T).shape, sa2(x).shape)\n\n# 問題2\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\nweights = softmax_rows((X @ Wq) @ (X @ Wk).T / np.sqrt(2))\nprint(\"行の合計:\", weights.sum(axis=1).round(3))\nprint(\"列の合計:\", weights.sum(axis=0).round(3))\n# softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由"
   },
   {
     "objectID": "attention-intuition.html#まずは自分で読んでみる",
