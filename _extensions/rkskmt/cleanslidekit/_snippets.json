@@ -1,0 +1,114 @@
+{
+	"Badge slide": {
+		"prefix": "csk-badge",
+		"body": "## ${1:Title} {.badge-${2|important,practice,fyi|}}",
+		"description": "H2 slide title with a rosette badge (important / practice / fyi)"
+	},
+	"Badge slide (Japanese)": {
+		"prefix": "csk-badge-ja",
+		"body": "## ${1:タイトル} {.badge-${2|important,practice,fyi|}-ja}",
+		"description": "H2 slide title with a Japanese-centred rosette badge"
+	},
+	"Inline highlight": {
+		"prefix": "csk-hl",
+		"body": "==${1:text}==",
+		"description": "Inline highlight marker (hl.lua); phrases may span spaces"
+	},
+	"English co-notation": {
+		"prefix": "csk-en",
+		"body": "[${1:english}]{.en}",
+		"description": "English co-notation span placed beside Japanese text"
+	},
+	"Break slide": {
+		"prefix": "csk-break",
+		"body": "## ${1:Section title} {.break-slide}",
+		"description": "Section-divider slide (also a divider in the slide-list drawer)"
+	},
+	"Image + citation slide": {
+		"prefix": "csk-figcite",
+		"body": [
+			"::: {.fig-cite src=\"${1:image.png}\" height=\"${2:400px}\"}",
+			"::: {.cite}",
+			"${3:Source: …}",
+			":::",
+			":::"
+		],
+		"description": "Sized image with a source-citation line (cite-image.lua)"
+	},
+	"Full-bleed background slide": {
+		"prefix": "csk-bgcover",
+		"body": [
+			"## ${1:Title} {.bg-cover src=\"${2:image.png}\"}",
+			"",
+			"::: {.cite}",
+			"${3:Credit: …}",
+			":::"
+		],
+		"description": "Full-bleed background-image slide with an optional credit"
+	},
+	"Scaled computed figure": {
+		"prefix": "csk-fig",
+		"body": [
+			"::: {.fig width=\"${1:50%}\"}",
+			"$0",
+			":::"
+		],
+		"description": "Scale a computed figure's output (figscale.lua)"
+	},
+	"Plotly iframe embed": {
+		"prefix": "csk-plotly",
+		"body": [
+			"::: {.plotly-iframe src=\"${1:fig.html}\" width=\"${2:900}\" height=\"${3:520}\"}",
+			":::"
+		],
+		"description": "Embed a Plotly HTML export as a sized iframe (plotly-iframe.lua)"
+	},
+	"Tweak practice block": {
+		"prefix": "csk-tweak",
+		"body": [
+			"::: {.tweak}",
+			"| ${1:Goal} | ${2:Code} |",
+			"|--|--|",
+			"| ${3:Train longer} | `${4:range(1, 4)}` → `${5:range(1, 9)}` |",
+			":::"
+		],
+		"description": "Hands-on 'change one line & see' practice block"
+	},
+	"Prompt (exercise statement)": {
+		"prefix": "csk-prompt",
+		"body": [
+			"::: {.prompt}",
+			"$0",
+			":::"
+		],
+		"description": "Neutral rounded frame marking the exercise statement"
+	},
+	"Caption note": {
+		"prefix": "csk-caption",
+		"body": [
+			"::: {.caption-note}",
+			"$0",
+			":::"
+		],
+		"description": "Annotation caption for the element directly above it"
+	},
+	"Slide peek link": {
+		"prefix": "csk-peek",
+		"body": "[${1:text}](${2:other-deck.qmd}#${3:slide-id}){.peek}",
+		"description": "Cross-deck link that opens one target slide in a modal (peek-ui.js)"
+	},
+	"Lecture index card grid": {
+		"prefix": "csk-index",
+		"body": [
+			":::: {.lectures}",
+			"",
+			"### ${1:Category} {.sec .cat1}",
+			"::: {.grid .cat1}",
+			"- [${2:Lecture one}](${3:lecture-one.qmd})",
+			":::",
+			"",
+			"::::"
+		],
+		"description": "Auto-numbered, colour-coded lecture-index card grid"
+	}
+}

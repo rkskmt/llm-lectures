@@ -1,0 +1,113 @@
+# Quarto Wizard schema for CleanSlideKit RevealJS.
+#
+# Documents the CSS classes and filter attributes this theme contributes so
+# editors (via Quarto Wizard) can offer autocompletion, validation and hover
+# documentation. See https://m.canouil.dev/quarto-wizard/.
+$schema: https://m.canouil.dev/quarto-wizard/assets/schema/v2/extension-schema.json
+
+classes:
+  # --- Rosette badges (badge-ui.js): set on an H2 slide title ---
+  badge-important:
+    description: "Rosette badge on an H2 slide title marking the slide as important (coral). Several badges may be set on one title and stack side by side."
+  badge-practice:
+    description: "Rosette badge marking a practice / exercise slide (blue)."
+  badge-fyi:
+    description: "Rosette badge marking an FYI (for-your-information) slide (peach)."
+  badge-important-ja:
+    description: "Japanese variant of badge-important: the badge centre shows the Japanese word instead of the icon."
+  badge-practice-ja:
+    description: "Japanese variant of badge-practice."
+  badge-fyi-ja:
+    description: "Japanese variant of badge-fyi."
+
+  # --- Authoring inline / spans ---
+  en:
+    description: "English co-notation typography for a span placed beside Japanese text, e.g. `[overfitting]{.en}`. Use bold inside for spelled-out abbreviations."
+  hl:
+    description: "Inline highlight span (white-on-blue marker). Usually produced by the `==text==` shorthand (hl.lua) rather than written directly."
+  peek:
+    description: "On a cross-deck link, opens that single target slide in a modal overlay, fully rendered, without navigating away. Give the target slide an id: `## Heading {#slide-id}`."
+
+  # --- Figures & image slides (Lua filters) ---
+  fig-cite:
+    description: "A sized image with a source-citation line; add a nested `::: {.cite}` for the credit. Attributes: src, height."
+  cite:
+    description: "The citation / credit line inside a `.fig-cite` block or a `.bg-cover` slide."
+  bg-cover:
+    description: "On an H2, makes a full-bleed background-image slide (the header is hidden). Attribute: src; add `::: {.cite}` for the credit."
+  fig:
+    description: "Wraps a computed figure (e.g. a code cell) to scale its output; revealjs otherwise drops out-width for these. Attribute: width."
+  plotly-iframe:
+    description: "Embeds a Plotly HTML export as a sized iframe. Attributes: src, width, height."
+
+  # --- Slide components (custom.css) ---
+  tweak:
+    description: "Hands-on 'change one line & see what happens' practice block; a two-column table or a list renders as auto-numbered row-bands with a coral accent."
+  prompt:
+    description: "A neutral rounded frame marking a paragraph as the exercise statement."
+  caption-note:
+    description: "An annotation caption for whatever sits directly above it (a table, a figure, a code block)."
+  break-slide:
+    description: "On an H2, renders a section-divider slide; it also appears as a divider in the slide-list drawer."
+  break-title:
+    description: "Title-styling companion class for `.break-slide` section-divider slides."
+
+  # --- Lecture index card grid (card-grid.lua + custom.css) ---
+  lectures:
+    description: "Wrapper for the auto-numbered lecture-index card grid on a course index page."
+  sec:
+    description: "A category header inside `.lectures`; pair it with the same `.catN` colour as its grid."
+  grid:
+    description: "A category's list of lecture links inside `.lectures`; combine with `.catN`, `.app`, or `.dl`."
+  cat1:
+    description: "Category colour 1 (blue). Put the same `.catN` on both the `.sec` header and its `.grid`."
+  cat2:
+    description: "Category colour 2 (green)."
+  cat3:
+    description: "Category colour 3 (amber)."
+  cat4:
+    description: "Category colour 4 (purple)."
+  cat5:
+    description: "Category colour 5 (pink)."
+  app:
+    description: "Un-numbered (◦) grid group for appendix / reference items."
+  dl:
+    description: "On a `.grid`, styles the links as PDF downloads (adds a PDF document icon); used on the handouts page."
+  pdf-gate:
+    description: "On an index link, a top-right gate that points to the handouts page. Rendered only when pdf/ next to the input file holds at least one PDF; otherwise card-grid.lua drops the link."
+
+attributes:
+  ".fig-cite":
+    src:
+      type: string
+      description: "Path to the image file."
+      completion:
+        type: file
+        extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"]
+    height:
+      type: string
+      description: "Rendered image height as a CSS size (e.g. '400px')."
+  ".bg-cover":
+    src:
+      type: string
+      description: "Path to the full-bleed background image."
+      completion:
+        type: file
+        extensions: ["png", "jpg", "jpeg", "gif", "webp", "svg"]
+  ".fig":
+    width:
+      type: string
+      description: "Target width for the scaled figure as a CSS size (e.g. '50%', '600px')."
+  ".plotly-iframe":
+    src:
+      type: string
+      description: "Path to the Plotly HTML export to embed."
+      completion:
+        type: file
+        extensions: ["html"]
+    width:
+      type: [string, number]
+      description: "Iframe width in pixels or a CSS size."
+    height:
+      type: [string, number]
+      description: "Iframe height in pixels or a CSS size."

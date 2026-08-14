@@ -7,18 +7,25 @@
 // Authoring: [text](other.qmd#slide-id){.peek}, and give the target slide an
 // explicit id:  ## 見出し {#slide-id}
 //
-// How it works (iframe approach): load the target deck in an <iframe> pointed
-// at `other.html#/slide-id`. The real deck boots inside the frame and the real
-// JS runs — so MathJax, Quarto copy buttons, lightbox and even Plotly all work
-// (the old cloneNode approach couldn't reuse the page's JS). To keep it a peek
-// and not a walkthrough, once the inner Reveal is ready we hard-disable every
-// way to move slides (keyboard, touch, controls, menu) and hide deck chrome,
-// so the student structurally cannot wander to another slide. The frame is
-// sized to the deck's aspect ratio and Reveal scales the slide to fit
-// natively — no manual `zoom`, so scrollbars/figures behave normally.
+// How it works (iframe + postMessage): the target deck is loaded in an
+// <iframe> pointed at `other.html?peek-embed=1#/slide-id`. The real deck boots
+// inside the frame and the real JS runs — so MathJax, Quarto copy buttons,
+// lightbox and even Plotly all work. Seeing `peek-embed=1`, the deck tunes
+// ITSELF: it hides its chrome, hard-disables every way to move slides
+// (keyboard, touch, controls, menu) and blocks link navigation, so the student
+// structurally cannot wander off the peeked slide. When its Reveal is ready it
+// posts `ready` (title + deck size) to the host, which drops the loader and
+// fits the frame to the deck's aspect ratio; Esc inside the frame posts
+// `close`. The host never touches the frame's document, so a peek also works
+// where host and frame are cross-origin — e.g. inside a sandboxed preview
+// iframe (sandbox="allow-scripts" gives every document a distinct opaque
+// origin, which made the old contentDocument-based approach hang on
+// "Loading…" forever).
 (function () {
   try {
     var DECK_W = 1280, DECK_H = 720;  // fallback deck size; refined from Reveal config
+    var CHANNEL = 'cleanslidekit-peek-v1';
+    var EMBED_PARAM = 'peek-embed';
 
     // UI strings follow the document language: Japanese when <html lang>
     // starts with "ja" (the format default), English otherwise.
@@ -39,6 +46,118 @@
       from: 'From: ',
       frameTitle: 'Slide preview'
     };
+
+    // ================= embedded mode (this document IS the peeked slide) ====
+    if (new RegExp('[?&]' + EMBED_PARAM + '=1(?:&|$)').test(window.location.search)) {
+      runEmbedded();
+      return;
+    }
+
+    function runEmbedded() {
+      // strip every bit of deck chrome and the buttons slide-ui.js /
+      // search-ui.js inject, so the peek shows nothing but the slide and
+      // offers no way to navigate off it
+      var FRAME_STYLE = [
+        '.reveal .controls, .reveal .progress, .reveal .slide-number,',
+        '.reveal .footer, .reveal .slide-menu-button, .slide-menu-button,',
+        '.reveal-viewport > .backarrow,',
+        '#search-btn, #slide-nav, #home-btn, #toc-btn { display: none !important; }',
+        'html, body { overflow: hidden !important; }'
+      ].join('\n');
+
+      function post(msg) {
+        try { msg.channel = CHANNEL; window.parent.postMessage(msg, '*'); } catch (e) {}
+      }
+
+      try {
+        var st = document.createElement('style');
+        st.textContent = FRAME_STYLE;
+        (document.head || document.documentElement).appendChild(st);
+      } catch (e) {}
+
+      // a peek is read-only: block links that would navigate the frame away to
+      // another page (lightbox anchors are left alone — GLightbox handles them)
+      try {
+        document.addEventListener('click', function (e) {
+          var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+          if (!a) return;
+          if (a.classList.contains('lightbox') || (a.closest && a.closest('.lightbox'))) return;
+          e.preventDefault();
+          e.stopPropagation();
+        }, true);
+        // Esc pressed with focus inside the frame must close the host's modal
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            post({ type: 'close' });
+          }
+        }, true);
+      } catch (e) {}
+
+      function deckTitle() {
+        var t = '';
+        try {
+          // Prefer the deck's own title slide heading. Fall back to <title>,
+          // where Quarto websites use "<site title> – <page title>" — take the
+          // LAST segment (the page), not the first (the site).
+          var h = document.querySelector('.reveal h1.title');
+          if (h && h.textContent.trim()) t = h.textContent.trim();
+          if (!t && document.title) {
+            var parts = document.title.split(/[–—|]/);
+            t = parts[parts.length - 1].trim();
+          }
+        } catch (e) {}
+        return t;
+      }
+
+      // lock the deck down to a single non-navigable slide with all fragments
+      // shown (a peek is a snapshot, not a walkthrough)
+      function tune() {
+        try {
+          var R = window.Reveal;
+          if (R && R.configure) {
+            R.configure({
+              controls: false, progress: false, slideNumber: false,
+              keyboard: false, touch: false, overview: false,
+              fragments: false, help: false, autoSlide: 0, loop: false,
+              mouseWheel: false, transition: 'none'
+            });
+          }
+          // ensure we're actually on the requested slide (src hash should
+          // already have done this, but re-assert in case init raced the hash)
+          var frag = window.location.hash.replace(/^#\/?/, '');
+          if (frag) {
+            try { window.location.hash = '#/' + frag; } catch (e) {}
+          }
+          if (R && R.layout) R.layout();
+        } catch (e) {}
+      }
+
+      function announce() {
+        var w = 0, h = 0;
+        try {
+          var c = window.Reveal && Reveal.getConfig ? Reveal.getConfig() : null;
+          if (c && typeof c.width === 'number' && c.width > 0) w = c.width;
+          if (c && typeof c.height === 'number' && c.height > 0) h = c.height;
+        } catch (e) {}
+        post({ type: 'ready', title: deckTitle(), width: w, height: h });
+      }
+
+      // wait for Reveal to boot, then tune and report in. Gives up after ~12s
+      // but still announces so the host drops its loader.
+      var tries = 0;
+      (function poll() {
+        tries++;
+        var ready = false;
+        try { ready = !!(window.Reveal && Reveal.isReady && Reveal.isReady()); } catch (e) {}
+        if (ready) { tune(); announce(); return; }
+        if (tries > 240) { announce(); return; }
+        setTimeout(poll, 50);
+      })();
+    }
+
+    // ================= host mode (deck containing the .peek links) ==========
 
     var STYLE = [
       // the inline link marker: dotted underline + magnifier, "preview" cursor
@@ -88,18 +207,10 @@
       '#peek-hint { margin-top: 10px; font-size: 0.82rem; color: #aaa; text-align: right; }'
     ].join('\n');
 
-    // CSS injected INTO the iframe document: strip every bit of deck chrome and
-    // the buttons our own slide-ui.js / search-ui.js inject there, so a peek
-    // shows nothing but the slide and offers no way to navigate off it.
-    var FRAME_STYLE = [
-      '.reveal .controls, .reveal .progress, .reveal .slide-number,',
-      '.reveal .footer, .reveal .slide-menu-button, .slide-menu-button,',
-      '.reveal-viewport > .backarrow,',
-      '#search-btn, #slide-nav, #home-btn, #toc-btn { display: none !important; }',
-      'html, body { overflow: hidden !important; }'
-    ].join('\n');
-
     var revealKbPrev = null;
+    var activeFrame = null;      // the currently-open peek iframe
+    var frameAspect = null;      // {w,h} reported by the frame's `ready`
+    var pendingTimer = null;     // stale-frame fallback (frame never announces)
 
     function injectStyle() {
       if (document.getElementById('peek-ui-style')) return;
@@ -132,6 +243,9 @@
     function closePeek() {
       var modal = document.getElementById('peek-modal');
       if (modal) modal.classList.remove('peek-open');
+      if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+      activeFrame = null;
+      frameAspect = null;
       // drop the iframe so its deck stops running (timers, plotly, audio…)
       var wrap = document.getElementById('peek-frame-wrap');
       if (wrap) wrap.innerHTML = '<div id="peek-loading">' + T.loading + '</div>';
@@ -160,9 +274,11 @@
       return modal;
     }
 
-    // The deck's authored size; the frame is sized to this aspect so Reveal's
-    // own scaling reproduces the on-screen proportions.
+    // The peeked deck's authored size (from its `ready` message when available,
+    // else the host deck's config); the frame is sized to this aspect so
+    // Reveal's own scaling reproduces the on-screen proportions.
     function deckSize() {
+      if (frameAspect) return frameAspect;
       var w = DECK_W, h = DECK_H;
       try {
         if (window.Reveal && Reveal.getConfig) {
@@ -189,96 +305,30 @@
       } catch (e) {}
     }
 
-    function sourceLabel(doc) {
-      var t = '';
+    function removeLoading() {
+      var loading = document.getElementById('peek-loading');
+      if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
+    }
+
+    // Everything frame-related arrives over postMessage (see header comment).
+    window.addEventListener('message', function (e) {
       try {
-        // Prefer the deck's own title slide heading. Fall back to <title>,
-        // where Quarto websites use "<site title> – <page title>" — take the
-        // LAST segment (the page), not the first (the site).
-        var h = doc && doc.querySelector ? doc.querySelector('.reveal h1.title') : null;
-        if (h && h.textContent.trim()) t = h.textContent.trim();
-        if (!t && doc && doc.title) {
-          var parts = doc.title.split(/[–—|]/);
-          t = parts[parts.length - 1].trim();
+        var d = e.data;
+        if (!d || d.channel !== CHANNEL) return;
+        if (!activeFrame || e.source !== activeFrame.contentWindow) return;
+        if (d.type === 'close') { closePeek(); return; }
+        if (d.type !== 'ready') return;
+        if (pendingTimer) { clearTimeout(pendingTimer); pendingTimer = null; }
+        if (typeof d.width === 'number' && d.width > 0 &&
+            typeof d.height === 'number' && d.height > 0) {
+          frameAspect = { w: d.width, h: d.height };
+          sizeFrame(activeFrame);
         }
-      } catch (e) {}
-      return t ? (T.from + t) : '';
-    }
-
-    // Once the inner Reveal is ready, lock it down to a single non-navigable
-    // slide and reveal all fragments (a peek is a snapshot, not a walkthrough).
-    function tuneFrameDeck(win, frag) {
-      try {
-        var R = win.Reveal;
-        if (R && R.configure) {
-          R.configure({
-            controls: false, progress: false, slideNumber: false,
-            keyboard: false, touch: false, overview: false,
-            fragments: false, help: false, autoSlide: 0, loop: false,
-            mouseWheel: false, transition: 'none'
-          });
-        }
-        // ensure we're actually on the requested slide (src hash should already
-        // have done this, but re-assert in case init raced the hash)
-        if (frag) {
-          try { win.location.hash = '#/' + frag; } catch (e) {}
-        }
-        if (R && R.layout) R.layout();
-      } catch (e) {}
-    }
-
-    // Wait until the iframe's Reveal has booted, then run cb(win). Same-origin,
-    // so we can poll the inner window directly. Gives up after ~12s but still
-    // calls cb so the loader is removed.
-    function whenFrameReady(frame, cb) {
-      var tries = 0;
-      (function poll() {
-        tries++;
-        var win = null;
-        try { win = frame.contentWindow; } catch (e) {}
-        var ready = false;
-        try { ready = !!(win && win.Reveal && win.Reveal.isReady && win.Reveal.isReady()); } catch (e) {}
-        if (ready) { cb(win); return; }
-        if (tries > 240) { cb(win); return; }
-        setTimeout(poll, 50);
-      })();
-    }
-
-    function onFrameLoad(frame, frag) {
-      var fdoc = null, fwin = null;
-      try { fwin = frame.contentWindow; fdoc = frame.contentDocument; } catch (e) {}
-      if (!fdoc) return;
-      // hide deck chrome inside the frame
-      try {
-        var st = fdoc.createElement('style');
-        st.textContent = FRAME_STYLE;
-        (fdoc.head || fdoc.documentElement).appendChild(st);
-      } catch (e) {}
-      // a peek is read-only: block links that would navigate the frame away to
-      // another page (lightbox anchors are left alone — GLightbox handles them).
-      try {
-        fdoc.addEventListener('click', function (e) {
-          var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-          if (!a) return;
-          if (a.classList.contains('lightbox') || (a.closest && a.closest('.lightbox'))) return;
-          e.preventDefault();
-        }, true);
-        // Esc inside the frame must close the modal too (focus may be in here)
-        fdoc.addEventListener('keydown', function (e) {
-          if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); closePeek(); }
-        }, true);
-      } catch (e) {}
-
-      // source label from the loaded doc
-      var source = document.getElementById('peek-source');
-      if (source) source.textContent = sourceLabel(fdoc);
-
-      whenFrameReady(frame, function (win) {
-        tuneFrameDeck(win || fwin, frag);
-        var loading = document.getElementById('peek-loading');
-        if (loading && loading.parentNode) loading.parentNode.removeChild(loading);
-      });
-    }
+        var source = document.getElementById('peek-source');
+        if (source && d.title) source.textContent = T.from + d.title;
+        removeLoading();
+      } catch (e2) {}
+    });
 
     function openPeek(page, frag) {
       var modal = ensureModal();
@@ -287,16 +337,26 @@
       if (source) source.textContent = '';
       if (wrap) wrap.innerHTML = '<div id="peek-loading">' + T.loading + '</div>';
       setRevealKeyboard(false);
+      frameAspect = null;
       modal.classList.add('peek-open');
 
-      // build a fresh iframe each time (clean state, stops the old deck)
+      // build a fresh iframe each time (clean state, stops the old deck);
+      // same-page peek (no page part) targets the current document
+      var base = page || window.location.href.split('#')[0];
       var frame = document.createElement('iframe');
       frame.id = 'peek-frame';
       frame.setAttribute('title', T.frameTitle);
-      // same-page peek (no page part) targets the current document
-      var base = page || window.location.href.split('#')[0];
-      frame.src = base + '#/' + frag;
-      frame.addEventListener('load', function () { onFrameLoad(frame, frag); });
+      frame.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + EMBED_PARAM + '=1#/' + frag;
+      frame.addEventListener('load', function () {
+        // a target rendered with an old kit never announces `ready`; drop the
+        // loader after a grace period so the slide still shows (untuned)
+        if (frame !== activeFrame) return;
+        if (pendingTimer) clearTimeout(pendingTimer);
+        pendingTimer = setTimeout(function () {
+          if (frame === activeFrame) removeLoading();
+        }, 3000);
+      });
+      activeFrame = frame;
       if (wrap) {
         wrap.appendChild(frame);
         sizeFrame(frame);

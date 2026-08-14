@@ -210,19 +210,19 @@
    main point. System fonts only, NO web-font download: Latin → Georgia,
    Japanese → an installed mincho if present else the generic serif fallback. */
 .reveal .caption-note {
-  text-align: center;
+  text-align: left;
   margin-top: 0.3em;             /* small, element-agnostic gap (table OR code output above) */
   margin-bottom: 0.6em;
 }
 .reveal .caption-note p {
   display: inline-block;
   margin: 0 !important;
-  padding: 0.3em 1.2em;
+  padding: 0.45em 1em;
   border: 1px solid #c7ccd4;
   border-radius: 8px;
   background: #f7f8fa;
   font-family: Georgia, Cambria, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif !important;
-  font-size: 0.72em !important;
+  font-size: 0.82em !important;
   color: #555 !important;
   font-weight: normal !important;
 }
@@ -463,10 +463,15 @@ table td:first-child {
 /* Search button (created by search-ui.js at top:54px) moved to the bottom-right
    so the top-right corner is reserved for the badge. */
 #search-btn { top: auto !important; bottom: 14px !important; }
+/* Quarto's footer spans the viewport by default. Shrink-wrap the navigation so
+   the invisible remainder cannot intercept controls on a scrolled slide. */
 .reveal > .footer {
   display: flex !important;
   align-items: center;
   justify-content: center;
+  left: 50%;
+  width: fit-content;
+  transform: translateX(-50%);
   padding: 0 16px;
   height: auto !important;
   overflow: visible !important;
@@ -888,6 +893,13 @@ a.lightbox[href]::after {
 .reveal .slide ul li, .reveal .slide ol li {
     margin-top: 0.3em;
     margin-bottom: 0.3em;
+}
+/* Ordered lists: numbering (1. / a.) is authored deliberately — it asserts
+   "exactly N items" and parent↔child correspondence, unlike plain bullets.
+   Give the markers weight+color so the structured enumeration reads at a glance. */
+.reveal .slide-body ol > li::marker {
+  font-weight: 700;
+  color: #2471a3;
 }
 
 .reveal .slide-body ul ul ul > li::before {
