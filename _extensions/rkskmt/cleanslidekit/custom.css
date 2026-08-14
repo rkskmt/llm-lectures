@@ -249,6 +249,19 @@ table {
   padding-left: 0.7em;
   padding-right: 0.7em;
 }
+/* Compact markdown table: natural width, centered — the global table
+   {width:100%} stretches small matrices (e.g. a 2x2 confusion matrix) across
+   the slide with huge gaps. Wrap the table in ::: {.table-compact}. */
+.table-compact table {
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
+}
+.table-compact table th,
+.table-compact table td {
+  padding-left: 0.7em;
+  padding-right: 0.7em;
+}
 table tbody {
   border-bottom: none !important;
 }
