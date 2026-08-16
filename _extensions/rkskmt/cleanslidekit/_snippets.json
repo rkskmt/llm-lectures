@@ -83,6 +83,15 @@
 		],
 		"description": "Neutral rounded frame marking the exercise statement"
 	},
+	"Takeaway (slide key message)": {
+		"prefix": "csk-takeaway",
+		"body": [
+			"::: {.takeaway}",
+			"${1:Key message}",
+			":::"
+		],
+		"description": "Large outlined box for the slide's key message"
+	},
 	"Caption note": {
 		"prefix": "csk-caption",
 		"body": [

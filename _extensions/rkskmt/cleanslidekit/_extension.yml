@@ -1,6 +1,6 @@
 title: CleanSlideKit RevealJS
 author: rkskmt
-version: 1.8.1
+version: 1.9.2
 quarto-required: ">=1.4.0"
 contributes:
   formats:
@@ -37,6 +37,50 @@ contributes:
         text: |
           <link rel="icon" type="image/svg+xml" href="favicon.svg">
           <link rel="stylesheet" href="custom.css">
+          <script>
+          // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+          // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+          // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+          // repaint leaves inline math wider than its reserved box and it overpaints
+          // the neighboring text. The CommonHTML renderer lays out from built-in
+          // metric tables and has no such race. Quarto offers no knob for this, so
+          // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+          // the math config before Reveal.initialize hands it to the math plugin.
+          //
+          // CommonHTML still sizes math by measuring an ex-height probe in the
+          // DOM next to each equation (matchFontHeight). reveal.css keeps every
+          // section display:none until Reveal's first layout, so when MathJax
+          // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+          // against hidden slides: the probe measures 0, MathJax substitutes
+          // the 16px-body default ex but keeps the real 32px font-size, and
+          // every equation renders at ~50-61% — permanently, because MathJax
+          // never re-typesets processed math. A fixed scale with
+          // matchFontHeight off removes the DOM measurement entirely (which
+          // also fixes math inside collapsed code-fold / callout bodies —
+          // those always measured hidden). 127% is what the measurement
+          // itself yields for this theme's fonts when it works; retune it if
+          // the body font ever changes.
+          (function () {
+            var reveal;
+            Object.defineProperty(window, "Reveal", {
+              configurable: true,
+              get: function () { return reveal; },
+              set: function (value) {
+                reveal = value;
+                if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+                value.__cskCHTML = true;
+                var initialize = value.initialize;
+                value.initialize = function (config) {
+                  if (config && config.math && typeof config.math.config === "string") {
+                    config.math.config = config.math.config.replace("_HTML", "_CHTML");
+                    config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+                  }
+                  return initialize.call(this, config);
+                };
+              }
+            });
+          })();
+          </script>
           <script src="slide-ui.js" defer></script>
           <script src="search-ui.js" defer></script>
           <script src="peek-ui.js" defer></script>
