@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -308,7 +352,7 @@ rkskmt
 <p><strong>ノート</strong></p>
 </div>
 <div class="callout-content">
-<p>採点表は<strong>捨てずに取っておく</strong> — 最終回の種明かしのとき、自分の目がどこまで確かだったか答え合わせできる。</p>
+<p>採点表は<strong>捨てずに取っておく</strong> — 最終回に正体を明かすとき、自分の目がどこまで確かだったか答え合わせできる。</p>
 </div>
 </div>
 </div>
@@ -346,14 +390,14 @@ rkskmt
 <section id="chatgpt-は何をしている機械か" class="slide level2">
 <h2>ChatGPT は何をしている機械か</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>ChatGPT の中身がやっている仕事を、一言で言うと？ 「考えている」「検索している」「会話している」……？</p>
@@ -474,14 +518,14 @@ rkskmt
 <section id="予想を数に置き換える" class="slide level2">
 <h2>「予想」を数に置き換える</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>『吾輩は猫である』全文（約32万字）で、「吾輩」の<strong>次</strong>に来た文字を数える。1位はどの文字？　2位は？</p>
@@ -490,7 +534,7 @@ rkskmt
 </div>
 </div>
 <div class="fragment">
-<div id="5910f6d3" class="cell" data-execution_count="1">
+<div id="4d6b13d9" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -512,7 +556,7 @@ rkskmt
 <ul>
 <li>体験ゲームの「確信」と「お手上げ」も、数えれば形になる。「であ」の次と「、」の次：</li>
 </ul>
-<div id="36f05f8c" class="cell" data-execution_count="2">
+<div id="c1f20228" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -562,7 +606,7 @@ rkskmt
 <li><strong>架空の地名メーカーを育てる</strong>：数えるだけのモデルから始めて、学習・埋め込み・文脈の窓へ</li>
 <li><strong>注意（Attention）を開ける</strong>：「どこを見るか」を学習する仕組みを手計算からコードまで</li>
 <li><strong>GPT を組んで火を入れる</strong>：部品を束ねて『吾輩は猫である』32万字で訓練する</li>
-<li><strong>推し文豪ボット</strong>：最終回、好きな作家で自分のGPTを育てる — そして文豪テストの種明かし</li>
+<li><strong>推し文豪ボット</strong>：最終回、好きな作家で自分のGPTを育てる — そして文豪テストの答え合わせ</li>
 </ul>
 <div class="callout callout-note callout-titled callout-style-default">
 <div class="callout-body">
@@ -617,7 +661,7 @@ rkskmt
 <li><code>find</code> で「猫」の位置を順に探し、その次の1文字を辞書で数える（<code>collections.Counter</code> 可）</li>
 <li>回数の多い順に5件、「文字：回数」で表示</li>
 </ol>
-<div id="636b6650" class="cell" data-execution_count="3">
+<div id="c739ee1f" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
@@ -682,7 +726,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="3de51d2c" class="cell" data-execution_count="4">
+<div id="f45ffc4d" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
@@ -998,7 +1042,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

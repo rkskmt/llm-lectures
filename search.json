@@ -4,7 +4,7 @@
     "href": "transformer-block.html#前回の振り返り",
     "title": "深く積む",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\nマルチヘッド注意（会議で集める）と FFN（席に戻って考える）ができた\nどちらも入口と出口が同じ形 — 理屈の上では、いくらでも積み重ねられる\n\n\n\n\n\n\n\n\nクイズ\n\n\n同じ形だから8段でも96段でも積める。では素朴に積めば、積んだぶんだけ賢くなる？\n\n\n\n\n\n\nならない。深さには税金が2つ：勾配が入口まで届かない／途中のベクトルの大きさが暴れる\n今日はこの2つに保険をかけてから、GPT の全身を組む"
+    "text": "前回の振り返り\n\n\nマルチヘッド注意（会議で集める）と FFN（席に戻って考える）ができた\nどちらも入口と出口が同じ形 — 理屈の上では、いくらでも積み重ねられる\n\n\n\n\n\n\n\n\n質問\n\n\n同じ形だから8段でも96段でも積める。では素朴に積めば、積んだぶんだけ賢くなる？\n\n\n\n\n\n\nならない。深さには税金が2つ：勾配が入口まで届かない／途中のベクトルの大きさが暴れる\n今日はこの2つに保険をかけてから、GPT の全身を組む"
   },
   {
     "objectID": "transformer-block.html#前回の部品を持ってくる",
@@ -63,6 +63,13 @@
     "text": "Tweak 設計図の数字で遊ぶ\n\n\nGPTクラスのコード の設定を変えて、形とパラメータ数を確認（訓練はしないので一瞬）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\nn_layer=2 → 8\nパラメータはどこがどれだけ増える？（内訳の勘定で確認）\n\n\nn_embd=96 → 192\n層を増やすのと次元を増やすの、効き方の違いは？\n\n\nblock_size=64 → 128\n増えるのは1部品だけ。どれ？（内訳の勘定はヒントにならない — なぜ？）\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\nblock_size を倍にして増えるのは位置の埋め込み表だけ：64×96 = 6,144 → 128×96 = 12,288。パラメータ的には安い買い物（ただし各ヘッドが作る視線の表は T×T に広がるので、計算の手間は別勘定）\n内訳の勘定で pos_emb は「埋め込み」の行に混ざっている — 増分 6,144 はそこに現れる"
   },
   {
+    "objectID": "transformer-block.html#全身を歩く-自作gpt",
+    "href": "transformer-block.html#全身を歩く-自作gpt",
+    "title": "深く積む",
+    "section": "全身を歩く — 自作GPT",
+    "text": "全身を歩く — 自作GPT\n\nいま組んだ GPT クラスの中身を、訓練済みの実重みで上から下まで歩く。\n\n\n\n左の箱を入力から順にクリックして、各部品の出力（ヒートマップ）を眺める\n「＋ 残差」の前後でヒートマップの模様が大きくは変わらないことを確認 — 迂回路の実感\n各箱が今日の GPT クラスのどの行にあたるか、コードと突き合わせる\n\nエクスプローラを別タブで開く"
+  },
+  {
     "objectID": "transformer-block.html#本物の中を歩く",
     "href": "transformer-block.html#本物の中を歩く",
     "title": "深く積む",
@@ -95,7 +102,7 @@
     "href": "to-chatgpt.html#完成した機械を眺める",
     "title": "ChatGPT までの距離",
     "section": "完成した機械を眺める",
-    "text": "完成した機械を眺める\n\n\n手元にあるもの：82万パラメータ・『吾輩は猫である』1冊で育てた文字レベル GPT\n世の中にあるもの：ChatGPT\n\n\n\n\n\n\n\n\nクイズ\n\n\n自作GPTと ChatGPT の差は、次のどれが一番大きい？\na. 仕組み（アーキテクチャ）が根本的に違う　b. 大きさとデータ量　c. 訓練後の仕込み\n\n\n\n\n\n\n答えは b と c。仕組みの根っこは、君たちが組んだものとほぼ同じ"
+    "text": "完成した機械を眺める\n\n\n手元にあるもの：82万パラメータ・『吾輩は猫である』1冊で育てた文字レベル GPT\n世の中にあるもの：ChatGPT\n\n\n\n\n\n\n\n\n質問\n\n\n自作GPTと ChatGPT の差は、次のどれが一番大きい？\na. 仕組み（アーキテクチャ）が根本的に違う　b. 大きさとデータ量　c. 訓練後の仕込み\n\n\n\n\n\n\n答えは b と c。仕組みの根っこは、君たちが組んだものとほぼ同じ"
   },
   {
     "objectID": "to-chatgpt.html#設計図は読めるようになっている",
@@ -112,11 +119,39 @@
     "text": "距離1：スケール\n\n\n\n\n\n\n\n\n\n\n\nGPT-3 は自作GPTの約21万倍。データも『猫』32万字に対して数千億トークン\n自作GPTは同じ本を64周して過学習した。巨大 LLM は逆にデータが多すぎて1周も読み切らないことがある — 暗記する暇がない"
   },
   {
+    "objectID": "to-chatgpt.html#大きさを重さで実感する",
+    "href": "to-chatgpt.html#大きさを重さで実感する",
+    "title": "ChatGPT までの距離",
+    "section": "大きさを重さで実感する",
+    "text": "大きさを重さで実感する\n\n\nパラメータは float32 の数 — 1個が4バイト。個数を掛ければ「モデルの重さ」が出る\n\n\nfor name, p in [(\"自作GPT\", 817_125), (\"GPT-2\", 1.5e9), (\"GPT-3\", 175e9)]:\n    print(f\"{name}\\t{p * 4 / 1e9:,.4f} GB\")   # 数1個 = 4バイト\n\n自作GPT   0.0033 GB\nGPT-2   6.0000 GB\nGPT-3   700.0000 GB\n\n\n\n配布した ckpt_best.pt は実測 3.4MB（語彙表なども同梱）— メールに添付できる重さ。『猫』本文は約 0.96MB だから、自作GPTは原作より重い\nGPT-3 は 700GB — ノートPCのSSDに丸ごとは入らない。「大きい」はディスクの重さでも実感できる"
+  },
+  {
     "objectID": "to-chatgpt.html#距離2語彙-文字をやめる",
     "href": "to-chatgpt.html#距離2語彙-文字をやめる",
     "title": "ChatGPT までの距離",
     "section": "距離2：語彙 — 文字をやめる",
     "text": "距離2：語彙 — 文字をやめる\n\n\n組み立ての回の勘定：自作GPTはパラメータの7割が語彙まわり（3,045字の出入口）\n実物は文字でなくサブワードを使う：よく出る文字の並びを1トークンに合体させた単位\n\n\n\n\n\n自作GPT\nGPT-2以降\n\n\n\n\nトークン\n文字（3,045種）\nサブワード（約5万種）\n\n\n「こんにちは」\n5トークン\n1〜2トークン\n\n\n\n\n同じ文脈長でもずっと長い文章が窓に入る — では、その約5万種は誰がどう選んだのか？\n\n\n\n\n\n\n\nノート\n\n\nLLM の料金表が「文字数」でなく「トークン数」なのは、この単位で動いているから。"
+  },
+  {
+    "objectID": "to-chatgpt.html#語彙は数えて作る",
+    "href": "to-chatgpt.html#語彙は数えて作る",
+    "title": "ChatGPT までの距離",
+    "section": "語彙は数えて作る",
+    "text": "語彙は数えて作る\n\n\n誰かが5万語を選んだのではない。よく隣り合う2つを合体、をひたすら繰り返すだけ — BPE（byte pair encoding）と呼ぶ\n『猫』の前半10万字で実際に回した結果：\n\n\n\n\n\n\n\n\nマージ回数\n起きたこと\n\n\n\n\n20回\n「って」「る。」に続いて 「主人」「吾輩」「云う」が1トークンに\n\n\n100回\n最長トークンは「である。」。「吾輩は」「ところ」「そんな」も1トークン\n\n\n\n\n数えただけで、『猫』の主役たち（主人・吾輩）が真っ先に単語になる — 語彙はコーパスの鏡\nトークン数は 100,000 → 91,366（20回）→ 81,286（100回）と縮む — 合体するほど窓に長い文章が入る\n作り方は回数外の BPE の付録 で、数え上げから1行ずつ自作する"
+  },
+  {
+    "objectID": "to-chatgpt.html#実物を操作する-ブラウザの中の-gpt-2",
+    "href": "to-chatgpt.html#実物を操作する-ブラウザの中の-gpt-2",
+    "title": "ChatGPT までの距離",
+    "section": "実物を操作する — ブラウザの中の GPT-2",
+    "text": "実物を操作する — ブラウザの中の GPT-2\n\n本物の GPT-2（小型版・1.2億パラメータ）をブラウザ内で動かして中を覗ける公開デモ。ここまでの距離を実物で確かめる。\n\n\n\n好きな英文を入れて、右端の次トークンの確率を眺める\n入力がサブワードに割れているのを確認 — 文字でも単語でもない切れ方（距離2の実物）\nTemperature のスライダを動かして、分布が平ら↔︎尖りに変わるのを確認（生成を操るの回のツマミの実物）\n部品の箱を入口から出口までたどって、「習っていない箱」を探す — あってもたいてい名前が違うだけ\n\n\n\n\n\n\n\nノート\n\n\nこの GPT-2 は事前学習だけの素の姿 — 次の距離（仕込み）を、まだ通っていない。\n\n\n\nTransformer Explainer を別タブで開く"
+  },
+  {
+    "objectID": "to-chatgpt.html#実験自作gptに質問してみる",
+    "href": "to-chatgpt.html#実験自作gptに質問してみる",
+    "title": "ChatGPT までの距離",
+    "section": "実験：自作GPTに質問してみる",
+    "text": "実験：自作GPTに質問してみる\n\n\nimport torch\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ndef gen(prompt, n, seed=0):\n    torch.manual_seed(seed)\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    out = model.generate(idx, n, temperature=0.8, top_k=40)\n    return \"\".join(chars[i] for i in out[0].tolist())\n\nprint(gen(\"「君の名前は何かね」\", 60, seed=1))\n\n「君の名前は何かね」\n「それでね、どうですかも知れないのは、どうです、どうだってもしない」\n「あらあ」\n「あの伯父さん」\n「ええ」と大蔵様は\n\n\n\n返ってきたのは答えではなく、芝居の続きの台本 — 質問を「登場人物のセリフ」としか読めていない\n考えてみれば当然：訓練で見た世界には文の続きしかない。「質問に答える」という行為は『猫』のどこにも定義されていない\n\n\n\n\n\n\n\nノート\n\n\n「質問：〜」「答え：〜」の形式では、そもそも入力すらできない — 「：」は 3,045 字の語彙にない（stoi[\"：\"] で KeyError）。 『猫』に出てこない文字は、自作GPTの世界に存在しない（文字を数にするの回）。"
   },
   {
     "objectID": "to-chatgpt.html#距離3仕込み-予測マシンから対話相手へ",
@@ -126,11 +161,18 @@
     "text": "距離3：仕込み — 予測マシンから対話相手へ\n\n\nこの「続きしか書けない機械」を対話相手に変えるのが3つ目の距離 — 訓練のあとの仕込み\n\n\n\n事前学習：自作GPTがやったこと、そのもの。ここで「言葉」を覚える\n指示チューニング（instruction tuning）：「質問→回答」形式の手本を追加で学習。文の続きではなく応答を返すようになる\n好みの調整（RLHF — 名前だけ紹介）：人間が「良い答え」を選び、その好みに寄せる\nChatGPT ＝ 次語予測マシン＋行儀のしつけ。土台は最後まで次語予測"
   },
   {
-    "objectID": "to-chatgpt.html#実験うちの子に事実を聞く",
-    "href": "to-chatgpt.html#実験うちの子に事実を聞く",
+    "objectID": "to-chatgpt.html#しつけの中身-台本で追加訓練",
+    "href": "to-chatgpt.html#しつけの中身-台本で追加訓練",
     "title": "ChatGPT までの距離",
-    "section": "実験：うちの子に事実を聞く",
-    "text": "実験：うちの子に事実を聞く\n\n\nprint(gen(\"主人の名前は\", 50, seed=1))\n\n主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」\n\n\n\n流暢に何も答えていない。しかも「名前はまだ…」と続けたがる — コーパスで一番有名な「名前」の文脈（「名前はまだ無い」）を引きずっている\n喋っているのは事実ではなく統計 — 「ありそうな続き」製造機の正直な姿"
+    "section": "しつけの中身 — 台本で追加訓練",
+    "text": "しつけの中身 — 台本で追加訓練\n\n\n指示チューニングのデータは「指示 → 望ましい応答」の台本。人が書いた手本を数万〜数百万組読ませる（形のイメージ）：\n\n\n\n\n指示（人が書く）\n応答の手本（人が書く）\n\n\n\n\n日本でいちばん高い山は？\n富士山です。標高は 3,776 m です。\n\n\n「吾輩は猫である」を現代語に言い換えて\n私は猫です。\n\n\n\n\nここが要点：追加訓練でもやることは次の1トークン予測のまま。変わるのは読ませる台本のほう\n「質問の続き」＝「その答え」という世界で育ち直す — 仕組みには1ミリも手を入れない\n自作GPTとの違いは訓練の中身ではなく、コーパスに「答える」という行為が書いてあるかどうか"
+  },
+  {
+    "objectID": "to-chatgpt.html#実験自作gptに事実を聞く",
+    "href": "to-chatgpt.html#実験自作gptに事実を聞く",
+    "title": "ChatGPT までの距離",
+    "section": "実験：自作GPTに事実を聞く",
+    "text": "実験：自作GPTに事実を聞く\n\n\nprint(gen(\"主人の名前は\", 50, seed=1))\n\n主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」\n\n\n\n流暢に何も答えていない。しかも「名前はまだ…」と続けたがる — コーパスで一番有名な「名前」の文脈（「名前はまだ無い」）を引きずっている\n喋っているのは事実ではなく統計 — 「ありそうな続き」製造機の正直な姿"
   },
   {
     "objectID": "to-chatgpt.html#ハルシネーション-堂々と間違える理由",
@@ -138,6 +180,13 @@
     "title": "ChatGPT までの距離",
     "section": "ハルシネーション — 堂々と間違える理由",
     "text": "ハルシネーション — 堂々と間違える理由\n\n\nLLM が事実でないことを流暢に述べる現象をハルシネーション（hallucination）と呼ぶ\n原理は今日見たとおり：モデルの中には「ありそうさ」しかなく、「本当かどうか」という軸が存在しない\nスケールが上がると「ありそう」と「本当」の一致率は上がる。だが原理は消えない — ChatGPT も、自作GPTの21万倍上手なだけの「続き製造機」\n\n\n\n\n\n\n\n\nだから、騙されない側になる\n\n\n\n検算できるものは検算する（計算・日付・引用は特に）\n出典を出させて、実物を確認する（それらしい架空の出典も平気で作る）\n流暢さと自信は、正しさの証拠にならない — 自作GPTがその生き証人"
+  },
+  {
+    "objectID": "to-chatgpt.html#ハルシネーションの解剖",
+    "href": "to-chatgpt.html#ハルシネーションの解剖",
+    "title": "ChatGPT までの距離",
+    "section": "ハルシネーションの解剖",
+    "text": "ハルシネーションの解剖\n\n\nprint(gen(\"吾輩の主人は\", 60, seed=0))\n\n吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も\n\n\n\n途中に「寒月君は猫としてはならんのだから」— それらしい主張。本文と照合する：\n\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nprint(\"寒月君は:\", text.count(\"寒月君は\"), \"回\")\nprint(\"猫として:\", text.count(\"猫として\"), \"回\")\nprint(\"寒月君は猫:\", \"寒月君は猫\" in text)\n\n寒月君は: 59 回\n猫として: 4 回\n寒月君は猫: False\n\n\n\n部品はどちらも本文に実在する。組み合わせだけが作り話\n数えるだけの言語モデルの回でやった「でたらめ地名の解剖」と同じ構造 — 一歩一歩は正しいのに、全体は迷子\nありそうなかけらを、ありそうな順につないだ結果が、そのまま「堂々とした嘘」になる"
   },
   {
     "objectID": "to-chatgpt.html#演習aiの発言をファクトチェックする",
@@ -158,7 +207,7 @@
     "href": "to-chatgpt.html#まとめ",
     "title": "ChatGPT までの距離",
     "section": "まとめ",
-    "text": "まとめ\n\n\nChatGPT との距離は主に：スケール（21万倍）・語彙（BPE）・仕込み（指示チューニング＋好み調整）\n仕込みも中身は次語予測のまま — 台本を差し替えて「質問の続き＝答え」の世界で育て直すだけ\n背骨は同じ：埋め込み → Transformer ブロック → 次語予測\nハルシネーションは故障ではなく原理 — 部品は本物でも、組み合わせに「本当」の保証がない\n検算する・出典を確かめる・流暢さを信じない — 作った者だけが持てる健全な不信感\n\n\n現在の設計図　サブワード → 大型Transformer → 指示・好みで追加訓練 → 応答\n\n\n\n\n\n\n\n\n次回予告：最終回\n\n\n仕上げは推し文豪ボット — 青空文庫から好きな作家を選んで、自分のGPTを育てる。 そして初回の文豪テストの種明かしをする。"
+    "text": "まとめ\n\n\nChatGPT との距離は主に：スケール（21万倍）・語彙（BPE）・仕込み（指示チューニング＋好み調整）\n仕込みも中身は次語予測のまま — 台本を差し替えて「質問の続き＝答え」の世界で育て直すだけ\n背骨は同じ：埋め込み → Transformer ブロック → 次語予測\nハルシネーションは故障ではなく原理 — 部品は本物でも、組み合わせに「本当」の保証がない\n検算する・出典を確かめる・流暢さを信じない — 作った者だけが持てる健全な不信感\n\n\n現在の設計図　サブワード → 大型Transformer → 指示・好みで追加訓練 → 応答\n\n\n\n\n\n\n\n\n次回予告：最終回\n\n\n仕上げは推し文豪ボット — 青空文庫から好きな作家を選んで、自分のGPTを育てる。 そして初回の文豪テストの答え合わせをする。"
   },
   {
     "objectID": "to-chatgpt.html#練習問題",
@@ -175,11 +224,116 @@
     "text": "解答例\n\n\n\n解答例を見る\n# 問題1\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nprint(\"苦沙弥:\", text.count(\"苦沙弥\"), \"回\")   # 呼び名はこちら（99回）\nprint(\"珍野:\", text.count(\"珍野\"), \"回\")       # 姓はたった2回 — 検索しないと出会えない\n\n# 問題2\nmine = 817_125\nfor name, p in [(\"GPT-2\", 1.5e9), (\"GPT-3\", 175e9)]:\n    print(f\"{name}: 自作GPT {p / mine:,.0f} 台ぶん\")\n\n\n苦沙弥: 99 回\n珍野: 2 回\nGPT-2: 自作GPT 1,836 台ぶん\nGPT-3: 自作GPT 214,166 台ぶん"
   },
   {
+    "objectID": "sampling.html#前回の振り返り",
+    "href": "sampling.html#前回の振り返り",
+    "title": "生成を操る",
+    "section": "前回の振り返り",
+    "text": "前回の振り返り\n\n\n訓練済みの重み（ckpt_best.pt）を手に入れ、文章が生成できるようになった\nモデルの出力は確率分布 — 生成の自由度は「その分布からどう引くか」に集約される\n今日は引き方のツマミを2つ握る。まずは準備：\n\n\nimport torch\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\n\ngpt.py と ckpt_best.pt は前回と同じ配置で"
+  },
+  {
+    "objectID": "sampling.html#実験毎回1位だけを選んだら",
+    "href": "sampling.html#実験毎回1位だけを選んだら",
+    "title": "生成を操る",
+    "section": "実験：毎回1位だけを選んだら",
+    "text": "実験：毎回1位だけを選んだら\n\n\n「一番ありそうな文字を選び続ける」のが最強に思える。バイグラムの Tweak で見た argmax 作戦\n\n\ndef gen(prompt, n, temperature=1.0, top_k=None, seed=0):\n    torch.manual_seed(seed)\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    out = model.generate(idx, n, temperature=temperature, top_k=top_k)\n    return \"\".join(chars[i] for i in out[0].tolist())\n\nprint(gen(\"吾輩は\", 60, top_k=1))     # top_k=1 ＝ 常に1位だけ\n\n吾輩はこの猫のごとく、主人の頭をあらわしている。\n「それでも構わんやい」と主人は少々ぷんぷんぷんぷんぷんしている。\n「それでも\n\n\n\n「少々ぷんぷんぷんぷんぷんしている」 — 堂々巡りに落ちた\n常に最有力の道だけを歩くと、同じ角を回り続ける。しかもシードを変えても毎回同じ文"
+  },
+  {
+    "objectID": "sampling.html#なぜ堂々巡りになるのか",
+    "href": "sampling.html#なぜ堂々巡りになるのか",
+    "title": "生成を操る",
+    "section": "なぜ堂々巡りになるのか",
+    "text": "なぜ堂々巡りになるのか\n\n\n\nモデルは同じ入力に必ず同じ分布を返す。1位だけ選ぶなら、次の文字も必ず同じ\n生成中に「前に見た窓の中身」へ一度でも戻ると、そこから先は永遠に同じ道 — 「ぷんぷん」の正体\nサイコロ（確率での抽選）は、このループを破る唯一の乱数源。問題は「どれくらい揺らすか」"
+  },
+  {
+    "objectID": "sampling.html#ツマミ1temperature",
+    "href": "sampling.html#ツマミ1temperature",
+    "title": "生成を操る",
+    "section": "ツマミ1：temperature",
+    "text": "ツマミ1：temperature\n\n\nsoftmax の前に、スコアを \\(T\\) で割る — たったこれだけ\n\n\\[\n\\text{probs} = \\mathrm{softmax}\\!\\left(\\frac{\\text{logits}}{T}\\right)\n\\]\n\n\\(T &lt; 1\\)：スコア差が拡大 → 分布が尖る（1位に集中、無難）\n\\(T &gt; 1\\)：スコア差が縮小 → 分布が平らになる（番狂わせが増える、危険）\n\\(T \\to 0\\)：ほぼ argmax。\\(T = 1\\)：モデルの分布そのまま\n\n\n\n\n\n\n\n\n\n\n\n同じモデル・同じ入力でも、\\(T\\) だけで「こ」の確率が 72% ⇄ 16% ⇄ 2% と変わる"
+  },
+  {
+    "objectID": "sampling.html#t-を手計算サイズで確かめる",
+    "href": "sampling.html#t-を手計算サイズで確かめる",
+    "title": "生成を操る",
+    "section": "T を手計算サイズで確かめる",
+    "text": "T を手計算サイズで確かめる\n\n\nsoftmax の回のスコア (2, 1, −1) を、\\(T\\) で割ってから通すと：\n\n\nimport torch\nimport torch.nn.functional as F\n\ns = torch.tensor([2.0, 1.0, -1.0])\nfor T in [0.5, 1.0, 2.0]:\n    print(f\"T={T}:\", F.softmax(s / T, dim=0).round(decimals=3))\n\nT=0.5: tensor([0.8790, 0.1190, 0.0020])\nT=1.0: tensor([0.7050, 0.2590, 0.0350])\nT=2.0: tensor([0.5470, 0.3310, 0.1220])\n\n\n\n\\(T=0.5\\)：スコア差が2倍に開いて1位が独走（0.88）。\\(T=2.0\\)：差が半分に縮んで接戦（0.55 / 0.33 / 0.12）\nモデルは1ミリも変わっていない。変わったのは softmax に渡す前の「差の広げ方」だけ\n\\(e^s\\) は差の増幅器だった — \\(T\\) はその増幅率のツマミ"
+  },
+  {
+    "objectID": "sampling.html#聞き比べどれがどの温度",
+    "href": "sampling.html#聞き比べどれがどの温度",
+    "title": "生成を操る",
+    "section": "聞き比べ：どれがどの温度？",
+    "text": "聞き比べ：どれがどの温度？\n\n\n\n\n\n\n\n\n質問\n\n\nT ＝ 0.2・0.8・2.0 のどれかで生成した3つ。どれがどの温度？\n\n\n\n\n\n\n--- A ---\n吾輩は登ぱり何音野株か知るシ囃通り数が奇秘をも刑い台み掻…死絽を溜ごし嘔算吾私製霞如世一来出で』裁めて爆面引る前将見田置し日武捐虞だ、飴ん悟り激纏珍騒振る所以早顔心で \n\n--- B ---\n吾輩はこの猫を捉まっている。\n　主人は「それでもいい、そんなになっても、あなたのです」と主人は少々焦れる。\n「それではないか」と主人は「そんな事はないから、そんなに利 \n\n--- C ---\n吾輩はあるまいと思うくらいならよりほかには元来主人のみを反対の穴があって、吾輩の頭をあつかない。それはこの事なら、何しかしこまでも同じ事を悟ってはいっしゃるまい。また \n\n\n\n\n\nA は T=2.0：漢字の豪雨 — 分布の尻尾にいたレア文字が当選しまくる\nB は T=0.2：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）\nC は T=0.8：ほどよく揺れて、いちばん「漱石風」\n作り方は3つとも gen(\"吾輩は\", 80, temperature=T)（種は0で共通）"
+  },
+  {
+    "objectID": "sampling.html#ツマミ2top-k-尻尾を切る安全網",
+    "href": "sampling.html#ツマミ2top-k-尻尾を切る安全網",
+    "title": "生成を操る",
+    "section": "ツマミ2：top-k — 尻尾を切る安全網",
+    "text": "ツマミ2：top-k — 尻尾を切る安全網\n\n\n\\(T\\) を上げたいが暴走は困る → 上位 \\(k\\) 文字だけ残して、あとは \\(-\\infty\\) にしてから抽選\n\n\n\n\n\n\n\n\n\n\n\n票を \\(-\\infty\\) で消す — 因果マスクと同じ手口（softmax の前に消すのが作法）\n\n\nprint(gen(\"吾輩は\", 80, temperature=2.0, top_k=40))\n\n吾輩はあるま品分に、かいるはずよりほといものも近い猫とし得るのを忘れしきりを捉まってあたかなかって見ましまか」\n「ハハハハヴ」と念だ、細君もま時はよこはどっち構ってさ\n\n\n\n同じ T=2.0 でも、尻尾の3,005文字が消えるだけで「日本語の音」に戻ってくる\ngpt.py の generate はこの2ツマミ込みで書いてある：\n\nlogits = logits / temperature                      # ツマミ1\nif top_k is not None:\n    v, _ = torch.topk(logits, top_k)\n    logits[logits &lt; v[:, [-1]]] = float(\"-inf\")    # ツマミ2（尻尾を消す）\nprobs = F.softmax(logits, dim=-1)\nnxt = torch.multinomial(probs, num_samples=1)      # サイコロ"
+  },
+  {
+    "objectID": "sampling.html#top-p-尻尾を合計で切る",
+    "href": "sampling.html#top-p-尻尾を合計で切る",
+    "title": "生成を操る",
+    "section": "top-p — 尻尾を「合計」で切る",
+    "text": "top-p — 尻尾を「合計」で切る\n\n\ntop-k の弱点：常に k 席の固定枠 — 自信満々の場面では広すぎ、大混戦では狭すぎる\ntop-p（nucleus sampling）は席数でなく得票の合計で切る：確率の高い順に足していき、合計が \\(p\\) に達したら打ち止め\n\n\n\n\n\n\n\n\n\n\n\n「吾輩は猫であ」の次は1文字（「る」92%）で到達、「吾輩は」の次は299文字 — 枠の広さが分布の形に追随する\n自作GPTの generate のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る"
+  },
+  {
+    "objectID": "sampling.html#分布の形を実物で歩く",
+    "href": "sampling.html#分布の形を実物で歩く",
+    "title": "生成を操る",
+    "section": "分布の形を、実物で歩く",
+    "text": "分布の形を、実物で歩く\n\n\ntop-p のカーブが要約していたもの — 位置ごとの分布の形 — をエクスプローラで1つずつ覗ける\n\n\n\n\nいま開いているのは「吾輩は」まで読んだ位置 — 低い棒がずらり（お手上げ型。1位「こ」でも 15.5%）\n「あ」（吾輩は猫であ）の位置をクリック — 「る」が 92% でそびえる（確信型）\nプリセットを会話文に替えて、いちばん平らな位置といちばん尖った位置を探す\n見つけた2箇所で「top-p (\\(p=0.9\\)) の枠に何文字入るか」を目分量で予想 — 尖りは1桁、平らは3桁\n\nエクスプローラを別タブで開く"
+  },
+  {
+    "objectID": "sampling.html#サイコロの種-揺れを再現する",
+    "href": "sampling.html#サイコロの種-揺れを再現する",
+    "title": "生成を操る",
+    "section": "サイコロの種 — 揺れを再現する",
+    "text": "サイコロの種 — 揺れを再現する\n\n\n「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は疑似乱数で、種（シード）が同じなら出目の列も同じ\n\n\ntorch.manual_seed(0)\nprint(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))\ntorch.manual_seed(0)\nprint(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))\n\ntensor([2, 1, 0, 2, 0, 1, 0, 0])\ntensor([2, 1, 0, 2, 0, 1, 0, 0])\n\n\n\na = gen(\"吾輩は\", 40, temperature=0.8, seed=7)\nb = gen(\"吾輩は\", 40, temperature=0.8, seed=7)   # 同じ種でもう一度\nc = gen(\"吾輩は\", 40, temperature=0.8, seed=8)   # 種を変える\nprint(a)\nprint(\"同じ種:\", a == b, \"／ 違う種:\", a == c)\nprint(c)\n\n吾輩はようやくのは、融通の人のごときは違っている。主人は甚然として御互に願いて、まずし\n同じ種: True ／ 違う種: False\n吾輩は便宜者だから、ここを絞殺して見る小供はあって、これからでまた当人の二絃琴の真中は\n\n\n\nこの講義のセルに毎回 manual_seed が入っていた理由 — スライドの出力を君の手元で完全再現するため\n「揺れ」がほしいときは種を変える。「証拠」にしたいときは種を固定して、種の値も一緒に記録する（レポートの作法）"
+  },
+  {
+    "objectID": "sampling.html#実物も同じツマミで動いている",
+    "href": "sampling.html#実物も同じツマミで動いている",
+    "title": "生成を操る",
+    "section": "実物も同じツマミで動いている",
+    "text": "実物も同じツマミで動いている\n\n\n\n\n自作GPT\nChatGPT など実物の API\n\n\n\n\ntemperature=0.8\ntemperature（同じ意味・同じ数式）\n\n\ntop_k=40\ntop_k / top_p（前のスライドの2種類の尻尾切り）\n\n\nseed=7 で再現\nseed 指定（対応するAPIもある）\n\n\n\n\n「AIの回答は毎回違う」の正体は、このサイコロ\n同じ質問に違う答えが返るのは故障ではなく、\\(T &gt; 0\\) の仕様"
+  },
+  {
+    "objectID": "sampling.html#tweak-ツマミを回しまくる",
+    "href": "sampling.html#tweak-ツマミを回しまくる",
+    "title": "生成を操る",
+    "section": "Tweak ツマミを回しまくる",
+    "text": "Tweak ツマミを回しまくる\n\n\ngen を好きに呼んで実験（実行のたびに seed を変えると別の文が出る）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\ntemperature=0.5 と 1.5 のあいだを刻む\n自分の耳で「ちょうどいい温度」を探す\n\n\ntop_k=3 で temperature=1.0\n安全網がきつすぎると何の刑に近づく？\n\n\ngen(\"名前はまだ\", 80, 0.8)\n書き出しで話題を誘導できるか試す\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\ntop_k を小さくしすぎると argmax の「堂々巡り」に近づく — 2つのツマミは同じ「無難⇄暴走」軸を別の方法で動かしている"
+  },
+  {
+    "objectID": "sampling.html#まとめ",
+    "href": "sampling.html#まとめ",
+    "title": "生成を操る",
+    "section": "まとめ",
+    "text": "まとめ\n\n\n生成のツマミは2つ：temperature（分布を尖らせる/平らにする）と top-k（尻尾を切る）。実物にはもう1つ top-p（合計で切る可変枠）\nargmax（top_k=1）は堂々巡り、T が高すぎると漢字の豪雨 — 良い文はそのあいだにある\n実装は「割る」「-∞で消す」「サイコロ」の3行。ChatGPT の同名パラメータも同じ仕組み\n確率的な出力は故障ではなく仕様 — 種（シード）を固定すれば完全再現できる。今日の全セルがそうだった\n\n\n現在の設計図　書き出し → 訓練済みGPT → temperature・top-k・top-p → 次の文字\n\n\n\n\n\n\n\n\n次回予告\n\n\n自作GPTはここで完成。次回はこのモデルと ChatGPT の距離を測る — 足りないのは仕組みか、それとも量か。ついでに、LLM が堂々と嘘をつく理由も明かす。"
+  },
+  {
+    "objectID": "sampling.html#練習問題",
+    "href": "sampling.html#練習問題",
+    "title": "生成を操る",
+    "section": "練習問題",
+    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：argmax の決定性\ntop_k=1 で seed=0 と seed=123 の2回生成し、出力が完全に一致することを == で確かめよ。サイコロを振っているのに同じになる理由を1行で説明せよ。\n問題2：安全網の値段\ntemperature=1.0 で top_k=5 と top_k=None の200文字を生成し、それぞれの文字の種類数（len(set(...))）を比べよ。top-k が「守ってくれるもの」と「奪うもの」を1行ずつ述べよ。"
+  },
+  {
+    "objectID": "sampling.html#解答例",
+    "href": "sampling.html#解答例",
+    "title": "生成を操る",
+    "section": "解答例",
+    "text": "解答例\n\n\n\n解答例を見る\n# 問題1\na = gen(\"吾輩は\", 60, top_k=1, seed=0)\nb = gen(\"吾輩は\", 60, top_k=1, seed=123)\nprint(\"一致:\", a == b)\n# 上位1文字しか残らないので、サイコロの目が何であれ当選者は同じ\n\n# 問題2\na = gen(\"吾輩は\", 200, temperature=1.0, top_k=5, seed=0)\nb = gen(\"吾輩は\", 200, temperature=1.0, top_k=None, seed=0)\nprint(\"top_k=5   :\", len(set(a)), \"種類\")\nprint(\"top_k=None:\", len(set(b)), \"種類\")\n# 守るもの：レア文字の事故（暴走）を防ぐ／奪うもの：語彙の多様性\n\n\n一致: True\ntop_k=5   : 67 種類\ntop_k=None: 110 種類"
+  },
+  {
     "objectID": "position-mask.html#前回の振り返り",
     "href": "position-mask.html#前回の振り返り",
     "title": "順序とカンニング",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n自己注意が完成した：\\(\\mathrm{softmax}(QK^\\top/\\sqrt{d})\\,V\\) — 行列積2回と softmax\n予告した「2つの大問題」を、今日は事件の再現から始める\n\n\n\n\n\n\n\n\nクイズ\n\n\n自己注意に「ねこがねず」と「こねがねず」（前4文字を並べ替え、最後は同じ）を入れる。 最後の文字の出力は変わるか？"
+    "text": "前回の振り返り\n\n\n自己注意が完成した：\\(\\mathrm{softmax}(QK^\\top/\\sqrt{d})\\,V\\) — 行列積2回と softmax\n予告した「2つの大問題」を、今日は事件の再現から始める\n\n\n\n\n\n\n\n\n質問\n\n\n自己注意に「ねこがねず」と「こねがねず」（前4文字を並べ替え、最後は同じ）を入れる。 最後の文字の出力は変わるか？"
   },
   {
     "objectID": "position-mask.html#事件1順番を替えても何も変わらない",
@@ -189,6 +343,13 @@
     "text": "事件1：順番を替えても何も変わらない\n\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):                     # 前回のクラスそのまま\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)\n        self.key   = nn.Linear(n_embd, head_size, bias=False)\n        self.value = nn.Linear(n_embd, head_size, bias=False)\n\n    def forward(self, x):\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = F.softmax(q @ k.T / k.shape[-1] ** 0.5, dim=-1)\n        return w @ v\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nemb = nn.Embedding(10, 8)\n\ntokens   = torch.tensor([3, 1, 4, 1, 5])\nshuffled = torch.tensor([1, 4, 1, 3, 5])            # 前4文字を並べ替え\ndiff = (sa(emb(tokens))[-1] - sa(emb(shuffled))[-1]).abs().max()\nprint(f\"最後の文字の出力の差: {diff:.1e}\")\n\n最後の文字の出力の差: 1.5e-08\n\n\n\n差はほぼ0（丸め誤差だけ）。「がねこ」と「ねこが」の区別が付いていない"
   },
   {
+    "objectID": "position-mask.html#犯人は足し算-混ぜ物に順番はない",
+    "href": "position-mask.html#犯人は足し算-混ぜ物に順番はない",
+    "title": "順序とカンニング",
+    "section": "犯人は足し算 — 混ぜ物に順番はない",
+    "text": "犯人は足し算 — 混ぜ物に順番はない\n\n\n\n注意の出力は \\(v\\) の重み付き平均 — つまり足し算。足す順番を替えても合計は変わらない\n重みを決めるスコア \\(q \\cdot k\\) も1対1の内積で、「何番目か」はどこにも入っていない\n自己注意は文を文字の集合（袋）として見ている — 「ねこが」も「がねこ」も同じ袋。日本語で順序が消えたら大惨事"
+  },
+  {
     "objectID": "position-mask.html#解決1位置にも埋め込みを配る",
     "href": "position-mask.html#解決1位置にも埋め込みを配る",
     "title": "順序とカンニング",
@@ -196,11 +357,18 @@
     "text": "解決1：位置にも埋め込みを配る\n\n\n「何文字目か」という情報も、文字と同じように埋め込みベクトルにしてしまう\n文字のベクトルに足してから自己注意に渡す\n\n\n\npos = nn.Embedding(16, 8)                 # 位置番号 0〜15 の埋め込み表\n\ndef with_pos(t):\n    return emb(t) + pos(torch.arange(len(t)))\n\ndiff = (sa(with_pos(tokens))[-1] - sa(with_pos(shuffled))[-1]).abs().max()\nprint(f\"位置を足した後の差: {diff:.4f}\")\n\n位置を足した後の差: 0.1176\n\n\n\n差が出た — 同じ「ね」でも1文字目のねと4文字目のねは別のベクトルになる\nこの位置の表（pos）が位置埋め込み（positional embedding）。表も学習される — 「位置の使い方」まで勾配降下まかせ"
   },
   {
+    "objectID": "position-mask.html#学習された位置の表を覗く",
+    "href": "position-mask.html#学習された位置の表を覗く",
+    "title": "順序とカンニング",
+    "section": "学習された「位置の表」を覗く",
+    "text": "学習された「位置の表」を覗く\n\n\nでは、訓練を終えた表には何が入っているのか。完成品（最終回のモデル）から64本を取り出して比べる\n\n\n\n\n\n\n\n\n\n\n\n赤いのは対角線（自分×自分）だけ — どの位置とも似ていない、ほぼ直交の「住所札」64本\n隣どうしすら似せていない（隣接位置の平均類似度 0.08）。このモデルに必要だったのは「近さ」ではなく区別だった"
+  },
+  {
     "objectID": "position-mask.html#事件2訓練中の視線は未来を見ている",
     "href": "position-mask.html#事件2訓練中の視線は未来を見ている",
     "title": "順序とカンニング",
     "section": "事件2：訓練中の視線は未来を見ている",
-    "text": "事件2：訓練中の視線は未来を見ている\n\n\n言語モデルの訓練は「各位置で次の文字を当てる」だった\nところが前回作った視線の表（誰が誰をどれだけ見るかの \\(T \\times T\\)）は全部埋まっている — 3文字目の行が5文字目も見ている\n\n\n\n\n\n\n\n\nクイズ\n\n\n「次の文字を当てよ」というテスト中に、答えの文字そのものが見えていたら何が起きる？ 訓練の成績と、生成（本番）の成績、それぞれどうなる？\n\n\n\n\n\n\n訓練：正解を丸写しできるのでほぼ満点\n本番の生成：未来の文字はまだ存在しないので、丸写し戦略は白紙 — 大崩壊\n「あやしい満点」、三たび。今回は過学習ではなくカンニングが原因"
+    "text": "事件2：訓練中の視線は未来を見ている\n\n\n言語モデルの訓練は「各位置で次の文字を当てる」だった\nところが前回作った視線の表（誰が誰をどれだけ見るかの \\(T \\times T\\)）は全部埋まっている — 3文字目の行が5文字目も見ている\n\n\n\n\n\n\n\n\n質問\n\n\n「次の文字を当てよ」というテスト中に、答えの文字そのものが見えていたら何が起きる？ 訓練の成績と、生成（本番）の成績、それぞれどうなる？\n\n\n\n\n\n\n訓練：正解を丸写しできるのでほぼ満点\n本番の生成：未来の文字はまだ存在しないので、丸写し戦略は白紙 — 大崩壊\n「あやしい満点」、三たび。今回は過学習ではなくカンニングが原因"
   },
   {
     "objectID": "position-mask.html#解決2因果マスク-未来の視線を封じる",
@@ -256,7 +424,7 @@
     "href": "mlp-lm.html#前回の振り返り",
     "title": "窓を広げる",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n文字は埋め込みで \\(d\\) 次元ベクトルになった（表引き＝nn.Embedding）\nただしモデルはまだバイグラム：直前の1文字しか見ていない\n地名バイグラムの損失は2.34の壁に当たった — 作戦自体の限界だった\n\n\n\n\n\n\n\n\nクイズ\n\n\n「かみ」まで読んだ。次は？「かわ」まで読んだ。次は？ 2文字見えるだけで、どれくらい予想が変わるだろう。"
+    "text": "前回の振り返り\n\n\n文字は埋め込みで \\(d\\) 次元ベクトルになった（表引き＝nn.Embedding）\nただしモデルはまだバイグラム：直前の1文字しか見ていない\n地名バイグラムの損失は2.34の壁に当たった — 作戦自体の限界だった\n\n\n\n\n\n\n\n\n質問\n\n\n「かみ」まで読んだ。次は？「かわ」まで読んだ。次は？ 2文字見えるだけで、どれくらい予想が変わるだろう。"
   },
   {
     "objectID": "mlp-lm.html#作戦直前の数文字をまとめて入れる",
@@ -270,7 +438,35 @@
     "href": "mlp-lm.html#peek-mlp",
     "title": "窓を広げる",
     "section": "寄り道 — 多層ネットワーク再入門",
-    "text": "寄り道 — 多層ネットワーク再入門\n\n\nバイグラムのモデルは線形1枚（掛けて足すだけ）だった。今日はここに部品を足して「多層」にする\nなぜ足す必要があるのか — まず線形の弱点を自分の目で確かめる\n\n\n\n\n\n\n\n\nクイズ\n\n\n線形1枚で力不足なら、線形を2枚重ねれば賢くなるはず。本当か？"
+    "text": "寄り道 — 多層ネットワーク再入門\n\n\nバイグラムのモデルは線形1枚（掛けて足すだけ）だった。今日はここに部品を足して「多層」にする\nなぜ足す必要があるのか — まず線形の弱点を自分の目で確かめる\n\n\n\n\n\n\n\n\n質問\n\n\n線形1枚で力不足なら、線形を2枚重ねれば賢くなるはず。本当か？"
+  },
+  {
+    "objectID": "mlp-lm.html#実験線形線形線形",
+    "href": "mlp-lm.html#実験線形線形線形",
+    "title": "窓を広げる",
+    "section": "実験：線形×線形＝線形",
+    "text": "実験：線形×線形＝線形\n\n\nimport torch\nimport torch.nn as nn\n\ntorch.manual_seed(0)\nf = nn.Sequential(nn.Linear(2, 2, bias=False), nn.Linear(2, 2, bias=False))\nW = f[1].weight @ f[0].weight        # 2枚の行列を先に掛けて1枚にまとめる\n\nx = torch.randn(3, 2)\nprint(f(x))                          # 2枚に順に通した結果\nprint(x @ W.T)                       # まとめた1枚に通した結果\n\ntensor([[ 0.4006,  0.7693],\n        [-0.2132, -0.3805],\n        [ 0.1598,  0.3545]], grad_fn=&lt;MmBackward0&gt;)\ntensor([[ 0.4006,  0.7693],\n        [-0.2132, -0.3805],\n        [ 0.1598,  0.3545]], grad_fn=&lt;MmBackward0&gt;)\n\n\n\n出力は完全に一致 — 何枚重ねても、まとめれば線形1枚と同じ。表現力は1ミリも増えない\n線形の限界：各入力の「持ち点」を足すことしかできない。窓に3文字入れても、3文字の組み合わせ（「この並びのときだけ」）には反応できない"
+  },
+  {
+    "objectID": "mlp-lm.html#非線形の最小部品-relu",
+    "href": "mlp-lm.html#非線形の最小部品-relu",
+    "title": "窓を広げる",
+    "section": "非線形の最小部品 — ReLU",
+    "text": "非線形の最小部品 — ReLU\n\n\nそこで、線形のあいだに直線ではない部品を挟む。最小の候補：負の数を0に折るだけの関数\n\n\\[\n\\mathrm{ReLU}(x) = \\max(0,\\ x)\n\\]\n\n\n\n\n\n\n\n\n\n\nimport torch\nimport torch.nn as nn\n\nx = torch.tensor([[-2.0, -0.5, 0.0, 1.0, 3.0]])\nprint(nn.ReLU()(x))          # 負だけ0に折られる\n\ntensor([[0., 0., 0., 1., 3.]])\n\n\n\n名前は ReLU（Rectified Linear Unit）。中身はこれだけ — だが0のところに折り目がある"
+  },
+  {
+    "objectID": "mlp-lm.html#折り目を足すと曲がった規則が作れる",
+    "href": "mlp-lm.html#折り目を足すと曲がった規則が作れる",
+    "title": "窓を広げる",
+    "section": "折り目を足すと、曲がった規則が作れる",
+    "text": "折り目を足すと、曲がった規則が作れる\n\n\n\n\n\n\n\n\n\n\n\nReLU 1個＝折り目1個。重み付きで足し合わせると、折り目の数だけ曲がる折れ線が作れる\n折る位置（1枚目の線形）も混ぜ方（2枚目の線形）も、勾配降下で学習される — 折り紙は機械が自分で折る"
+  },
+  {
+    "objectID": "mlp-lm.html#線形-折る-線形-mlp",
+    "href": "mlp-lm.html#線形-折る-線形-mlp",
+    "title": "窓を広げる",
+    "section": "線形 → 折る → 線形 ＝ MLP",
+    "text": "線形 → 折る → 線形 ＝ MLP\n\n\n\nこの3段重ねが多層ネットワーク（MLP multi-layer perceptron）\n今日の窓モデルは 24次元 → 64（折り目64本）→ 75クラス\n線形1枚では書けなかった「組み合わせの規則」（「か」の次は前後しだいで「わ」にも「み」にも）がこれで書ける"
   },
   {
     "objectID": "mlp-lm.html#データを窓の形に切り直す",
@@ -308,11 +504,11 @@
     "text": "うますぎる名前には気をつける\n\n\nmade = [\"おおじたわらまち\", \"つるぎし\", \"きょうおんし\", \"みなみちょう\", \"おおのし\"]\nfor s in made:\n    print(s, \"→\", \"実在する\" if s in names else \"新作\")\n\nおおじたわらまち → 新作\nつるぎし → 新作\nきょうおんし → 新作\nみなみちょう → 実在する\nおおのし → 実在する\n\n\n\n10件中2件は実在の名前をそのまま再現していた（みなみちょう・おおのし）\n「上手くなった」と「覚えただけ」の区別 — どこかで聞いた話が始まる"
   },
   {
-    "objectID": "mlp-lm.html#クイズ窓を広げれば広げるほど良い",
-    "href": "mlp-lm.html#クイズ窓を広げれば広げるほど良い",
+    "objectID": "mlp-lm.html#質問窓を広げれば広げるほど良い",
+    "href": "mlp-lm.html#質問窓を広げれば広げるほど良い",
     "title": "窓を広げる",
-    "section": "クイズ：窓を広げれば広げるほど良い？",
-    "text": "クイズ：窓を広げれば広げるほど良い？\n\n\n\n\n\n\n\n\nクイズ\n\n\n窓を 1 → 2 → 3 → 5 文字と広げると、見せていないデータでの損失はどうなる？ 予想してから、めくる。\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntrain は下がり続けるのに、val は窓2で底を打って悪化に転じる（前コースで多項式の次数を上げすぎたときと同じ形）"
+    "section": "質問：窓を広げれば広げるほど良い？",
+    "text": "質問：窓を広げれば広げるほど良い？\n\n\n\n\n\n\n\n\n質問\n\n\n窓を 1 → 2 → 3 → 5 文字と広げると、見せていないデータでの損失はどうなる？ 予想してから、めくる。\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ntrain は下がり続けるのに、val は窓2で底を打って悪化に転じる（前コースで多項式の次数を上げすぎたときと同じ形）"
   },
   {
     "objectID": "mlp-lm.html#peek-overfit",
@@ -413,18 +609,18 @@
     "text": "言葉を覚えていく定点観測\n\n同じスクリプト（train_neko.py）を回し続け、節目ごとに生成させた記録：\n\n\n\n\n\n\n\n0回（乱数のまま）\n\n\n寺吹瞳麼Q次軒融亡項多忙鴻武箝未肯美汚ヘ煙促喪襟欣銷京紫胎篤銅狎撮腹杭棄羊骨絞煉果物孤葵層幣穴姿他娘誦磯持……\n\n\n\n\n\n\n\n\n\n\n\n50回 — ひらがなと句読点を発見\n\n\nだなり大ではて融んて多こょ武箝未そに汚。をるしずせ銷っの大が御や。ててて時す。な果物のとう幣てる今…い。持ののてあ師合面たでけっん……\n\n\n\n\n\n\n\n\n\n\n\n500回 — 言葉のかけらが出る\n\n\n「なりゃでは、融んだ多忙いわんです。汚ヘを促しずせている大き御やり腹の男時はなさ。物を受けると云っている。第存に待し合面白いけに区物を食え」……\n\n\n\n\n\n\n\n\n\n\n\n2,000回 — 文の形になる\n\n\n果物を受けるところだと椽側のごとく眼を面白いかに区別らしておく。群鶴館なのみなんだ。それから感心みたら君の下へはもっとよい切って行きっと正おると間違える。吾輩は……\n\n\n\n\n\n\n\n\n\n\n\n10,000回（約50分）\n\n\n「なるほどは、融突然多忙ですよ。それじゃ、私しゃボイがメンチボーの御師匠さんが、果物を一層の通り今日に至るまで遠征を入れた時改急に一生懸命になって上げなければ……\n\n\n\n\n\n文字 → かな → 単語 → 文 — 人間の子どもと同じ順番で言葉を覚えていく"
   },
   {
-    "objectID": "gpt-training.html#クイズ10000回回すと何が起きる",
-    "href": "gpt-training.html#クイズ10000回回すと何が起きる",
+    "objectID": "gpt-training.html#質問10000回回すと何が起きる",
+    "href": "gpt-training.html#質問10000回回すと何が起きる",
     "title": "小さなGPTを訓練する",
-    "section": "クイズ：10,000回回すと何が起きる？",
-    "text": "クイズ：10,000回回すと何が起きる？\n\n\n\n\n\n\n\n\nクイズ\n\n\n損失のグラフはどうなっていると思う？ 訓練データ（見た文章）と、隠しておいた1割（初見の文章）の2本の線を想像してから、めくる。\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nval は2,500回あたりで底（約3.6）を打ち、その後は悪化 — train だけが下がり続ける\n32万字を10,000回で約64周も読んだ（\\(10000 \\times 2048 \\div 321139\\)）— 同じ本の読みすぎ"
+    "section": "質問：10,000回回すと何が起きる？",
+    "text": "質問：10,000回回すと何が起きる？\n\n\n\n\n\n\n\n\n質問\n\n\n損失のグラフはどうなっていると思う？ 訓練データ（見た文章）と、隠しておいた1割（初見の文章）の2本の線を想像してから、めくる。\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nval は2,500回あたりで底（約3.6）を打ち、その後は悪化 — train だけが下がり続ける\n32万字を10,000回で約64周も読んだ（\\(10000 \\times 2048 \\div 321139\\)）— 同じ本の読みすぎ"
   },
   {
-    "objectID": "gpt-training.html#過学習最終決戦",
-    "href": "gpt-training.html#過学習最終決戦",
+    "objectID": "gpt-training.html#peek-earlystop",
+    "href": "gpt-training.html#peek-earlystop",
     "title": "小さなGPTを訓練する",
     "section": "過学習、最終決戦",
-    "text": "過学習、最終決戦\n\n\n地名MLPの回とまったく同じ形（過学習）が、GPT でも出た — モデルが変わっても病気は同じ\n訓練文の細かい癖に最適化が進み、初見の文章への実力はむしろ落ちていく\n対策も同じ発想：val が底を打ったところで止めて、その時点の重みを使う（早期終了）\n\n\n\n\n\n\n\nノート\n\n\n本物の LLM はこの逆で「同じ文章を何周もしない」規模のデータを使う — データの量で過学習をねじ伏せている（この話は「ChatGPTまでの距離」の回で）。"
+    "text": "過学習、最終決戦\n\n\n地名MLPの回とまったく同じ形（過学習）が、GPT でも出た — モデルが変わっても病気は同じ\n訓練文の細かい癖に最適化が進み、初見の文章への実力はむしろ落ちていく\n対策も同じ発想：val が底を打ったところで止めて、その時点の重みを使う — 早期終了（early stopping）と呼ぶ\n\n\n\n\n\n\n\nノート\n\n\n本物の LLM はこの逆で「同じ文章を何周もしない」規模のデータを使う — データの量で過学習をねじ伏せている（この話は「ChatGPTまでの距離」の回で）。"
   },
   {
     "objectID": "gpt-training.html#訓練済みの重みを読み込む",
@@ -462,6 +658,13 @@
     "text": "視線と対話する — BertViz\n\n\n静止画は1枚ずつしか見られない。BertViz というライブラリなら、トークンをなぞって全ヘッドの視線を対話的に眺められる（下の埋め込みで今すぐ試せる）\n\n\n\n\n\n自分の手元で動かすコード（pip install bertviz が必要）\nimport torch\nfrom bertviz import head_view\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ntext = \"吾輩は猫である。名前はまだ無い。\"        # 語彙にある文字なら何でも\nidx = torch.tensor([[stoi[c] for c in text]])\n\nmaps = []                                        # 各ブロックを歩き直して視線を回収\nwith torch.no_grad():\n    x = model.tok_emb(idx) + model.pos_emb(torch.arange(idx.shape[1]))\n    for block in model.blocks:\n        h_in = block.ln1(x)\n        layer = []\n        for head in block.sa.heads:\n            q, k = head.query(h_in), head.key(h_in)\n            w = q @ k.transpose(-2, -1) / (k.shape[-1] ** 0.5)\n            w = w.masked_fill(head.tril[:idx.shape[1], :idx.shape[1]] == 0,\n                              float(\"-inf\"))\n            layer.append(torch.softmax(w, dim=-1))\n        maps.append(torch.stack(layer, dim=1))   # (1, ヘッド数, T, T)\n        x = x + block.sa(h_in)\n        x = x + block.ff(block.ln2(x))\n\nhtml = head_view(maps, list(text), html_action=\"return\")\nopen(\"attn_view.html\", \"w\", encoding=\"utf-8\").write(\n    \"&lt;html&gt;&lt;head&gt;&lt;meta charset='utf-8'&gt;&lt;/head&gt;&lt;body&gt;\" + html.data + \"&lt;/body&gt;&lt;/html&gt;\")\nprint(\"attn_view.html をブラウザで開く\")\n\n\n\n好きな文（語彙にある文字だけ）に差し替えて、お気に入りのヘッドを1つ見つけて「係の名前」を付ける — 隣の人と見つけた係を交換\n線の濃さ＝視線の重み。左の列でレイヤを切り替えられる\n\n\n\n\n\n\n\nノート\n\n\n表示には d3.js などを CDN から読むためネット接続が要る。pip install bertviz は初回のみ。"
   },
   {
+    "objectID": "gpt-training.html#全部品を一望する-自作gptエクスプローラ",
+    "href": "gpt-training.html#全部品を一望する-自作gptエクスプローラ",
+    "title": "小さなGPTを訓練する",
+    "section": "全部品を一望する — 自作GPTエクスプローラ",
+    "text": "全部品を一望する — 自作GPTエクスプローラ\n\n視線だけでなく、全部品の中身を歩ける。埋め込みから次の1文字の予想まで、ぜんぶ訓練済みの実物の数値。\n\n\n\nいま開いているのは「吾」だけ読んだ位置の予想 — 1位は「輩」71.4%（ことばの地図の回の「吾→輩」がここでも生きている）\n文字を順にクリックして、予想が文脈で変わっていく様子を歩く\n途中の部品（LayerNorm・FFN・残差）も開いて、ヒートマップの模様の移り変わりを眺める\n隣の人に、好きな部品を1つ選んで「この箱は◯◯をしている」と30秒で説明\n\nエクスプローラを別タブで開く"
+  },
+  {
     "objectID": "gpt-training.html#tweak-火加減を変える",
     "href": "gpt-training.html#tweak-火加減を変える",
     "title": "小さなGPTを訓練する",
@@ -497,11 +700,18 @@
     "text": "文豪テスト、開封\n\n初回の4つの文章。投票の結果を覚えているだろうか。\n\n\n\n\n正体\n\n\n\n\nA（喜多床へ行って顔さえ剃って貰やあ…）\n本物の漱石\n\n\nB（元来主人のように関する主人は…）\n機械\n\n\nC（迷亭はとぼけた顔をして…）\n本物の漱石\n\n\nD（まあどうですか、全く君の事じゃ…）\n機械\n\n\n\n\nB と D を書いたのは：82万パラメータ・『吾輩は猫である』1冊・3,500回訓練の文字レベルGPT\nつまり、君たちが前回まで動かしてきた ckpt_best.pt そのもの（temperature 0.8・top-k 40）\n初回の「怪しい箇所」の採点表を取ってある人は、ここで答え合わせを — 君の目は機械のしっぽを掴んでいたか"
   },
   {
-    "objectID": "bungo-project.html#種明かしの種明かし",
-    "href": "bungo-project.html#種明かしの種明かし",
+    "objectID": "bungo-project.html#偽物の正体",
+    "href": "bungo-project.html#偽物の正体",
     "title": "最終プロジェクト：推し文豪ボット",
-    "section": "種明かしの種明かし",
-    "text": "種明かしの種明かし\n\n\n生成文と本文の一致は最長でも9文字 — 暗記の吐き出しではなく、文体の統計が書いた偽物\nよく読めば文法は壊れている。それでも投票が割れるのは、「漱石の音」が確かに写っているから\n32万字＋50分の訓練でこれなら、推し作家ならどうなる？ — というのが今日の全部\n\n\n\n\n\n\n\n\n最終プロジェクト\n\n\n青空文庫から好きな作家・作品を選び、自分のGPTを育て、偽物の一文を提出せよ。 最終日は全員の偽物＋本物でクラス対抗・文豪テスト大会を開く。"
+    "section": "偽物の正体",
+    "text": "偽物の正体\n\n\n生成文と本文の一致は最長でも9文字 — 暗記の吐き出しではなく、文体の統計が書いた偽物\nよく読めば文法は壊れている。それでも投票が割れるのは、「漱石の音」が確かに写っているから\n32万字＋50分の訓練でこれなら、推し作家ならどうなる？ — というのが今日の全部\n\n\n\n\n\n\n\n\n最終プロジェクト\n\n\n青空文庫から好きな作家・作品を選び、自分のGPTを育て、偽物の一文を提出せよ。 最終日は全員の偽物＋本物でクラス対抗・文豪テスト大会を開く。"
+  },
+  {
+    "objectID": "bungo-project.html#段階で仕上げる",
+    "href": "bungo-project.html#段階で仕上げる",
+    "title": "最終プロジェクト：推し文豪ボット",
+    "section": "3段階で仕上げる",
+    "text": "3段階で仕上げる\n\n\n\n\n\n\n\n\n\n段階\n見せるもの\n完了の目印\n\n\n\n\n材料検査\n作家・作品名、字数、語彙サイズ、冒頭200字\n洗った本文が読める\n\n\n試運転\n500回までの train / val、所要時間\nmy_ckpt_500.pt ができる\n\n\n本番\n選んだ重み、偽物と本物、生成のツマミ\n選択理由を説明できる\n\n\n\n\n途中で失敗しても、最後に成功した段階から再開する\n最終日に初めて訓練するのではなく、段階ごとに動作を確かめる"
   },
   {
     "objectID": "bungo-project.html#材料選び-青空文庫",
@@ -525,6 +735,13 @@
     "text": "育てる — 道具はすべて手元にある\n\n\n訓練コードは小さなGPTの回のものを1行だけ差し替える：読み込むファイル名だけ\ngpt.py を自分のスクリプトと同じフォルダに置く（小さなGPTの回と同じ配置）\n\n\nimport time\n\nimport torch\nimport torch.nn.functional as F\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\ntext = open(\"data/mybungo.txt\", encoding=\"utf-8\").read()   # ← ここだけ差し替え\nchars = sorted(set(text))\nstoi = {c: i for i, c in enumerate(chars)}\ndata = torch.tensor([stoi[c] for c in text])\nn = int(len(data) * 0.9)\ntrain_data, val_data = data[:n], data[n:]\n\ndef get_batch(d):\n    ix = torch.randint(len(d) - 65, (32,))\n    x = torch.stack([d[i:i + 64] for i in ix])\n    y = torch.stack([d[i + 1:i + 65] for i in ix])\n    return x, y\n\ntorch.manual_seed(42)\nmodel = GPT(vocab_size=len(chars), n_embd=96, n_head=4, n_layer=2, block_size=64)\nopt = torch.optim.AdamW(model.parameters(), lr=1e-3)\n\nMAX_ITERS = 1000\nstarted = time.perf_counter()\n\nfor it in range(1, MAX_ITERS + 1):\n    xb, yb = get_batch(train_data)\n    opt.zero_grad()\n    loss = F.cross_entropy(model(xb).view(-1, len(chars)), yb.view(-1))\n    loss.backward()\n    opt.step()\n    if it == 100:\n        sec_per_iter = (time.perf_counter() - started) / 100\n        print(f\"このPCの見込み: 500回 {sec_per_iter * 500 / 60:.1f}分 / \"\n              f\"1000回 {sec_per_iter * 1000 / 60:.1f}分\")\n    if it % 250 == 0:\n        with torch.no_grad():\n            xv, yv = get_batch(val_data)\n            vl = F.cross_entropy(model(xv).view(-1, len(chars)), yv.view(-1))\n        print(f\"{it:5d}回 | train {loss.item():.3f} | val {vl.item():.3f}\")\n        torch.save({\"cfg\": dict(n_embd=96, n_head=4, n_layer=2, block_size=64),\n                    \"vocab\": \"\".join(chars),\n                    \"state_dict\": model.state_dict()}, f\"data/my_ckpt_{it}.pt\")\n\n\n250回ごとに val を表示し、重みを保存していく — 早期終了は「あとから底を選ぶ」で実現できる"
   },
   {
+    "objectID": "bungo-project.html#分に収める",
+    "href": "bungo-project.html#分に収める",
+    "title": "最終プロジェクト：推し文豪ボット",
+    "section": "15〜30分に収める",
+    "text": "15〜30分に収める\n\n\n標準は MAX_ITERS = 1000。まず100回の表示で、自分のPCの所要時間を確認\n1000回の見込みが30分を超えるなら 750、15分未満なら 1500 まで延長してよい\n500回の重みができれば試運転は完了 — 時間内に終わらなくても、そこから生成と分析へ進める\n速さを競う課題ではない。回数より、train / val を見て重みを選んだ理由が採点対象"
+  },
+  {
     "objectID": "bungo-project.html#何回回すべきか-実測の目安",
     "href": "bungo-project.html#何回回すべきか-実測の目安",
     "title": "最終プロジェクト：推し文豪ボット",
@@ -539,11 +756,25 @@
     "text": "偽物を提出する\n\n\nimport torch\nimport torch.nn.functional as F\nfrom gpt import GPT\n\nBEST_ITER = 500   # 自分のログで val が最小だった回へ変更\nblob = torch.load(f\"data/my_ckpt_{BEST_ITER}.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ntorch.manual_seed(7)\nidx = torch.tensor([[stoi[c] for c in \"その夜\"]])\nout = model.generate(idx, 120, temperature=0.8, top_k=40)\nprint(\"\".join(chars[i] for i in out[0].tolist()))\n\n本番提出（文豪テスト大会のエントリーシート）：\n\n作家名・使った作品と字数・語彙サイズ\n偽物1本（120字前後）と、生成に使ったツマミ（temperature / top-k / シード / 書き出し）\n同じ作家の本物1本（偽物と長さを揃える）\ntrain / val 損失の推移（printの写しでよい）と、どの回の重みを選んだか＋その理由"
   },
   {
+    "objectID": "bungo-project.html#提出前の身体検査-盗作チェック",
+    "href": "bungo-project.html#提出前の身体検査-盗作チェック",
+    "title": "最終プロジェクト：推し文豪ボット",
+    "section": "提出前の身体検査 — 盗作チェック",
+    "text": "提出前の身体検査 — 盗作チェック\n\n\n過学習ぎみの重みや低い temperature では、本文の丸写しに近い文が出ることがある。偽物は文体の創作であって暗記の吐き出しではないこと — 大会のフェアプレー\nコーパスとのひと続きの最長一致を測ってから提出する：\n\n\ndef longest_match(fake, text):\n    best = \"\"\n    for i in range(len(fake)):\n        j = i + len(best) + 1\n        while j &lt;= len(fake) and fake[i:j] in text:\n            best = fake[i:j]\n            j += 1\n    return best\n\nfake = \"……\"   # 提出する偽物をここに\ntext = open(\"data/mybungo.txt\", encoding=\"utf-8\").read()\nm = longest_match(fake, text)\nprint(len(m), \"字:\", m)\n\n\n参考値：文豪テストの機械文 B・D は最長一致 8字・9字（決まり文句レベル）\n逆に本物の文を入れれば全文一致するはず — 検査コード自体の動作確認になる\n文が丸ごと一致したら：val の底より手前の重みを選び直すか、temperature を少し上げる"
+  },
+  {
     "objectID": "bungo-project.html#大会のルール",
     "href": "bungo-project.html#大会のルール",
     "title": "最終プロジェクト：推し文豪ボット",
     "section": "大会のルール",
     "text": "大会のルール\n\n\n出題者以外は「本物・偽物」を投票 → 騙した票数がスコア\n発表者は最後にツマミと訓練の記録を開示（再現できない魔法は禁止）\n審査観点はふたつ：どれだけ騙せたかと、なぜ騙せたかを説明できるか\n\n\n\n\n\n\n\nノート\n\n\n騙せなかった偽物にも価値がある — どこでバレたか（文法？語彙？リズム？）を言語化できれば、 それはモデルの弱点分析であり、立派な技術報告になる。"
+  },
+  {
+    "objectID": "bungo-project.html#大会の進行",
+    "href": "bungo-project.html#大会の進行",
+    "title": "最終プロジェクト：推し文豪ボット",
+    "section": "大会の進行",
+    "text": "大会の進行\n\n1組あたり3分弱。流れ：\n\n出題：本物と偽物を並べて提示（どちらが偽物かは伏せる。並び順はコイントスで）\n全員30秒の黙読 → 「偽物はどっち？」で一斉に挙手\n開票 → 出題者が正解とツマミ・訓練の記録を開示（1分）\n記録係が「騙した人数」をスコア表に記入\n\n\n全組が終わったら表彰は2部門：最多得票の偽物と、最も鮮やかにバレた偽物（バレた理由の解剖が見事だったもの）\n時間が余ったら：優勝作をみんなで解剖 — どの一節が「らしさ」を出したのか"
   },
   {
     "objectID": "bungo-project.html#講義全体のまとめ-部品総覧",
@@ -564,7 +795,7 @@
     "href": "bigram-neural.html#前回の振り返り",
     "title": "学習で当てる",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n数えて作った75×75の確率表で、架空の地名が作れた\nでも前コースの分類器は、表を数えて作らなかった\n\n損失を決めて、その損失が減る向きへ数値を少しずつ動かした — 学習\n\n\n\n\n\n\n\n\n\nクイズ\n\n\n前回の表と同じものを、数えずに勾配降下法だけで作れるか？\n\n\n\n\n\n\n作れる。しかも「数えられない問題」への扉がそこで開く — 今日はその実験"
+    "text": "前回の振り返り\n\n\n数えて作った75×75の確率表で、架空の地名が作れた\nでも前コースの分類器は、表を数えて作らなかった\n\n損失を決めて、その損失が減る向きへ数値を少しずつ動かした — 学習\n\n\n\n\n\n\n\n\n\n質問\n\n\n前回の表と同じものを、数えずに勾配降下法だけで作れるか？\n\n\n\n\n\n\n作れる。しかも「数えられない問題」への扉がそこで開く — 今日はその実験"
   },
   {
     "objectID": "bigram-neural.html#問題を分類器の形に直す",
@@ -572,6 +803,13 @@
     "title": "学習で当てる",
     "section": "問題を分類器の形に直す",
     "text": "問題を分類器の形に直す\n\n\n「次の1文字を当てる」を、見慣れた形に並べ直す\n分類器＝入力から各選択肢の確率を出す機械（30秒リキャップ）\n\n\n\n\n\nMNIST\n今日\n\n\n\n\n入力 \\(x\\)\n画像（784次元）\nいまの文字（1つ）\n\n\n出力\n10クラスの確率\n75クラスの確率\n\n\n訓練データ\n(画像, 正解の数字)\n(いまの文字, 次の文字)\n\n\n損失\n交差エントロピー\n交差エントロピー\n\n\n\n\n訓練データは前回のバイグラムの組そのもの：11,428組の (いまの文字, 次の文字)"
+  },
+  {
+    "objectID": "bigram-neural.html#道具箱の再点検-pytorch",
+    "href": "bigram-neural.html#道具箱の再点検-pytorch",
+    "title": "学習で当てる",
+    "section": "道具箱の再点検 — PyTorch",
+    "text": "道具箱の再点検 — PyTorch\n\n\n今日から PyTorch を使う。基本の箱は tensor — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚\n\n\nimport torch\n\na = torch.tensor([[1.0, 2.0], [3.0, 4.0]])\nb = torch.tensor([10.0, 100.0])\nprint(a.shape)          # 形の確認も同じ\nprint(a @ b)            # 行列×ベクトルも @ 一発\n\ntorch.Size([2, 2])\ntensor([210., 430.])\n\n\n\nここまでは NumPy と見た目が違うだけ。ではなぜわざわざ乗り換えるのか — tensor には決定的な特技が1つある"
   },
   {
     "objectID": "bigram-neural.html#peek-autograd",
@@ -600,6 +838,13 @@
     "title": "学習で当てる",
     "section": "スコアを確率に直す — softmax",
     "text": "スコアを確率に直す — softmax\n\n\n欲しい変換：全部正・合計1・スコアの大小はそのまま\n作り方は2手：\\(e^s\\) を取る（負でも正になる）→ 合計で割る（合計が1になる）\n\n\\[\n\\mathrm{softmax}(s_k) = \\frac{e^{s_k}}{\\sum_j e^{s_j}}\n\\]\n\nimport torch\nimport torch.nn.functional as F\n\ns = torch.tensor([2.0, 1.0, -1.0])     # スコア（負もある）\np = F.softmax(s, dim=0)\nprint(p)                                # 全部正・順位はそのまま\nprint(p.sum())                          # 合計はきっかり1\n\ntensor([0.7054, 0.2595, 0.0351])\ntensor(1.0000)\n\n\n\nスコア (2, 1, −1) が確率 (0.71, 0.26, 0.04) になった。順位は保ちつつ、差は強調される\n前コースの分類器の出力層に住んでいたのと同じ部品 — この講義では出ずっぱりになる"
+  },
+  {
+    "objectID": "bigram-neural.html#softmax-の形-es-は差の増幅器",
+    "href": "bigram-neural.html#softmax-の形-es-は差の増幅器",
+    "title": "学習で当てる",
+    "section": "softmax の形 — \\(e^s\\) は差の増幅器",
+    "text": "softmax の形 — \\(e^s\\) は差の増幅器\n\n\n\n\n\n\n\n\n\n\n\n左：\\(e^s\\) はどんな負の数も正に直し、スコアが1増えるだけで約2.7倍にする増幅器\nだから確率の比はスコアの差だけで決まる：\\(p_i / p_j = e^{s_i - s_j}\\) — 全員に同じ数を足しても出力は不変\n右：クラスが2つなら softmax はシグモイド（前コースの2クラス分類の出力層に居たS字カーブ）と完全に一致\n\n\\[\n\\mathrm{softmax}(s,\\, 0)_1 = \\frac{e^{s}}{e^{s} + e^{0}} = \\frac{1}{1 + e^{-s}} = \\sigma(s)\n\\]\n\nsoftmax はシグモイドの多クラス版 — 新しい部品ではなく、知っている部品の一般形"
   },
   {
     "objectID": "bigram-neural.html#peek-xent",
@@ -634,7 +879,7 @@
     "href": "bigram-neural.html#なぜわざわざ学習するのか",
     "title": "学習で当てる",
     "section": "なぜわざわざ学習するのか",
-    "text": "なぜわざわざ学習するのか\n\n\n数える方が速くて正確なのに、遠回りした理由：\n\n\n\n\n\n\n\n\nクイズ\n\n\n「直前の5文字を見て次を当てる」を表で作ると、行はいくつ必要？\n\n\n\n\n\n\n\\(75^5 \\approx\\) 23億行。データは9,681文字しかない — ほぼ全行が空っぽになる\n数える作戦は文脈を伸ばした瞬間に破綻する。勾配降下法はこの先も使える\nここから先のモデル（MLP、そして Transformer）は全部この3拍子で学習する"
+    "text": "なぜわざわざ学習するのか\n\n\n数える方が速くて正確なのに、遠回りした理由：\n\n\n\n\n\n\n\n\n質問\n\n\n「直前の5文字を見て次を当てる」を表で作ると、行はいくつ必要？\n\n\n\n\n\n\n\\(75^5 \\approx\\) 23億行。データは9,681文字しかない — ほぼ全行が空っぽになる\n数える作戦は文脈を伸ばした瞬間に破綻する。勾配降下法はこの先も使える\nここから先のモデル（MLP、そして Transformer）は全部この3拍子で学習する"
   },
   {
     "objectID": "bigram-neural.html#学習した表でも生成できる",
@@ -683,28 +928,28 @@
     "href": "attention-qkv.html#なぜ変換が要るのか-埋め込みそのままだと",
     "title": "Q・K・V を開ける",
     "section": "なぜ変換が要るのか — 埋め込みそのままだと",
-    "text": "なぜ変換が要るのか — 埋め込みそのままだと\n\n\n変換などせず、==埋め込み \\(x\\) どうしの内積==を関連度にすればよさそうに見える：スコア \\(= XX^\\top\\)\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])   # 3文字ぶんの埋め込み\nprint(X @ X.T)\n\n\n対角（自分×自分）が最有力 — 自分の埋め込みに一番似ているのは自分。視線が自分に吸い付いて、他人の情報がほとんど混ざらない\nしかも内積は対称：「AがBを見る強さ」＝「BがAを見る強さ」。だが言語の関係は非対称 — 「まだ」には「名前」が要るが、「名前」に「まだ」は要らない\n結論：「私が探すもの」と「私が掲げる看板」は別物にしたい — だから変換を挟む"
+    "text": "なぜ変換が要るのか — 埋め込みそのままだと\n\n\n変換などせず、==埋め込み \\(x\\) どうしの内積==を関連度にすればよさそうに見える：スコア \\(= XX^\\top\\)\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])   # 3文字ぶんの埋め込み\nprint(X @ X.T)\n\n[[1. 0. 1.]\n [0. 1. 1.]\n [1. 1. 2.]]\n\n\n\n対角（自分×自分）が最有力 — 自分の埋め込みに一番似ているのは自分。視線が自分に吸い付いて、他人の情報がほとんど混ざらない\nしかも内積は対称：「AがBを見る強さ」＝「BがAを見る強さ」。だが言語の関係は非対称 — 「まだ」には「名前」が要るが、「名前」に「まだ」は要らない\n結論：「私が探すもの」と「私が掲げる看板」は別物にしたい — だから変換を挟む"
   },
   {
-    "objectID": "attention-qkv.html#人の作り方-行列を1枚ずつ",
-    "href": "attention-qkv.html#人の作り方-行列を1枚ずつ",
+    "objectID": "attention-qkv.html#qkv-の作り方-行列を1枚ずつ",
+    "href": "attention-qkv.html#qkv-の作り方-行列を1枚ずつ",
     "title": "Q・K・V を開ける",
-    "section": "3人の作り方 — 行列を1枚ずつ",
-    "text": "3人の作り方 — 行列を1枚ずつ\n\n\n文字の埋め込み \\(\\vec{\\vphantom{b}x}\\) から、3種類のベクトルを作る：\n\n\\[\n\\vec{\\vphantom{b}q} = \\vec{\\vphantom{b}x}\\, W_Q \\qquad\n\\vec{\\vphantom{b}k} = \\vec{\\vphantom{b}x}\\, W_K \\qquad\n\\vec{\\vphantom{b}v} = \\vec{\\vphantom{b}x}\\, W_V\n\\]\n\n\n\n\n\n\n\n\n記号\n名前\n役割\n\n\n\n\n\\(Q\\)\nクエリ（query）\n探しもの：「いま何の情報が欲しいか」\n\n\n\\(K\\)\nキー（key）\n名札：「私はこういう情報を持っている」\n\n\n\\(V\\)\nバリュー（value）\n中身：実際に混ぜられて運ばれる情報\n\n\n\n\n\n\\(W_Q, W_K, W_V\\) は勾配降下で学習されるただの行列 — 「どこを見るべきか」が学習されるとは、この3枚が育つこと"
+    "section": "q・k・v の作り方 — 行列を1枚ずつ",
+    "text": "q・k・v の作り方 — 行列を1枚ずつ\n\n\n文字の埋め込み \\(\\vec{\\vphantom{b}x}\\) から、3種類のベクトルを作る：\n\n\\[\n\\vec{\\vphantom{b}q} = \\vec{\\vphantom{b}x}\\, W_Q \\qquad\n\\vec{\\vphantom{b}k} = \\vec{\\vphantom{b}x}\\, W_K \\qquad\n\\vec{\\vphantom{b}v} = \\vec{\\vphantom{b}x}\\, W_V\n\\]\n\n\n\n\n\n\n\n\n記号\n名前\n役割\n\n\n\n\n\\(Q\\)\nクエリ（query）\n探しもの：「いま何の情報が欲しいか」\n\n\n\\(K\\)\nキー（key）\n名札：「私はこういう情報を持っている」\n\n\n\\(V\\)\nバリュー（value）\n中身：実際に混ぜられて運ばれる情報\n\n\n\n\n\n\\(W_Q, W_K, W_V\\) は勾配降下で学習されるただの行列 — 「どこを見るべきか」が学習されるとは、この3枚が育つこと"
   },
   {
     "objectID": "attention-qkv.html#全位置いっせいに",
     "href": "attention-qkv.html#全位置いっせいに",
     "title": "Q・K・V を開ける",
     "section": "全位置いっせいに",
-    "text": "全位置いっせいに\n\n\n文が \\(T\\) 文字なら、埋め込みを縦に積んだ行列 \\(X\\)（\\(T\\) 行）に掛ければ全文字ぶん一度に変換できる — 行列積は内積の一括処理機\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0],     # 3文字ぶんの埋め込み（おもちゃサイズ）\n              [0.0, 1.0],\n              [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nscores = Q @ K.T                  # ① 全ペアの関連度を一撃で\nprint(scores)\n\n\nQ @ K.T の \\((i, j)\\) 成分＝「\\(i\\) 文字目の探しもの」と「\\(j\\) 文字目の名札」の内積\n==\\(T \\times T\\) の「視線の表」==が1回の行列積で出る"
+    "text": "全位置いっせいに\n\n\n文が \\(T\\) 文字なら、埋め込みを縦に積んだ行列 \\(X\\)（\\(T\\) 行）に掛ければ全文字ぶん一度に変換できる — 行列積は内積の一括処理機\n\n\nimport numpy as np\n\nX = np.array([[1.0, 0.0],     # 3文字ぶんの埋め込み（おもちゃサイズ）\n              [0.0, 1.0],\n              [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nscores = Q @ K.T                  # ① 全ペアの関連度を一撃で\nprint(scores)\n\n[[1. 0. 1.]\n [2. 1. 3.]\n [3. 1. 4.]]\n\n\n\nQ @ K.T の \\((i, j)\\) 成分＝「\\(i\\) 文字目の探しもの」と「\\(j\\) 文字目の名札」の内積\n==\\(T \\times T\\) の「視線の表」==が1回の行列積で出る"
   },
   {
     "objectID": "attention-qkv.html#スケーリング-内積は次元で膨らむ",
     "href": "attention-qkv.html#スケーリング-内積は次元で膨らむ",
     "title": "Q・K・V を開ける",
     "section": "スケーリング — 内積は次元で膨らむ",
-    "text": "スケーリング — 内積は次元で膨らむ\n\n\n\n\n\n\n\n\nクイズ\n\n\nベクトルの次元 \\(d\\) を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？\n\n\n\n\n\nimport numpy as np\n\nrng = np.random.default_rng(0)\nfor d in [2, 64]:\n    dots = [rng.standard_normal(d) @ rng.standard_normal(d) for _ in range(1000)]\n    print(f\"d={d:3d}: 内積の典型的な大きさ = {np.std(dots):.2f}\")\n\n\n\n\n\n\n足し合わせる項が \\(d\\) 個あるので \\(\\sqrt{d}\\) 倍で膨らむ（2→64 で約5.7倍）\nスコアが大きすぎると softmax が一極集中して、視線が1点に固まってしまう：\n\n\ns = np.array([8.0, 0.0, -8.0])            # d=64 スケールの生スコア\ne = np.exp(s); print(\"そのまま:\", (e / e.sum()).round(4))\ne = np.exp(s / 8); print(\"÷√64  :\", (e / e.sum()).round(4))\n\n\nだからスコアを \\(\\sqrt{d}\\) で割ってから softmax する — それだけの話"
+    "text": "スケーリング — 内積は次元で膨らむ\n\n\n\n\n\n\n\n\n質問\n\n\nベクトルの次元 \\(d\\) を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？\n\n\n\n\n\nimport numpy as np\n\nrng = np.random.default_rng(0)\nfor d in [2, 64]:\n    dots = [rng.standard_normal(d) @ rng.standard_normal(d) for _ in range(1000)]\n    print(f\"d={d:3d}: 内積の典型的な大きさ = {np.std(dots):.2f}\")\n\n\n\nd=  2: 内積の典型的な大きさ = 1.43\nd= 64: 内積の典型的な大きさ = 7.92\n\n\n\n\n足し合わせる項が \\(d\\) 個あるので \\(\\sqrt{d}\\) 倍で膨らむ（2→64 で約5.7倍）\nスコアが大きすぎると softmax が一極集中して、視線が1点に固まってしまう：\n\n\ns = np.array([8.0, 0.0, -8.0])            # d=64 スケールの生スコア\ne = np.exp(s); print(\"そのまま:\", (e / e.sum()).round(4))\ne = np.exp(s / 8); print(\"÷√64  :\", (e / e.sum()).round(4))\n\nそのまま: [9.997e-01 3.000e-04 0.000e+00]\n÷√64  : [0.6652 0.2447 0.09  ]\n\n\n\nだからスコアを \\(\\sqrt{d}\\) で割ってから softmax する — それだけの話"
   },
   {
     "objectID": "attention-qkv.html#完成形-論文の式と3ステップ",
@@ -718,21 +963,28 @@
     "href": "attention-qkv.html#peek-qkv-full",
     "title": "Q・K・V を開ける",
     "section": "通しで動かす",
-    "text": "通しで動かす\n\n\nimport numpy as np\n\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nweights = softmax_rows(Q @ K.T / np.sqrt(2))   # 視線の表（各行の合計が1）\nout = weights @ V                              # 各文字の「混ぜた結果」\n\nprint(weights.round(3))\nprint(out.round(3))\n\n\n出力は文字ごとに1本：3文字入れたら、視線済みベクトルが3本返る\nどの文字も「自分の探しもの」で全員を見た — これを自己注意（self-attention）と呼ぶ"
+    "text": "通しで動かす\n\n\nimport numpy as np\n\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\n\nQ, K, V = X @ Wq, X @ Wk, X @ Wv\nweights = softmax_rows(Q @ K.T / np.sqrt(2))   # 視線の表（各行の合計が1）\nout = weights @ V                              # 各文字の「混ぜた結果」\n\nprint(weights.round(3))\nprint(out.round(3))\n\n[[0.401 0.198 0.401]\n [0.284 0.14  0.576]\n [0.306 0.074 0.62 ]]\n[[0.802 0.599]\n [0.86  0.716]\n [0.926 0.694]]\n\n\n\n出力は文字ごとに1本：3文字入れたら、視線済みベクトルが3本返る\nどの文字も「自分の探しもの」で全員を見た — これを自己注意（self-attention）と呼ぶ"
   },
   {
     "objectID": "attention-qkv.html#視線の表を絵にする",
     "href": "attention-qkv.html#視線の表を絵にする",
     "title": "Q・K・V を開ける",
     "section": "視線の表を絵にする",
-    "text": "視線の表を絵にする\n\n\n3文字目は3文字目自身を62%見ている、など視線の配分が読める\nこの先、本物のモデルの視線もこの絵で覗く"
+    "text": "視線の表を絵にする\n\n\n\n\n\n\n\n\n\n\n\n3文字目は3文字目自身を62%見ている、など視線の配分が読める\nこの先、本物のモデルの視線もこの絵で覗く"
+  },
+  {
+    "objectID": "attention-qkv.html#本物の視線を先取りで覗く",
+    "href": "attention-qkv.html#本物の視線を先取りで覗く",
+    "title": "Q・K・V を開ける",
+    "section": "本物の視線を先取りで覗く",
+    "text": "本物の視線を先取りで覗く\n\nこの講義の最終形 —『吾輩は猫である』で訓練済みの自作GPT — の「視線の表」を、今日の道具だけで読んでみる。\n\n\n\n上の文字をクリックして、弧（＝その場所の視線）の飛び先を観察\nこの head 1 が「何を見る係」なのか、ひとことで言語化\n左の head 0・head 3 のサムネイルをクリックして、係の違いを確認（q・k・v の3枚のヒートマップも本物）\n\n\n\n\n\n\n\n\n気づいてしまった人へ\n\n\n視線の表の右上半分がきれいに空になっている。今日の式 \\(\\mathrm{softmax}(QK^\\top/\\sqrt{d})\\,V\\) のままでは、こうはならないはず — なぜか。次回の主役。\n\n\n\n\nエクスプローラを別タブで開く"
   },
   {
     "objectID": "attention-qkv.html#pytorch-部品にしておく",
     "href": "attention-qkv.html#pytorch-部品にしておく",
     "title": "Q・K・V を開ける",
     "section": "PyTorch 部品にしておく",
-    "text": "PyTorch 部品にしておく\n\n\nあとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が nn.Module：==__init__ に持ち物（層）、forward に計算手順==を書けば、sa(x) と呼べる部品になる\n\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)   # Wq\n        self.key   = nn.Linear(n_embd, head_size, bias=False)   # Wk\n        self.value = nn.Linear(n_embd, head_size, bias=False)   # Wv\n\n    def forward(self, x):                       # x: (文字数 T, n_embd)\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = q @ k.T / k.shape[-1] ** 0.5        # ① 関連度 ＋ ①′ 補正\n        w = F.softmax(w, dim=-1)                # ② 割合にする\n        return w @ v                            # ③ 混ぜる\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)                           # 5文字・8次元\nprint(sa(x).shape)\n\n\nforward は実質3行。bias=False は「行列1枚」を式のとおりに書いただけ"
+    "text": "PyTorch 部品にしておく\n\n\nあとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が nn.Module：__init__ に持ち物（層）、forward に計算手順を書けば、sa(x) と呼べる部品になる\n\n\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)   # Wq\n        self.key   = nn.Linear(n_embd, head_size, bias=False)   # Wk\n        self.value = nn.Linear(n_embd, head_size, bias=False)   # Wv\n\n    def forward(self, x):                       # x: (文字数 T, n_embd)\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = q @ k.T / k.shape[-1] ** 0.5        # ① 関連度 ＋ ①′ 補正\n        w = F.softmax(w, dim=-1)                # ② 割合にする\n        return w @ v                            # ③ 混ぜる\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)                           # 5文字・8次元\nprint(sa(x).shape)\n\ntorch.Size([5, 4])\n\n\n\nforward は実質3行。bias=False は「行列1枚」を式のとおりに書いただけ"
   },
   {
     "objectID": "attention-qkv.html#tweak-行列をいじって視線を操る",
@@ -760,14 +1012,14 @@
     "href": "attention-qkv.html#解答例",
     "title": "Q・K・V を開ける",
     "section": "解答例",
-    "text": "解答例\n\n\n\n解答例を見る\nimport numpy as np\nimport torch\n\n# 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4\ntorch.manual_seed(0)\nsa2 = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)\nq, k, v = sa2.query(x), sa2.key(x), sa2.value(x)\nprint(q.shape, (q @ k.T).shape, sa2(x).shape)\n\n# 問題2\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\nweights = softmax_rows((X @ Wq) @ (X @ Wk).T / np.sqrt(2))\nprint(\"行の合計:\", weights.sum(axis=1).round(3))\nprint(\"列の合計:\", weights.sum(axis=0).round(3))\n# softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由"
+    "text": "解答例\n\n\n\n解答例を見る\nimport numpy as np\nimport torch\n\n# 問題1: Q,K,V は 5×4 / 視線の表は 5×5 / 出力は 5×4\ntorch.manual_seed(0)\nsa2 = SelfAttention(n_embd=8, head_size=4)\nx = torch.randn(5, 8)\nq, k, v = sa2.query(x), sa2.key(x), sa2.value(x)\nprint(q.shape, (q @ k.T).shape, sa2(x).shape)\n\n# 問題2\ndef softmax_rows(S):\n    e = np.exp(S - S.max(axis=1, keepdims=True))\n    return e / e.sum(axis=1, keepdims=True)\n\nX = np.array([[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]])\nWq = np.array([[1.0, 0.0], [1.0, 1.0]])\nWk = np.array([[1.0, 1.0], [0.0, 1.0]])\nWv = np.array([[1.0, 0.0], [0.0, 1.0]])\nweights = softmax_rows((X @ Wq) @ (X @ Wk).T / np.sqrt(2))\nprint(\"行の合計:\", weights.sum(axis=1).round(3))\nprint(\"列の合計:\", weights.sum(axis=0).round(3))\n# softmax は行ごとに掛けた（見る側ごとに視線を100%配分）。列＝「見られた合計」は自由\n\n\ntorch.Size([5, 4]) torch.Size([5, 5]) torch.Size([5, 4])\n行の合計: [1. 1. 1.]\n列の合計: [0.991 0.412 1.597]"
   },
   {
     "objectID": "attention-intuition.html#まずは自分で読んでみる",
     "href": "attention-intuition.html#まずは自分で読んでみる",
     "title": "注目という発想",
     "section": "まずは自分で読んでみる",
-    "text": "まずは自分で読んでみる\n\n\n\n\n\n\n\n\nクイズ\n\n\n次の（　）に入る言葉は？\n\n吾輩は猫である。名前はまだ（　）。\n\n\n\n\n\n\n\nほぼ全員が「無い」と答える。では、答えるときどこを見た？\n直前の「まだ」だけではない。少し離れた「名前は」に目が飛んだはず\n読むとは、関係する場所に視線を飛ばすこと — 今日はこれを数式にする"
+    "text": "まずは自分で読んでみる\n\n\n\n\n\n\n\n\n質問\n\n\n次の（　）に入る言葉は？\n\n吾輩は猫である。名前はまだ（　）。\n\n\n\n\n\n\n\nほぼ全員が「無い」と答える。では、答えるときどこを見た？\n直前の「まだ」だけではない。少し離れた「名前は」に目が飛んだはず\n読むとは、関係する場所に視線を飛ばすこと — 今日はこれを数式にする"
   },
   {
     "objectID": "attention-intuition.html#窓のやり方では届かない",
@@ -802,7 +1054,7 @@
     "href": "attention-intuition.html#手計算1往復-名前はまだで",
     "title": "注目という発想",
     "section": "手計算1往復 — 「名前はまだ」で",
-    "text": "手計算1往復 — 「名前はまだ」で\n\nミニ文「名前／は／まだ」の3トークン。「まだ」の場所から過去を見る。数値は電卓なしで埋められるおもちゃサイズにしてある。\n\n\n\n\n\n\n\n\nトークン\n名札 \\(\\vec{\\vphantom{b}k}\\)\n持ってる情報 \\(\\vec{\\vphantom{b}v}\\)\n\n\n\n\n「名前」\n\\((1, 1)\\)\n\\((1, 0)\\)\n\n\n「は」\n\\((1, 0)\\)\n\\((0, 1)\\)\n\n\n「まだ」\n\\((0, 1)\\)\n\\((1, 1)\\)\n\n\n\n「まだ」の探しもの：\\(\\vec{\\vphantom{b}q} = (1, 1)\\)\n\n関連度（内積）：\\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{名前} = 1{+}1 = 2\\)、同様に \\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{は} = 1\\)、\\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{まだ} = 1\\)\n割合：合計4で割って \\((0.5,\\ 0.25,\\ 0.25)\\)\n混ぜる：\\(0.5 (1,0) + 0.25 (0,1) + 0.25 (1,1) = (0.75,\\ 0.5)\\)\n\n\n「まだ」の探しものと一番似た名札は「名前」→ 「名前」の情報が半分を占めた\n冒頭のクイズで目が「名前」に飛んだ、あの動きを数で再現した1往復"
+    "text": "手計算1往復 — 「名前はまだ」で\n\nミニ文「名前／は／まだ」の3トークン。「まだ」の場所から過去を見る。数値は電卓なしで埋められるおもちゃサイズにしてある。\n\n\n\n\n\n\n\n\nトークン\n名札 \\(\\vec{\\vphantom{b}k}\\)\n持ってる情報 \\(\\vec{\\vphantom{b}v}\\)\n\n\n\n\n「名前」\n\\((1, 1)\\)\n\\((1, 0)\\)\n\n\n「は」\n\\((1, 0)\\)\n\\((0, 1)\\)\n\n\n「まだ」\n\\((0, 1)\\)\n\\((1, 1)\\)\n\n\n\n「まだ」の探しもの：\\(\\vec{\\vphantom{b}q} = (1, 1)\\)\n\n関連度（内積）：\\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{名前} = 1{+}1 = 2\\)、同様に \\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{は} = 1\\)、\\(\\vec{\\vphantom{b}q} \\cdot \\vec{\\vphantom{b}k}_{まだ} = 1\\)\n割合：合計4で割って \\((0.5,\\ 0.25,\\ 0.25)\\)\n混ぜる：\\(0.5 (1,0) + 0.25 (0,1) + 0.25 (1,1) = (0.75,\\ 0.5)\\)\n\n\n「まだ」の探しものと一番似た名札は「名前」→ 「名前」の情報が半分を占めた\n冒頭の質問で目が「名前」に飛んだ、あの動きを数で再現した1往復"
   },
   {
     "objectID": "attention-intuition.html#peek-attn-calc",
@@ -816,7 +1068,7 @@
     "href": "attention-intuition.html#割合化には落とし穴がある",
     "title": "注目という発想",
     "section": "割合化には落とし穴がある",
-    "text": "割合化には落とし穴がある\n\n\n\n\n\n\n\n\nクイズ\n\n\n関連度が \\((2, -1, -1)\\) になったら？「合計で割る」方式で割合を作ってみると……\n\n\n\n\n\n\n合計は \\(0\\) — ゼロ割り崩壊。負の重み「\\(-\\infty\\)%見る」も意味不明\n欲しい性質：常に正・合計1・大きいスコアほど強調\nその専用部品はすでに使っている — 「学習で当てる」の softmax（\\(e^s\\) を取って合計で割る）\n\n\n\nimport numpy as np\n\ndef softmax(s):\n    e = np.exp(s)\n    return e / e.sum()\n\nprint(softmax(np.array([2.0, 1.0, 1.0])))     # さっきの例\nprint(softmax(np.array([2.0, -1.0, -1.0])))   # 負が混ざっても安全\n\n\n\n[0.57611688 0.21194156 0.21194156]\n[0.909443  0.0452785 0.0452785]\n\n\n\n\n以後、②の割合化は softmax で行う。さっきの例なら重み \\((0.58, 0.21, 0.21)\\) — 1位がより強調される"
+    "text": "割合化には落とし穴がある\n\n\n\n\n\n\n\n\n質問\n\n\n関連度が \\((2, -1, -1)\\) になったら？「合計で割る」方式で割合を作ってみると……\n\n\n\n\n\n\n合計は \\(0\\) — ゼロ割り崩壊。負の重み「\\(-\\infty\\)%見る」も意味不明\n欲しい性質：常に正・合計1・大きいスコアほど強調\nその専用部品はすでに使っている — 「学習で当てる」の softmax（\\(e^s\\) を取って合計で割る）\n\n\n\nimport numpy as np\n\ndef softmax(s):\n    e = np.exp(s)\n    return e / e.sum()\n\nprint(softmax(np.array([2.0, 1.0, 1.0])))     # さっきの例\nprint(softmax(np.array([2.0, -1.0, -1.0])))   # 負が混ざっても安全\n\n\n\n[0.57611688 0.21194156 0.21194156]\n[0.909443  0.0452785 0.0452785]\n\n\n\n\n以後、②の割合化は softmax で行う。さっきの例なら重み \\((0.58, 0.21, 0.21)\\) — 1位がより強調される"
   },
   {
     "objectID": "attention-intuition.html#これが-attention",
@@ -858,7 +1110,7 @@
     "href": "bigram-counting.html#前回の振り返り",
     "title": "数えるだけの言語モデル",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\nことばは数になった：stoi / itos / encode / decode の4点セット\n地名データ：1,747件、語彙74文字\n\n\n\n\n\n\n\n\nクイズ\n\n\n地名のよみで、「ょ」の次に来る文字は何が多い？ 「きょうと」「ちょうし」…… 予想してから、数えて確かめる。\n\n\n\n\n\n\n今日のモデルの作戦はこれだけ：直前の1文字だけ見て、次の1文字を当てる"
+    "text": "前回の振り返り\n\n\nことばは数になった：stoi / itos / encode / decode の4点セット\n地名データ：1,747件、語彙74文字\n\n\n\n\n\n\n\n\n質問\n\n\n地名のよみで、「ょ」の次に来る文字は何が多い？ 「きょうと」「ちょうし」…… 予想してから、数えて確かめる。\n\n\n\n\n\n\n今日のモデルの作戦はこれだけ：直前の1文字だけ見て、次の1文字を当てる"
   },
   {
     "objectID": "bigram-counting.html#バイグラム-隣り合う2文字",
@@ -893,7 +1145,7 @@
     "href": "bigram-counting.html#表が知っていること",
     "title": "数えるだけの言語モデル",
     "section": "表が知っていること",
-    "text": "表が知っていること\n\n\n\n\n\n\n\n\nクイズ\n\n\n「・」の行のトップ5＝名前の最初に来やすい文字。何だと思う？ 「・」の列のトップ5＝名前の最後の文字。こっちはかなり偏るはず……\n\n\n\n\n\nimport numpy as np\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = [\"・\"] + sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nN = np.zeros((75, 75), dtype=int)\nfor name in names:\n    seq = \"・\" + name + \"・\"\n    for a, b in zip(seq, seq[1:]):\n        N[stoi[a], stoi[b]] += 1\n\nfirst = N[0].argsort()[::-1][:5]        # ・の行：最初の文字\nlast = N[:, 0].argsort()[::-1][:5]      # ・の列：最後の文字\nprint(\"最初:\", [(chars[i], N[0, i]) for i in first])\nprint(\"最後:\", [(chars[i], N[i, 0]) for i in last])\n\n\n\n最初: [('か', np.int64(135)), ('お', np.int64(123)), ('い', np.int64(106)), ('み', np.int64(102)), ('し', np.int64(98))]\n最後: [('し', np.int64(792)), ('う', np.int64(466)), ('ち', np.int64(277)), ('ら', np.int64(161)), ('ん', np.int64(28))]\n\n\n\n\n最後は「し」792回の圧勝 — 市・町（ちょう／まち）・村の「制度」が表に写り込んでいる\n誰も教えていないのに、数えただけで「地名の文法」が浮かび上がる"
+    "text": "表が知っていること\n\n\n\n\n\n\n\n\n質問\n\n\n「・」の行のトップ5＝名前の最初に来やすい文字。何だと思う？ 「・」の列のトップ5＝名前の最後の文字。こっちはかなり偏るはず……\n\n\n\n\n\nimport numpy as np\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = [\"・\"] + sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nN = np.zeros((75, 75), dtype=int)\nfor name in names:\n    seq = \"・\" + name + \"・\"\n    for a, b in zip(seq, seq[1:]):\n        N[stoi[a], stoi[b]] += 1\n\nfirst = N[0].argsort()[::-1][:5]        # ・の行：最初の文字\nlast = N[:, 0].argsort()[::-1][:5]      # ・の列：最後の文字\nprint(\"最初:\", [(chars[i], N[0, i]) for i in first])\nprint(\"最後:\", [(chars[i], N[i, 0]) for i in last])\n\n\n\n最初: [('か', np.int64(135)), ('お', np.int64(123)), ('い', np.int64(106)), ('み', np.int64(102)), ('し', np.int64(98))]\n最後: [('し', np.int64(792)), ('う', np.int64(466)), ('ち', np.int64(277)), ('ら', np.int64(161)), ('ん', np.int64(28))]\n\n\n\n\n最後は「し」792回の圧勝 — 市・町（ちょう／まち）・村の「制度」が表に写り込んでいる\n誰も教えていないのに、数えただけで「地名の文法」が浮かび上がる"
   },
   {
     "objectID": "bigram-counting.html#回数を確率に直す",
@@ -1019,14 +1271,14 @@
     "href": "embeddings.html#前回の振り返り",
     "title": "ことばの地図",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\none-hot × 行列 \\(W\\) → softmax で、バイグラム表を勾配降下法で学習できた\n\n\n\n\n\n\n\n\nクイズ\n\n\none-hot ベクトル（1が1個、あとは0）と行列の掛け算。 計算機は75×75＝5,625回の掛け算を本当にする必要がある？\n\n\n\n\n\n\nするわけがない。0を掛けるところは全部消える — 残るのは……"
+    "text": "前回の振り返り\n\n\none-hot × 行列 \\(W\\) → softmax で、バイグラム表を勾配降下法で学習できた\n\n\n\n\n\n\n\n\n質問\n\n\none-hot ベクトル（1が1個、あとは0）と行列の掛け算。 計算機は75×75＝5,625回の掛け算を本当にする必要がある？\n\n\n\n\n\n\nするわけがない。0を掛けるところは全部消える — 残るのは……"
   },
   {
-    "objectID": "embeddings.html#種明かし行を1本選んでいるだけ",
-    "href": "embeddings.html#種明かし行を1本選んでいるだけ",
+    "objectID": "embeddings.html#行を1本選んでいるだけ",
+    "href": "embeddings.html#行を1本選んでいるだけ",
     "title": "ことばの地図",
-    "section": "種明かし：行を1本選んでいるだけ",
-    "text": "種明かし：行を1本選んでいるだけ\n\n\nimport torch\nimport torch.nn.functional as F\n\nW = torch.arange(12.0).reshape(4, 3)      # 小さな行列で実験（語彙4、行の長さ3）\nx = torch.tensor([2])                     # 「2番の文字」\nX = F.one_hot(x, num_classes=4).float()\n\nprint(W)\nprint(X @ W)          # one-hot × 行列\nprint(W[2])           # 行列の2行目\n\ntensor([[ 0.,  1.,  2.],\n        [ 3.,  4.,  5.],\n        [ 6.,  7.,  8.],\n        [ 9., 10., 11.]])\ntensor([[6., 7., 8.]])\ntensor([6., 7., 8.])\n\n\n\nX @ W と W[2] は同じもの。one-hot の掛け算の正体は表引き\nつまり前回のモデルは「文字ごとに1本のベクトル（表の行）を持っていた」だけ"
+    "section": "行を1本選んでいるだけ",
+    "text": "行を1本選んでいるだけ\n\n\nimport torch\nimport torch.nn.functional as F\n\nW = torch.arange(12.0).reshape(4, 3)      # 小さな行列で実験（語彙4、行の長さ3）\nx = torch.tensor([2])                     # 「2番の文字」\nX = F.one_hot(x, num_classes=4).float()\n\nprint(W)\nprint(X @ W)          # one-hot × 行列\nprint(W[2])           # 行列の2行目\n\ntensor([[ 0.,  1.,  2.],\n        [ 3.,  4.,  5.],\n        [ 6.,  7.,  8.],\n        [ 9., 10., 11.]])\ntensor([[6., 7., 8.]])\ntensor([6., 7., 8.])\n\n\n\nX @ W と W[2] は同じもの。one-hot の掛け算の正体は表引き\nつまり前回のモデルは「文字ごとに1本のベクトル（表の行）を持っていた」だけ"
   },
   {
     "objectID": "embeddings.html#見方を変えると世界が変わる",
@@ -1040,7 +1292,7 @@
     "href": "embeddings.html#どこまで縮められる",
     "title": "ことばの地図",
     "section": "どこまで縮められる？",
-    "text": "どこまで縮められる？\n\n\n\n\n\n\n\n\nクイズ\n\n\n『吾輩は猫である』は語彙3,045。バイグラム表は 3,045×3,045 = 927万個の数。 埋め込みを2次元にしたら、パラメータはいくつになる？\n\n\n\n\n\n\n埋め込み表 3,045×2 ＋ 戻す変換 2×3,045（＋バイアス3,045）＝ 15,225個\n609分の1。そんなに潰して、まともに動くのか？ — 実験で確かめる\nおまけ：\\(d=2\\) なら、全文字を1枚の地図として描ける"
+    "text": "どこまで縮められる？\n\n\n\n\n\n\n\n\n質問\n\n\n『吾輩は猫である』は語彙3,045。バイグラム表は 3,045×3,045 = 927万個の数。 埋め込みを2次元にしたら、パラメータはいくつになる？\n\n\n\n\n\n\n埋め込み表 3,045×2 ＋ 戻す変換 2×3,045（＋バイアス3,045）＝ 15,225個\n609分の1。そんなに潰して、まともに動くのか？ — 実験で確かめる\nおまけ：\\(d=2\\) なら、全文字を1枚の地図として描ける"
   },
   {
     "objectID": "embeddings.html#peek-minibatch",
@@ -1075,7 +1327,7 @@
     "href": "embeddings.html#地図から見つかるもの",
     "title": "ことばの地図",
     "section": "地図から見つかるもの",
-    "text": "地図から見つかるもの\n\n\n文字の種類ごとに住み分けが始まっている — ひらがな・カタカナ・漢字・記号。誰も教えていない\n漢数字が寄り集まる：一・二・三・四・五・六・七・十がほぼ同じ場所に（「百」「半」も近くに来る）\n「吾」は一匹狼：地図のはるか外に1文字だけ\n\n\n\n\n\n\n\n\nクイズ\n\n\nなぜ「吾」だけ仲間はずれの場所に置かれた？この小説ならではの理由がある。\n\n\n\n\n\n\n「吾」の次は90%「輩」（535回中481回）— 他のどの文字とも違う極端な性格だから、専用の場所をもらった"
+    "text": "地図から見つかるもの\n\n\n文字の種類ごとに住み分けが始まっている — ひらがな・カタカナ・漢字・記号。誰も教えていない\n漢数字が寄り集まる：一・二・三・四・五・六・七・十がほぼ同じ場所に（「百」「半」も近くに来る）\n「吾」は一匹狼：地図のはるか外に1文字だけ\n\n\n\n\n\n\n\n\n質問\n\n\nなぜ「吾」だけ仲間はずれの場所に置かれた？この小説ならではの理由がある。\n\n\n\n\n\n\n「吾」の次は90%「輩」（535回中481回）— 他のどの文字とも違う極端な性格だから、専用の場所をもらった"
   },
   {
     "objectID": "embeddings.html#意味は使われ方に宿る",
@@ -1141,6 +1393,13 @@
     "text": "文豪テスト（つづき）\n\n\n\n\n\n\n\n\nC\n\n\n迷亭はとぼけた顔をして「君のような親切な夫を持った妻君は実に仕合せだな」と独り言のようにいう。障子の蔭でエヘンと云う細君の咳払いが聞える。\n\n\n\n\n\n\n\n\n\n\n\nD\n\n\nまあどうですか、全く君の事じゃありませんか、知らんと云われているとボイはこの際になれんではない。それではないかと思ってその実はどの人間のようにかかるるんだ。\n\n\n\n\n\n挙手で投票：本物はどれ？（複数可）"
   },
   {
+    "objectID": "lm-introduction.html#何を手がかりに見分けた",
+    "href": "lm-introduction.html#何を手がかりに見分けた",
+    "title": "ことばを当てる機械",
+    "section": "何を手がかりに見分けた？",
+    "text": "何を手がかりに見分けた？\n\nいま挙げた手の根拠を言語化しておく。\n\n4つの文章に「本物っぽさ」を◎○△×で採点\nいちばん怪しい文章の、怪しい箇所に下線 — 単語が変？　つながりが変？　意味が迷子？\n下線の理由を一言メモして、隣の人と見比べ。同じ箇所を挙げていたら、そこが「機械のしっぽ」\n\n\n\n\n\n\n\nノート\n\n\n採点表は捨てずに取っておく — 最終回に正体を明かすとき、自分の目がどこまで確かだったか答え合わせできる。\n\n\n\n\nいま使った「日本語らしさ」の感覚 — それを数で作り直すのが、この講義の仕事"
+  },
+  {
     "objectID": "lm-introduction.html#答えは最終回に",
     "href": "lm-introduction.html#答えは最終回に",
     "title": "ことばを当てる機械",
@@ -1152,7 +1411,7 @@
     "href": "lm-introduction.html#chatgpt-は何をしている機械か",
     "title": "ことばを当てる機械",
     "section": "ChatGPT は何をしている機械か",
-    "text": "ChatGPT は何をしている機械か\n\n\n\n\n\n\n\n\nクイズ\n\n\nChatGPT の中身がやっている仕事を、一言で言うと？ 「考えている」「検索している」「会話している」……？\n\n\n\n\n\n\n答え：次に来る言葉を予測している。それを繰り返しているだけ\nこの「次を当てる機械」を言語モデル（language model）と呼ぶ\n大規模にしたものが LLM（Large Language Model）— ChatGPT の本体"
+    "text": "ChatGPT は何をしている機械か\n\n\n\n\n\n\n\n\n質問\n\n\nChatGPT の中身がやっている仕事を、一言で言うと？ 「考えている」「検索している」「会話している」……？\n\n\n\n\n\n\n答え：次に来る言葉を予測している。それを繰り返しているだけ\nこの「次を当てる機械」を言語モデル（language model）と呼ぶ\n大規模にしたものが LLM（Large Language Model）— ChatGPT の本体"
   },
   {
     "objectID": "lm-introduction.html#peek-classifier",
@@ -1176,11 +1435,25 @@
     "text": "体験：君も言語モデル\n\nペアで交互に「次の1文字」を予想する。出題者は答えだけ知っている。\n\n第1問　「こんにち（　）」\n第2問　「吾輩は猫であ（　）」\n第3問　「今日の晩ご飯は（　）」\n\n\n\n第1問・第2問はほぼ全員正解。第3問は原理的に当てられない — この差はどこから来る？"
   },
   {
+    "objectID": "lm-introduction.html#当てやすさには濃淡がある",
+    "href": "lm-introduction.html#当てやすさには濃淡がある",
+    "title": "ことばを当てる機械",
+    "section": "当てやすさには濃淡がある",
+    "text": "当てやすさには濃淡がある\n\n\n第1問「こんにち（　）」：候補が事実上1つ — ほぼ確信\n第3問「今日の晩ご飯は（　）」：カレーも寿司も鍋もあり — お手上げの総当たり\nつまり「次の1文字」には当てやすさの濃淡がある — これを数で表したものが確率分布\n\n確信 → 1本の棒がそびえる尖った分布\nお手上げ → 低い棒がずらりと並ぶ平らな分布\n\n人間は文脈からこの分布を頭の中で作っている。同じことを機械にやらせたい"
+  },
+  {
     "objectID": "lm-introduction.html#予想を数に置き換える",
     "href": "lm-introduction.html#予想を数に置き換える",
     "title": "ことばを当てる機械",
     "section": "「予想」を数に置き換える",
-    "text": "「予想」を数に置き換える\n\n\n\n\n\n\n\n\nクイズ\n\n\n『吾輩は猫である』全文（約32万字）で、「吾輩」の次に来た文字を数える。1位はどの文字？　2位は？\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n「は」39%、「の」28%…… — 数えただけで「予想」が数になった\n言語モデルの中身はこの棒グラフの親玉 — どんな文脈にも棒グラフを返す機械"
+    "text": "「予想」を数に置き換える\n\n\n\n\n\n\n\n\n質問\n\n\n『吾輩は猫である』全文（約32万字）で、「吾輩」の次に来た文字を数える。1位はどの文字？　2位は？\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n「は」39%、「の」28%…… — 数えただけで「予想」が数になった\n言語モデルの中身はこの棒グラフの親玉 — どんな文脈にも棒グラフを返す機械"
+  },
+  {
+    "objectID": "lm-introduction.html#尖った分布と平らな分布",
+    "href": "lm-introduction.html#尖った分布と平らな分布",
+    "title": "ことばを当てる機械",
+    "section": "尖った分布と、平らな分布",
+    "text": "尖った分布と、平らな分布\n\n\n体験ゲームの「確信」と「お手上げ」も、数えれば形になる。「であ」の次と「、」の次：\n\n\n\n\n\n\n\n\n\n\n\n「であ」の次は「る」が 84.5%、候補は全部で12種類 — 第1問（こんにち）の世界\n「、」の次は1位の「そ」でも 6.3%、候補は1,044種類 — 第3問（晩ご飯）の世界\n予測のしやすさ＝分布の形。言語モデルの実力は、この形をどれだけ本物の続きに近づけられるか"
   },
   {
     "objectID": "lm-introduction.html#文字ずつなら文章も書ける",
@@ -1190,11 +1463,18 @@
     "text": "1文字ずつなら、文章も書ける\n\n\n予測した1文字を文章の尻に足して、また次を予測する — この繰り返し\n\n\n\n自己回帰（autoregressive）と呼ぶ。ChatGPT が1語ずつ「打っている」ように見えるのは、本当に1語ずつ作っているから\n「当てる」ができれば「書ける」— だからこの講義は「次の1文字を当てる」だけを磨き続ける"
   },
   {
+    "objectID": "lm-introduction.html#生成を1歩ずつほどく",
+    "href": "lm-introduction.html#生成を1歩ずつほどく",
+    "title": "ことばを当てる機械",
+    "section": "生成を1歩ずつほどく",
+    "text": "生成を1歩ずつほどく\n\n\nぐるぐる回る絵を、まっすぐ伸ばして3歩ぶん：\n\n\n\n毎歩やることは同じ：いまの文脈を入れる → 棒グラフをもらう → 1本引く → 尻に足す\n機械は1台きり。伸びていくのは文脈のほう\n「引く」は抽選 — 同じ書き出しでも、実行のたびに違う文章になりうる。ChatGPT の答えが毎回少し違う理由も、ここ（ツマミの調べ方は「生成を操る」の回で）"
+  },
+  {
     "objectID": "lm-introduction.html#この講義の道のり",
     "href": "lm-introduction.html#この講義の道のり",
     "title": "ことばを当てる機械",
     "section": "この講義の道のり",
-    "text": "この講義の道のり\n\n\n架空の地名メーカーを育てる：数えるだけのモデルから始めて、学習・埋め込み・文脈の窓へ\n注意（Attention）を開ける：「どこを見るか」を学習する仕組みを手計算からコードまで\nGPT を組んで火を入れる：部品を束ねて『吾輩は猫である』32万字で訓練する\n推し文豪ボット：最終回、好きな作家で自分のGPTを育てる — そして文豪テストの種明かし\n\n\n\n\n\n\n\nノート\n\n\nどの回も「小さく作って動かして、1個だけ賢くする」の繰り返し。 動かないものを3回我慢する回は、ひとつもない。"
+    "text": "この講義の道のり\n\n\n架空の地名メーカーを育てる：数えるだけのモデルから始めて、学習・埋め込み・文脈の窓へ\n注意（Attention）を開ける：「どこを見るか」を学習する仕組みを手計算からコードまで\nGPT を組んで火を入れる：部品を束ねて『吾輩は猫である』32万字で訓練する\n推し文豪ボット：最終回、好きな作家で自分のGPTを育てる — そして文豪テストの答え合わせ\n\n\n\n\n\n\n\nノート\n\n\nどの回も「小さく作って動かして、1個だけ賢くする」の繰り返し。 動かないものを3回我慢する回は、ひとつもない。"
   },
   {
     "objectID": "lm-introduction.html#持ち物の確認",
@@ -1218,11 +1498,25 @@
     "text": "まとめ\n\n\n言語モデル＝次の1文字を当てる分類器。MNIST と同じ形、同じ損失\n予想の濃淡は確率分布の形で表せる — 確信は尖り、お手上げは平ら。数えるだけでも分布は作れる（今日の棒グラフ）\n1文字当てて尻に足す（自己回帰）を繰り返せば、文章が書ける\n新しい概念は埋め込みと注意の2つだけ — あとは持っている道具の組み替え\n\n\n現在の設計図　文脈 → 語彙全体の確率 → 次の1文字 → 文脈へ戻す\n\n\n\n\n\n\n\n\n次回予告\n\n\n機械は「あ」という文字をそのままでは食べられない。 まず、ことばを数にする — 下ごしらえの回。文豪テストの機械への第一歩。"
   },
   {
+    "objectID": "lm-introduction.html#練習問題",
+    "href": "lm-introduction.html#練習問題",
+    "title": "ことばを当てる機械",
+    "section": "練習問題",
+    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：尖りと平らを実測する\n『吾輩は猫である』で、「であ」の次に来る文字と「、」の次に来る文字をそれぞれ数え、候補の種類数と1位の文字とその確率を表示せよ。\n\nneko.txt を data/ に置く（演習と同じ）\n演習のコードの「猫」を「であ」「、」に替えて数える（次の文字の位置は i + len(文脈)）\n種類数は len(nxt)、1位は nxt.most_common(1) で取り、「種類数」「1位の文字：確率」を表示\nどちらが「こんにち」型で、どちらが「晩ご飯」型か、本編の図と見比べる"
+  },
+  {
+    "objectID": "lm-introduction.html#解答例",
+    "href": "lm-introduction.html#解答例",
+    "title": "ことばを当てる機械",
+    "section": "解答例",
+    "text": "解答例\n\n\n\n解答例を見る\nfrom collections import Counter\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\n\nfor ctx in [\"であ\", \"、\"]:\n    nxt = Counter()\n    i = text.find(ctx)\n    while i != -1:\n        j = i + len(ctx)\n        if j &lt; len(text):\n            nxt[text[j]] += 1\n        i = text.find(ctx, i + 1)\n    total = sum(nxt.values())\n    c, n = nxt.most_common(1)[0]\n    print(f\"「{ctx}」の次: {len(nxt)}種類 | 1位「{c}」 {n / total:.1%}\")\n\n\n「であ」の次: 12種類 | 1位「る」 84.5%\n「、」の次: 1044種類 | 1位「そ」 6.3%"
+  },
+  {
     "objectID": "multihead-ffn.html#前回の振り返り",
     "href": "multihead-ffn.html#前回の振り返り",
     "title": "束ねて、考える",
     "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n言語モデル用の注意ヘッドが完成した：位置埋め込み＋因果マスク付きの Head\nでも、このヘッド1本ではまだ GPT は組めない。足りないものが2つ：\n\n\n\n\n\n\n\n\nクイズ\n\n\n「」の対応を見る視線と、直前の文字を見る視線 — 1枚の「視線の表」で両方いっぺんにできるか？\n\n\n\n\n\n\nできない。1枚の表は視線の配分1通りしか持てない — 今日の部品1つ目は視線の複線化"
+    "text": "前回の振り返り\n\n\n言語モデル用の注意ヘッドが完成した：位置埋め込み＋因果マスク付きの Head\nでも、このヘッド1本ではまだ GPT は組めない。足りないものが2つ：\n\n\n\n\n\n\n\n\n質問\n\n\n「」の対応を見る視線と、直前の文字を見る視線 — 1枚の「視線の表」で両方いっぺんにできるか？\n\n\n\n\n\n\nできない。1枚の表は視線の配分1通りしか持てない — 今日の部品1つ目は視線の複線化"
   },
   {
     "objectID": "multihead-ffn.html#文まとめて-バッチの軸",
@@ -1253,11 +1547,32 @@
     "text": "マルチヘッド注意\n\n\nclass MultiHead(nn.Module):\n    def __init__(self, n_embd, n_head, block_size):\n        super().__init__()\n        head_size = n_embd // n_head          # 幅を等分して合計は元どおり\n        self.heads = nn.ModuleList(\n            Head(n_embd, head_size, block_size) for _ in range(n_head))\n        self.proj = nn.Linear(n_embd, n_embd)  # つないだ結果を混ぜ直す\n\n    def forward(self, x):\n        return self.proj(torch.cat([h(x) for h in self.heads], dim=-1))\n\ntorch.manual_seed(0)\nmh = MultiHead(n_embd=96, n_head=4, block_size=64)\nx = torch.randn(2, 8, 96)\nprint(mh(x).shape)                             # 入口と同じ (2, 8, 96)\n\ntorch.Size([2, 8, 96])\n\n\n\nマルチヘッド注意（multi-head attention）。新しい数学はゼロ — cat して Linear 1枚"
   },
   {
+    "objectID": "multihead-ffn.html#幅の会計-等分してつないで元通り",
+    "href": "multihead-ffn.html#幅の会計-等分してつないで元通り",
+    "title": "束ねて、考える",
+    "section": "幅の会計 — 等分して、つないで、元通り",
+    "text": "幅の会計 — 等分して、つないで、元通り\n\n\n\nhead_size = n_embd ÷ n_head ＝ 96 ÷ 4 ＝ 24。幅を等分するから、つなぐと元の幅に戻る\nヘッドを増やしても総コストはほぼ一定 — 増えるのは視線の系統数、減るのは1系統あたりの解像度（幅）\n割り切れない頭数（96÷5）だと帳尻が合わずに壊れる — あとの Tweak で実際に壊してみる"
+  },
+  {
+    "objectID": "multihead-ffn.html#系統の視線を実物で確かめる",
+    "href": "multihead-ffn.html#系統の視線を実物で確かめる",
+    "title": "束ねて、考える",
+    "section": "4系統の視線を実物で確かめる",
+    "text": "4系統の視線を実物で確かめる\n\n訓練済みの完成品（最終回までに組む自作GPT）で、1つのブロックの4ヘッドを並べて見る。\n\n\n\n上の文字をクリックして、4色の弧（ヘッドごとの視線）が別々の場所へ飛ぶ瞬間を探す\n4枚の視線の表それぞれに係の名前を付ける（例：「◯◯を見る係」）\nプリセットをもう1つの文に切り替えて、係の分担が変わらないことを確認\n\n\n\n\n\n\n\nノート\n\n\nどの係になるかは誰も指示していない — 損失を下げる過程で、4本が勝手に分業した。\n\n\n\nエクスプローラを別タブで開く"
+  },
+  {
     "objectID": "multihead-ffn.html#集めたら考える-ffn",
     "href": "multihead-ffn.html#集めたら考える-ffn",
     "title": "束ねて、考える",
     "section": "集めたら、考える — FFN",
     "text": "集めたら、考える — FFN\n\n\n注意は他の文字から情報を集める部品。集めた情報を加工する場所がまだない\n各位置ごとに、小さな2層ネット（線形 → ReLU → 線形）を通す\n\n\nclass FeedForward(nn.Module):\n    def __init__(self, n_embd):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(n_embd, 4 * n_embd),   # いったん4倍に広げて\n            nn.ReLU(),                       # 折って\n            nn.Linear(4 * n_embd, n_embd))   # 戻す\n\n    def forward(self, x):\n        return self.net(x)\n\n\n\n注意＝会議で情報を集める、FFN＝自分の席に戻って考える。この交互が Transformer のリズム\nFFN は位置ごとに独立（隣を見ない）— 見る仕事は注意に任せてある"
+  },
+  {
+    "objectID": "multihead-ffn.html#なぜいったん4倍に広げるのか",
+    "href": "multihead-ffn.html#なぜいったん4倍に広げるのか",
+    "title": "束ねて、考える",
+    "section": "なぜ、いったん4倍に広げるのか",
+    "text": "なぜ、いったん4倍に広げるのか\n\n\nFFN の中身は 96 → 384 → 96。広げて、折って、戻す\n折り紙の勘定（窓を広げるの回でやった折れ線細工）：ReLU の折り目は中間の幅のぶんだけ作れる — 1位置あたり384本\n入口と同じ幅のままだと折り目96本 — 「考える広間」は入口より広く取るのが定石で、4倍は GPT の定番（GPT-2 も GPT-3 も 4×）\n\n\n\n\n\n\n\nノート\n\n\nFFN はパラメータの大食らいでもある：\\(96 \\times 384 \\times 2 \\approx 74{,}000\\) 個/ブロック — マルチヘッド注意（約37,000個）の2倍。 Transformer の「考える」は、見た目より物量で支えられている。"
   },
   {
     "objectID": "multihead-ffn.html#tweak-頭数で遊ぶ",
@@ -1286,846 +1601,6 @@
     "title": "束ねて、考える",
     "section": "解答例",
     "text": "解答例\n\n\n\n解答例を見る\n# 問題1: 各ヘッド (2, 10, 24) → cat (2, 10, 96) → proj (2, 10, 96)\ntorch.manual_seed(0)\nmh2 = MultiHead(n_embd=96, n_head=4, block_size=64)\nx = torch.randn(2, 10, 96)\nouts = [h(x) for h in mh2.heads]\ncat = torch.cat(outs, dim=-1)\nprint(outs[0].shape, cat.shape, mh2.proj(cat).shape)\n\n# 問題2\nper_head = 3 * 96 * 24            # q・k・v の行列（バイアスなし）\nproj = 96 * 96 + 96               # 混ぜ直しの行列＋バイアス\ntotal = 4 * per_head + proj\nprint(\"手計算:\", total)\nprint(\"実測  :\", sum(p.numel() for p in mh2.parameters()))\n\n\ntorch.Size([2, 10, 24]) torch.Size([2, 10, 96]) torch.Size([2, 10, 96])\n手計算: 36960\n実測  : 36960\n\n\n\nヘッド4本で27,648個、proj が9,312個 — 「視線の複線化」は意外と安い買い物（GPT 全体82万個の中では脇役）"
-  },
-  {
-    "objectID": "sampling.html#前回の振り返り",
-    "href": "sampling.html#前回の振り返り",
-    "title": "生成を操る",
-    "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n訓練済みの重み（ckpt_best.pt）を手に入れ、文章が生成できるようになった\nモデルの出力は確率分布 — 生成の自由度は「その分布からどう引くか」に集約される\n今日は引き方のツマミを2つ握る。まずは準備：\n\n\nimport torch\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\n\ngpt.py と ckpt_best.pt は前回と同じ配置で"
-  },
-  {
-    "objectID": "sampling.html#実験毎回1位だけを選んだら",
-    "href": "sampling.html#実験毎回1位だけを選んだら",
-    "title": "生成を操る",
-    "section": "実験：毎回1位だけを選んだら",
-    "text": "実験：毎回1位だけを選んだら\n\n\n「一番ありそうな文字を選び続ける」のが最強に思える。バイグラムの Tweak で見た argmax 作戦\n\n\ndef gen(prompt, n, temperature=1.0, top_k=None, seed=0):\n    torch.manual_seed(seed)\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    out = model.generate(idx, n, temperature=temperature, top_k=top_k)\n    return \"\".join(chars[i] for i in out[0].tolist())\n\nprint(gen(\"吾輩は\", 60, top_k=1))     # top_k=1 ＝ 常に1位だけ\n\n吾輩はこの猫のごとく、主人の頭をあらわしている。\n「それでも構わんやい」と主人は少々ぷんぷんぷんぷんぷんしている。\n「それでも\n\n\n\n「少々ぷんぷんぷんぷんぷんしている」 — 堂々巡りに落ちた\n常に最有力の道だけを歩くと、同じ角を回り続ける。しかもシードを変えても毎回同じ文"
-  },
-  {
-    "objectID": "sampling.html#ツマミ1temperature",
-    "href": "sampling.html#ツマミ1temperature",
-    "title": "生成を操る",
-    "section": "ツマミ1：temperature",
-    "text": "ツマミ1：temperature\n\n\nsoftmax の前に、スコアを \\(T\\) で割る — たったこれだけ\n\n\\[\n\\text{probs} = \\mathrm{softmax}\\!\\left(\\frac{\\text{logits}}{T}\\right)\n\\]\n\n\\(T &lt; 1\\)：スコア差が拡大 → 分布が尖る（1位に集中、無難）\n\\(T &gt; 1\\)：スコア差が縮小 → 分布が平らになる（番狂わせが増える、危険）\n\\(T \\to 0\\)：ほぼ argmax。\\(T = 1\\)：モデルの分布そのまま\n\n\n\n\n\n\n\n\n\n\n\n同じモデル・同じ入力でも、\\(T\\) だけで「こ」の確率が 72% ⇄ 16% ⇄ 2% と変わる"
-  },
-  {
-    "objectID": "sampling.html#聞き比べt-0.2-0.8-2.0",
-    "href": "sampling.html#聞き比べt-0.2-0.8-2.0",
-    "title": "生成を操る",
-    "section": "聞き比べ：T = 0.2 / 0.8 / 2.0",
-    "text": "聞き比べ：T = 0.2 / 0.8 / 2.0\n\n\nfor T in [0.2, 0.8, 2.0]:\n    print(f\"--- T = {T} ---\")\n    print(gen(\"吾輩は\", 80, temperature=T), \"\\n\")\n\n--- T = 0.2 ---\n吾輩はこの猫を捉まっている。\n　主人は「それでもいい、そんなになっても、あなたのです」と主人は少々焦れる。\n「それではないか」と主人は「そんな事はないから、そんなに利 \n\n--- T = 0.8 ---\n吾輩はあるまいと思うくらいならよりほかには元来主人のみを反対の穴があって、吾輩の頭をあつかない。それはこの事なら、何しかしこまでも同じ事を悟ってはいっしゃるまい。また \n\n--- T = 2.0 ---\n吾輩は登ぱり何音野株か知るシ囃通り数が奇秘をも刑い台み掻…死絽を溜ごし嘔算吾私製霞如世一来出で』裁めて爆面引る前将見田置し日武捐虞だ、飴ん悟り激纏珍騒振る所以早顔心で \n\n\n\n\nT=0.2：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）\nT=0.8：ほどよく揺れて、いちばん「漱石風」\nT=2.0：漢字の豪雨 — 分布の尻尾にいたレア文字が当選しまくる"
-  },
-  {
-    "objectID": "sampling.html#ツマミ2top-k-尻尾を切る安全網",
-    "href": "sampling.html#ツマミ2top-k-尻尾を切る安全網",
-    "title": "生成を操る",
-    "section": "ツマミ2：top-k — 尻尾を切る安全網",
-    "text": "ツマミ2：top-k — 尻尾を切る安全網\n\n\n\\(T\\) を上げたいが暴走は困る → 上位 \\(k\\) 文字だけ残して、あとは \\(-\\infty\\) にしてから抽選\n\n\n\n\n\n\n\n\n\n\n\n票を \\(-\\infty\\) で消す — 因果マスクと同じ手口（softmax の前に消すのが作法）\n\n\nprint(gen(\"吾輩は\", 80, temperature=2.0, top_k=40))\n\n吾輩はあるま品分に、かいるはずよりほといものも近い猫とし得るのを忘れしきりを捉まってあたかなかって見ましまか」\n「ハハハハヴ」と念だ、細君もま時はよこはどっち構ってさ\n\n\n\n同じ T=2.0 でも、尻尾の3,005文字が消えるだけで「日本語の音」に戻ってくる\ngpt.py の generate はこの2ツマミ込みで書いてある：\n\nlogits = logits / temperature                      # ツマミ1\nif top_k is not None:\n    v, _ = torch.topk(logits, top_k)\n    logits[logits &lt; v[:, [-1]]] = float(\"-inf\")    # ツマミ2（尻尾を消す）\nprobs = F.softmax(logits, dim=-1)\nnxt = torch.multinomial(probs, num_samples=1)      # サイコロ"
-  },
-  {
-    "objectID": "sampling.html#実物も同じツマミで動いている",
-    "href": "sampling.html#実物も同じツマミで動いている",
-    "title": "生成を操る",
-    "section": "実物も同じツマミで動いている",
-    "text": "実物も同じツマミで動いている\n\n\n\n\n自作GPT\nChatGPT など実物の API\n\n\n\n\ntemperature=0.8\ntemperature（同じ意味・同じ数式）\n\n\ntop_k=40\ntop_k / top_p（前のスライドの2種類の尻尾切り）\n\n\nseed=7 で再現\nseed 指定（対応するAPIもある）\n\n\n\n\n「AIの回答は毎回違う」の正体は、このサイコロ\n同じ質問に違う答えが返るのは故障ではなく、\\(T &gt; 0\\) の仕様"
-  },
-  {
-    "objectID": "sampling.html#tweak-ツマミを回しまくる",
-    "href": "sampling.html#tweak-ツマミを回しまくる",
-    "title": "生成を操る",
-    "section": "Tweak ツマミを回しまくる",
-    "text": "Tweak ツマミを回しまくる\n\n\ngen を好きに呼んで実験（実行のたびに seed を変えると別の文が出る）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\ntemperature=0.5 と 1.5 のあいだを刻む\n自分の耳で「ちょうどいい温度」を探す\n\n\ntop_k=3 で temperature=1.0\n安全網がきつすぎると何の刑に近づく？\n\n\ngen(\"名前はまだ\", 80, 0.8)\n書き出しで話題を誘導できるか試す\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\ntop_k を小さくしすぎると argmax の「堂々巡り」に近づく — 2つのツマミは同じ「無難⇄暴走」軸を別の方法で動かしている"
-  },
-  {
-    "objectID": "sampling.html#まとめ",
-    "href": "sampling.html#まとめ",
-    "title": "生成を操る",
-    "section": "まとめ",
-    "text": "まとめ\n\n\n生成のツマミは2つ：temperature（分布を尖らせる/平らにする）と top-k（尻尾を切る）。実物にはもう1つ top-p（合計で切る可変枠）\nargmax（top_k=1）は堂々巡り、T が高すぎると漢字の豪雨 — 良い文はそのあいだにある\n実装は「割る」「-∞で消す」「サイコロ」の3行。ChatGPT の同名パラメータも同じ仕組み\n確率的な出力は故障ではなく仕様 — 種（シード）を固定すれば完全再現できる。今日の全セルがそうだった\n\n\n現在の設計図　書き出し → 訓練済みGPT → temperature・top-k・top-p → 次の文字\n\n\n\n\n\n\n\n\n次回予告\n\n\n自作GPTはここで完成。次回はこのモデルと ChatGPT の距離を測る — 足りないのは仕組みか、それとも量か。ついでに、LLM が堂々と嘘をつく理由も種明かしする。"
-  },
-  {
-    "objectID": "sampling.html#練習問題",
-    "href": "sampling.html#練習問題",
-    "title": "生成を操る",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：argmax の決定性\ntop_k=1 で seed=0 と seed=123 の2回生成し、出力が完全に一致することを == で確かめよ。サイコロを振っているのに同じになる理由を1行で説明せよ。\n問題2：安全網の値段\ntemperature=1.0 で top_k=5 と top_k=None の200文字を生成し、それぞれの文字の種類数（len(set(...))）を比べよ。top-k が「守ってくれるもの」と「奪うもの」を1行ずつ述べよ。"
-  },
-  {
-    "objectID": "sampling.html#解答例",
-    "href": "sampling.html#解答例",
-    "title": "生成を操る",
-    "section": "解答例",
-    "text": "解答例\n\n\n\n解答例を見る\n# 問題1\na = gen(\"吾輩は\", 60, top_k=1, seed=0)\nb = gen(\"吾輩は\", 60, top_k=1, seed=123)\nprint(\"一致:\", a == b)\n# 上位1文字しか残らないので、サイコロの目が何であれ当選者は同じ\n\n# 問題2\na = gen(\"吾輩は\", 200, temperature=1.0, top_k=5, seed=0)\nb = gen(\"吾輩は\", 200, temperature=1.0, top_k=None, seed=0)\nprint(\"top_k=5   :\", len(set(a)), \"種類\")\nprint(\"top_k=None:\", len(set(b)), \"種類\")\n# 守るもの：レア文字の事故（暴走）を防ぐ／奪うもの：語彙の多様性\n\n\n一致: True\ntop_k=5   : 67 種類\ntop_k=None: 110 種類"
-  },
-  {
-    "objectID": "tokenization.html#前回の宿題",
-    "href": "tokenization.html#前回の宿題",
-    "title": "文字を数にする",
-    "section": "前回の宿題",
-    "text": "前回の宿題\n\n\n言語モデルは「次の1文字を当てる」分類器 — ここまでは前回の話\nところで、第1コースで学習に使った材料を思い出すと……\n\nMNIST の画像：28×28 の数値（明るさ 0〜1）\n損失も勾配も、ぜんぶ数値の計算だった\n\n\n\n\n\n\n\n\n\nクイズ\n\n\n「あ」は数字ではない。ニューラルネットに「あ」をどうやって入れる？\n\n\n\n\n\n\n答えはあっけない：番号を振る。今日はそれを自分の手でやる"
-  },
-  {
-    "objectID": "tokenization.html#文章を部品に割る-トークン化",
-    "href": "tokenization.html#文章を部品に割る-トークン化",
-    "title": "文字を数にする",
-    "section": "文章を部品に割る — トークン化",
-    "text": "文章を部品に割る — トークン化\n\n\n文章をモデルに渡す単位に割ることをトークン化（tokenization）、1つ1つの部品をトークン（token）と呼ぶ\n割り方は選べる：\n\n\n\n\n割り方\n「吾輩は猫である」の例\n部品の種類\n\n\n\n\n単語ごと\n吾輩 / は / 猫 / で / ある\n数十万〜\n\n\n文字ごと\n吾 / 輩 / は / 猫 / で / あ / る\n数十〜数千\n\n\n\n\nこの講義では文字ごとで通す — 部品が少なく、仕組みがぜんぶ見える\n\n\n\n\n\n\n\nノート\n\n\nChatGPT などの実物は中間のサブワード（subword）単位を使う — この回の終わりに一目だけ見る。"
-  },
-  {
-    "objectID": "tokenization.html#材料日本の市区町村名",
-    "href": "tokenization.html#材料日本の市区町村名",
-    "title": "文字を数にする",
-    "section": "材料：日本の市区町村名",
-    "text": "材料：日本の市区町村名\n\n\nこれから数回の材料は、全国 1,747 市区町村の名前の「よみがな」\nchimei.csv をダウンロードして、作業フォルダの data/ に置く\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nprint(len(names), \"件\")\nprint(names[:5])\n\n1747 件\n['あいおいし', 'あいかわまち', 'あいさいし', 'あいしょうちょう', 'あいずみちょう']\n\n\n\n\n\n\n\n\n\n出典\n\n\n総務省「全国地方公共団体コード」より作成（政府標準利用規約）。カタカナ表記をひらがなに変換してある。"
-  },
-  {
-    "objectID": "tokenization.html#この材料で何をするか",
-    "href": "tokenization.html#この材料で何をするか",
-    "title": "文字を数にする",
-    "section": "この材料で何をするか",
-    "text": "この材料で何をするか\n\n\nゴール：この名前たちを読み込んで、実在しない「架空の市町村名」を作る機械を育てる\n名前は短い・ひらがなだけ・でも「らしさ」がある — 練習台として最高の性質\n\n\n\nどこまで「本物っぽく」なるかは、これから作るモデルの腕次第"
-  },
-  {
-    "objectID": "tokenization.html#語彙-使う文字の一覧表",
-    "href": "tokenization.html#語彙-使う文字の一覧表",
-    "title": "文字を数にする",
-    "section": "語彙 — 使う文字の一覧表",
-    "text": "語彙 — 使う文字の一覧表\n\n\nデータに出てくる文字を全部集めた集合を語彙（vocabulary）と呼ぶ\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))   # 全部つなげて、重複を消して、並べる\nprint(\"語彙サイズ:\", len(chars))\nprint(\"\".join(chars))\n\n語彙サイズ: 74\nあいうえおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろわん\n\n\n\nひらがな74種類だけ — 「ゑ」も「ー」も地名には出てこない\n語彙の1文字1文字に、この並び順で番号を振る"
-  },
-  {
-    "objectID": "tokenization.html#番号との対応表を作る",
-    "href": "tokenization.html#番号との対応表を作る",
-    "title": "文字を数にする",
-    "section": "番号との対応表を作る",
-    "text": "番号との対応表を作る\n\n\n文字→番号の辞書と、番号→文字のリスト。この2つで変換は両方向できる\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\n\nstoi = {c: i for i, c in enumerate(chars)}   # string to int\nitos = chars                                  # int to string（リストのまま使える）\nprint(stoi[\"あ\"], stoi[\"ん\"])\nprint(itos[0], itos[73])\n\n0 73\nあ ん\n\n\n\nstoi / itos という変数名はこの先の回でもずっと使う"
-  },
-  {
-    "objectID": "tokenization.html#encode-と-decode",
-    "href": "tokenization.html#encode-と-decode",
-    "title": "文字を数にする",
-    "section": "encode と decode",
-    "text": "encode と decode\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nitos = chars\n\ndef encode(s):\n    return [stoi[c] for c in s]\n\ndef decode(ids):\n    return \"\".join(itos[i] for i in ids)\n\nprint(encode(\"しぶや\"))\nprint(decode(encode(\"しぶや\")))\n\n[17, 48, 62]\nしぶや\n\n\n\n行って戻ってこられる（往復できる）ことが対応表の合格条件"
-  },
-  {
-    "objectID": "tokenization.html#演習往復させる",
-    "href": "tokenization.html#演習往復させる",
-    "title": "文字を数にする",
-    "section": "演習：往復させる",
-    "text": "演習：往復させる\n\n自作の encode / decode が往復できることを確かめよ。\n\nさっきのスライドのコードを .py ファイルにコピーして実行\n好きな市区町村名（ひらがな）を encode して番号列を表示\nその番号列を decode して元に戻ることを確認（== で比較した結果も表示）\n「とうきょう」のようにデータに実在しない並びでも往復できることを確認\n\n\n\n解答例を見る\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nitos = chars\n\ndef encode(s):\n    return [stoi[c] for c in s]\n\ndef decode(ids):\n    return \"\".join(itos[i] for i in ids)\n\nword = \"とうきょう\"\nids = encode(word)\nprint(ids)\nprint(decode(ids))\nprint(decode(ids) == word)   # True — 実在しない並びでも文字さえ語彙にあれば往復できる"
-  },
-  {
-    "objectID": "tokenization.html#表に無い文字が来たら",
-    "href": "tokenization.html#表に無い文字が来たら",
-    "title": "文字を数にする",
-    "section": "表に無い文字が来たら？",
-    "text": "表に無い文字が来たら？\n\n\n\n\n\n\n\n\nクイズ\n\n\nencode(\"パリ\") を実行したら何が起きる？予想してから実行。\n\n\n\n\n\n\nKeyError: 'パ' — 語彙に無い文字は変換できずにエラーで止まる\nこれは正しい挙動。だまって握りつぶすより、その場で止まって教えてくれる方がいい\n実物の LLM も同じ問題を抱えている：語彙にどんな部品を揃えるかは設計の急所"
-  },
-  {
-    "objectID": "tokenization.html#大きな文章だと語彙はどうなる",
-    "href": "tokenization.html#大きな文章だと語彙はどうなる",
-    "title": "文字を数にする",
-    "section": "大きな文章だと語彙はどうなる？",
-    "text": "大きな文章だと語彙はどうなる？\n\n\n最終回に使う材料も、ここで一目だけ：夏目漱石『吾輩は猫である』全文\nneko.txt をダウンロードして data/ に置く\n\n\n\n\n\n\n\n\nクイズ\n\n\n『吾輩は猫である』全文（約32万字）に出てくる文字は何種類？ ひらがな＋カタカナで約170、そこに漢字が乗る。1000？ 2000？\n\n\n\n\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nprint(\"総文字数:\", len(text))\nprint(\"語彙サイズ:\", len(set(text)))\n\n\n\n総文字数: 321139\n語彙サイズ: 3045\n\n\n\n\n3,000超 — 日本語の文字レベル言語モデルは、この大語彙と戦うことになる\n\n\n\n\n\n\n\n\n\n出典\n\n\n青空文庫『吾輩は猫である』（著作権消滅済み）。ルビ・注記を除去したテキスト。"
-  },
-  {
-    "objectID": "tokenization.html#語彙サイズ比較",
-    "href": "tokenization.html#語彙サイズ比較",
-    "title": "文字を数にする",
-    "section": "語彙サイズ比較",
-    "text": "語彙サイズ比較\n\n\n\n\n\n\n\n\n\n\n\n同じ「日本語」でも、材料しだいで語彙は40倍違う\n語彙が大きい＝分類の選択肢が多い＝当てるのが難しい。まずは74択の地名から"
-  },
-  {
-    "objectID": "tokenization.html#まとめ",
-    "href": "tokenization.html#まとめ",
-    "title": "文字を数にする",
-    "section": "まとめ",
-    "text": "まとめ\n\n\nことばを数にする手順：トークン化（文字ごとに割る）→ 語彙（文字一覧）→ 番号の対応表\nstoi / itos / encode / decode — この4点セットはこの講義の全域で使い回す\n語彙に無い文字はエラー — 実物はバイトまで割って逃がす。地名は74種類、『猫』は3,000超、実物のサブワードは数万\n\n\n現在の設計図　文章 → 文字に分割 → 番号 → モデル → 番号 → 文字\n\n\n\n\n\n\n\n\n次回予告\n\n\n数になったので、いよいよ「次の1文字を当てる」が始められる。 最初のモデルは学習すらしない — 数えるだけ。それでも名前が作れてしまう。"
-  },
-  {
-    "objectID": "tokenization.html#練習問題",
-    "href": "tokenization.html#練習問題",
-    "title": "文字を数にする",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：一番よく使われる文字\n地名データ全体（1,747件をつなげた文字列）で、登場回数の多い文字トップ5を回数つきで表示せよ。\n\nchimei.csv を読み込み、\"\".join(...) で1本の文字列に\n各文字の回数を辞書で数える（collections.Counter を使ってもよい）\n多い順に並べてトップ5を表示\n\n問題2：使われていないひらがな\n五十音の基本46文字（\"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん\"）のうち、地名のよみに1度も使われていない文字をすべて表示せよ。\n問題3：秘密のメッセージ\n本編の対応表（stoi / itos）で、次の番号列を decode せよ。\n[66, 59, 25, 67, 14, 2, 5, 9, 30, 8, 41, 56, 27, 40, 36, 56, 3, 26]\n読めたら、その文はこの講義の次回予告になっている。"
-  },
-  {
-    "objectID": "tokenization.html#解答例",
-    "href": "tokenization.html#解答例",
-    "title": "文字を数にする",
-    "section": "解答例",
-    "text": "解答例\n\n\n\n解答例を見る\nfrom collections import Counter\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nall_text = \"\".join(names)\n\n# 問題1\ncounts = Counter(all_text)\nfor c, n in counts.most_common(5):\n    print(c, n)\n\n# 問題2\ngojuon = \"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん\"\nunused = [c for c in gojuon if c not in counts]\nprint(\"未使用:\", unused)\n\n# 問題3\nchars = sorted(set(all_text))\nids = [66, 59, 25, 67, 14, 2, 5, 9, 30, 8, 41, 56, 27, 40, 36, 56, 3, 26]\nprint(\"\".join(chars[i] for i in ids))\n\n\nし 1116\nち 860\nう 730\nま 593\nょ 514\n未使用: ['を']\nよめたらごうかくつぎはまちのなまえだ"
-  },
-  {
-    "objectID": "attention-qkv.html#本物の視線を先取りで覗く",
-    "href": "attention-qkv.html#本物の視線を先取りで覗く",
-    "title": "Q・K・V を開ける",
-    "section": "本物の視線を先取りで覗く",
-    "text": "本物の視線を先取りで覗く\n\nこの講義の最終形 —『吾輩は猫である』で訓練済みの自作GPT — の「視線の表」を、今日の道具だけで読んでみる。\n\n\n\n上の文字をクリックして、弧（＝その場所の視線）の飛び先を観察\nこの head 1 が「何を見る係」なのか、ひとことで言語化\n左の head 0・head 3 のサムネイルをクリックして、係の違いを確認（q・k・v の3枚のヒートマップも本物）\n\n\n\n\n\n\n\n\n気づいてしまった人へ\n\n\n視線の表の右上半分がきれいに空になっている。今日の式 \\(\\mathrm{softmax}(QK^\\top/\\sqrt{d})\\,V\\) のままでは、こうはならないはず — なぜか。次回の主役。\n\n\n\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "multihead-ffn.html#系統の視線を実物で確かめる",
-    "href": "multihead-ffn.html#系統の視線を実物で確かめる",
-    "title": "束ねて、考える",
-    "section": "4系統の視線を実物で確かめる",
-    "text": "4系統の視線を実物で確かめる\n\n訓練済みの完成品（最終回までに組む自作GPT）で、1つのブロックの4ヘッドを並べて見る。\n\n\n\n上の文字をクリックして、4色の弧（ヘッドごとの視線）が別々の場所へ飛ぶ瞬間を探す\n4枚の視線の表それぞれに係の名前を付ける（例：「◯◯を見る係」）\nプリセットをもう1つの文に切り替えて、係の分担が変わらないことを確認\n\n\n\n\n\n\n\nノート\n\n\nどの係になるかは誰も指示していない — 損失を下げる過程で、4本が勝手に分業した。\n\n\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "transformer-block.html#全身を歩く-うちの子",
-    "href": "transformer-block.html#全身を歩く-うちの子",
-    "title": "深く積む",
-    "section": "全身を歩く — うちの子",
-    "text": "全身を歩く — うちの子\n\nいま組んだ GPT クラスの中身を、訓練済みの実重みで上から下まで歩く。\n\n\n\n左の箱を入力から順にクリックして、各部品の出力（ヒートマップ）を眺める\n「＋ 残差」の前後でヒートマップの模様が大きくは変わらないことを確認 — 迂回路の実感\n各箱が今日の GPT クラスのどの行にあたるか、コードと突き合わせる\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "attention-qkv.html#前回の振り返り-1",
-    "href": "attention-qkv.html#前回の振り返り-1",
-    "title": "順序とカンニング",
-    "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n言語モデル用の注意ヘッドが完成した：位置埋め込み＋因果マスク付きの Head\nでも、このヘッド1本ではまだ GPT は組めない。足りないものが2つ：\n\n\n\n\n\n\n\n\nクイズ\n\n\n「」の対応を見る視線と、直前の文字を見る視線 — 1枚の「視線の表」で両方いっぺんにできるか？\n\n\n\n\n\n\nできない。1枚の表は視線の配分1通りしか持てない — 今日の部品1つ目は視線の複線化"
-  },
-  {
-    "objectID": "attention-qkv.html#文まとめて-バッチの軸",
-    "href": "attention-qkv.html#文まとめて-バッチの軸",
-    "title": "順序とカンニング",
-    "section": "32文まとめて — バッチの軸",
-    "text": "32文まとめて — バッチの軸\n\n\nミニバッチで学習するので、今日から入力は複数の文をまとめた3次元：（バッチ, 文字数, 次元）\n\n#| echo: true\nimport torch\n\nx = torch.randn(32, 5, 8)              # 32文・5文字・8次元\nprint(x.transpose(-2, -1).shape)       # 後ろ2軸だけ入れ替わる\n\n部品側の変更は1点だけ：転置を k.T でなく k.transpose(-2, -1)（最後の2軸だけ入れ替え）と書く\n行列積 @ も後ろ2軸で走り、バッチの軸は素通し — 32文ぶんの視線の表が一撃で32枚できる"
-  },
-  {
-    "objectID": "attention-qkv.html#ヘッドをバッチ対応にする",
-    "href": "attention-qkv.html#ヘッドをバッチ対応にする",
-    "title": "順序とカンニング",
-    "section": "ヘッドをバッチ対応にする",
-    "text": "ヘッドをバッチ対応にする\n\n#| echo: true\nimport math\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Head(nn.Module):\n    def __init__(self, n_embd, head_size, block_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)\n        self.key = nn.Linear(n_embd, head_size, bias=False)\n        self.value = nn.Linear(n_embd, head_size, bias=False)\n        self.register_buffer(\"tril\", torch.tril(torch.ones(block_size, block_size)))\n\n    def forward(self, x):\n        B, T, C = x.shape\n        q, k = self.query(x), self.key(x)\n        w = q @ k.transpose(-2, -1) / math.sqrt(k.shape[-1])\n        w = w.masked_fill(self.tril[:T, :T] == 0, float(\"-inf\"))\n        w = F.softmax(w, dim=-1)\n        return w @ self.value(x)\n\ntorch.manual_seed(0)\nhead = Head(n_embd=96, head_size=24, block_size=64)\nprint(head(torch.randn(2, 10, 96)).shape)\n\n前回のクラスと違うのは B, T, C = x.shape と transpose(-2, -1) の2行だけ。仕組みは同じ"
-  },
-  {
-    "objectID": "attention-qkv.html#視線は1系統では足りない",
-    "href": "attention-qkv.html#視線は1系統では足りない",
-    "title": "順序とカンニング",
-    "section": "視線は1系統では足りない",
-    "text": "視線は1系統では足りない\n\n\nヘッド1本＝視線の表1枚。でも読むときの視線は1種類ではない\n\n「直前の文字」を見る視線、「文の主語」を見る視線、「開きカッコ」を見る視線……\n\n解決は力技：同じ仕組みを並列に何本も走らせて、結果を横につなぐ\n\n\n\nどのヘッドがどんな係になるかは決め打ちしない — 学習が勝手に分業を育てる（訓練回に実物の視線で確かめる）"
-  },
-  {
-    "objectID": "attention-qkv.html#peek-multihead",
-    "href": "attention-qkv.html#peek-multihead",
-    "title": "順序とカンニング",
-    "section": "マルチヘッド注意",
-    "text": "マルチヘッド注意\n\n#| echo: true\nclass MultiHead(nn.Module):\n    def __init__(self, n_embd, n_head, block_size):\n        super().__init__()\n        head_size = n_embd // n_head          # 幅を等分して合計は元どおり\n        self.heads = nn.ModuleList(\n            Head(n_embd, head_size, block_size) for _ in range(n_head))\n        self.proj = nn.Linear(n_embd, n_embd)  # つないだ結果を混ぜ直す\n\n    def forward(self, x):\n        return self.proj(torch.cat([h(x) for h in self.heads], dim=-1))\n\ntorch.manual_seed(0)\nmh = MultiHead(n_embd=96, n_head=4, block_size=64)\nx = torch.randn(2, 8, 96)\nprint(mh(x).shape)                             # 入口と同じ (2, 8, 96)\n\nマルチヘッド注意（multi-head attention）。新しい数学はゼロ — cat して Linear 1枚\n幅96を4等分（head_size 24）して並走 → つなぐと幅96に戻る。入口と出口が同じ形"
-  },
-  {
-    "objectID": "attention-qkv.html#系統の視線を実物で確かめる",
-    "href": "attention-qkv.html#系統の視線を実物で確かめる",
-    "title": "順序とカンニング",
-    "section": "4系統の視線を実物で確かめる",
-    "text": "4系統の視線を実物で確かめる\n\n訓練済みの完成品（最終回までに組む自作GPT）で、1つのブロックの4ヘッドを並べて見る。\n\n\n\n上の文字をクリックして、4色の弧（ヘッドごとの視線）が別々の場所へ飛ぶ瞬間を探す\n4枚の視線の表それぞれに係の名前を付ける（例：「◯◯を見る係」）\nプリセットをもう1つの文に切り替えて、係の分担が変わらないことを確認\n\n\n\n\n\n\n\nノート\n\n\nどの係になるかは誰も指示していない — 損失を下げる過程で、4本が勝手に分業した。\n\n\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "attention-qkv.html#集めたら考える-ffn",
-    "href": "attention-qkv.html#集めたら考える-ffn",
-    "title": "順序とカンニング",
-    "section": "集めたら、考える — FFN",
-    "text": "集めたら、考える — FFN\n\n\n注意は他の文字から情報を集める部品。集めた情報を加工する場所がまだない\n各位置ごとに、小さな2層ネット（線形 → ReLU → 線形）を通す\n\n#| echo: true\nclass FeedForward(nn.Module):\n    def __init__(self, n_embd):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(n_embd, 4 * n_embd),   # いったん4倍に広げて\n            nn.ReLU(),                       # 折って\n            nn.Linear(4 * n_embd, n_embd))   # 戻す\n\n    def forward(self, x):\n        return self.net(x)\n\n注意＝会議で情報を集める、FFN＝自分の席に戻って考える。この交互が Transformer のリズム\nFFN は位置ごとに独立（隣を見ない）— 見る仕事は注意に任せてある"
-  },
-  {
-    "objectID": "attention-qkv.html#tweak-頭数で遊ぶ",
-    "href": "attention-qkv.html#tweak-頭数で遊ぶ",
-    "title": "順序とカンニング",
-    "section": "Tweak 頭数で遊ぶ",
-    "text": "Tweak 頭数で遊ぶ\n\n\nマルチヘッドのコード を書き換えて実行（訓練はしないので一瞬）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\nn_head=4 → 2 や 8\nhead_size はいくつになる？ 出力の形が変わらないことを確認\n\n\nn_head=4 → 5\nエラーで止まる。メッセージを読んで原因を言語化\n\n\nself.proj(...) → torch.cat(...) をそのまま返す\n形は同じ。では proj は何のためにある？\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\nn_head=5 は 16x95 と 96x96 は掛けられない と怒られる — head_size = 96÷5 = 19（切り捨て）で、5本つないでも幅95にしかならないから。n_embd は n_head で割り切れる値にするのが約束\nproj を外しても形は通る。だが cat 直後は「ヘッド4本の答えが並んでいるだけ」— ヘッドをまたいで混ぜ直すのが proj の仕事"
-  },
-  {
-    "objectID": "attention-qkv.html#まとめ-1",
-    "href": "attention-qkv.html#まとめ-1",
-    "title": "順序とカンニング",
-    "section": "まとめ",
-    "text": "まとめ\n\n\n入力にバッチの軸が付いた：（バッチ, 文字数, 次元）。部品の変更は transpose(-2, -1) だけ\nマルチヘッド＝ヘッドを並列に走らせて cat → Linear。視線が複数系統になり、係の分業は学習が育てる\nFFN＝集めた情報を位置ごとに考える2層ネット。「会議」と「自習」の交互\nどちらも入口と出口が同じ形 — 次はこれを積み重ねる番\n\n\n\n\n\n\n\n\n次回予告\n\n\n部品はそろった。だが素朴に8段積むと、勾配が入口に届かず消える。 深く積むための保険2つを付けて、GPT の全身を組み上げる。"
-  },
-  {
-    "objectID": "attention-qkv.html#練習問題-1",
-    "href": "attention-qkv.html#練習問題-1",
-    "title": "順序とカンニング",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：形を追いかける\nMultiHead(n_embd=96, n_head=4, block_size=64) に torch.randn(2, 10, 96) を入れたとき、次の形を先に紙で予想してから検算せよ。\n\n各ヘッドの出力（h(x) 1本ぶん）\ntorch.cat([...], dim=-1) の直後\nproj を通った最終出力\n\nforward に print を差し込んで確認すること。\n問題2：パラメータの勘定\nMultiHead(n_embd=96, n_head=4, block_size=64) のパラメータ総数を手で計算してから、sum(p.numel() for p in mh.parameters()) と一致させよ。\n\nヘッド1本：query・key・value（各 96×24、バイアスなし）\nヘッド4本ぶんに proj（96×96＋バイアス96）を足す\n合計をコードと突き合わせ（ズレたらどの部品を数え忘れたか探す）"
-  },
-  {
-    "objectID": "attention-qkv.html#解答例-1",
-    "href": "attention-qkv.html#解答例-1",
-    "title": "順序とカンニング",
-    "section": "解答例",
-    "text": "解答例\n\n#| echo: true\n#| code-fold: true\n#| code-summary: \"解答例を見る\"\n# 問題1: 各ヘッド (2, 10, 24) → cat (2, 10, 96) → proj (2, 10, 96)\ntorch.manual_seed(0)\nmh2 = MultiHead(n_embd=96, n_head=4, block_size=64)\nx = torch.randn(2, 10, 96)\nouts = [h(x) for h in mh2.heads]\ncat = torch.cat(outs, dim=-1)\nprint(outs[0].shape, cat.shape, mh2.proj(cat).shape)\n\n# 問題2\nper_head = 3 * 96 * 24            # q・k・v の行列（バイアスなし）\nproj = 96 * 96 + 96               # 混ぜ直しの行列＋バイアス\ntotal = 4 * per_head + proj\nprint(\"手計算:\", total)\nprint(\"実測  :\", sum(p.numel() for p in mh2.parameters()))\n\nヘッド4本で27,648個、proj が9,312個 — 「視線の複線化」は意外と安い買い物（GPT 全体82万個の中では脇役）"
-  },
-  {
-    "objectID": "attention-qkv.html#前回の振り返り-2",
-    "href": "attention-qkv.html#前回の振り返り-2",
-    "title": "順序とカンニング",
-    "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\nマルチヘッド注意（会議で集める）と FFN（席に戻って考える）ができた\nどちらも入口と出口が同じ形 — 理屈の上では、いくらでも積み重ねられる\n\n\n\n\n\n\n\n\nクイズ\n\n\n同じ形だから8段でも96段でも積める。では素朴に積めば、積んだぶんだけ賢くなる？\n\n\n\n\n\n\nならない。深さには税金が2つ：勾配が入口まで届かない／途中のベクトルの大きさが暴れる\n今日はこの2つに保険をかけてから、GPT の全身を組む"
-  },
-  {
-    "objectID": "attention-qkv.html#前回の部品を持ってくる",
-    "href": "attention-qkv.html#前回の部品を持ってくる",
-    "title": "順序とカンニング",
-    "section": "前回の部品を持ってくる",
-    "text": "前回の部品を持ってくる\n\n\n今日のコードは前回の Head・MultiHead・FeedForward の続き。自分のファイルの続きに書くか、下をコピーして先頭に置く\n\n#| echo: true\n#| code-fold: true\n#| code-summary: \"前回の部品（Head / MultiHead / FeedForward）\"\nimport math\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Head(nn.Module):\n    def __init__(self, n_embd, head_size, block_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)\n        self.key = nn.Linear(n_embd, head_size, bias=False)\n        self.value = nn.Linear(n_embd, head_size, bias=False)\n        self.register_buffer(\"tril\", torch.tril(torch.ones(block_size, block_size)))\n\n    def forward(self, x):\n        B, T, C = x.shape\n        q, k = self.query(x), self.key(x)\n        w = q @ k.transpose(-2, -1) / math.sqrt(k.shape[-1])\n        w = w.masked_fill(self.tril[:T, :T] == 0, float(\"-inf\"))\n        w = F.softmax(w, dim=-1)\n        return w @ self.value(x)\n\nclass MultiHead(nn.Module):\n    def __init__(self, n_embd, n_head, block_size):\n        super().__init__()\n        head_size = n_embd // n_head\n        self.heads = nn.ModuleList(\n            Head(n_embd, head_size, block_size) for _ in range(n_head))\n        self.proj = nn.Linear(n_embd, n_embd)\n\n    def forward(self, x):\n        return self.proj(torch.cat([h(x) for h in self.heads], dim=-1))\n\nclass FeedForward(nn.Module):\n    def __init__(self, n_embd):\n        super().__init__()\n        self.net = nn.Sequential(\n            nn.Linear(n_embd, 4 * n_embd), nn.ReLU(), nn.Linear(4 * n_embd, n_embd))\n\n    def forward(self, x):\n        return self.net(x)"
-  },
-  {
-    "objectID": "attention-qkv.html#peek-backprop",
-    "href": "attention-qkv.html#peek-backprop",
-    "title": "順序とカンニング",
-    "section": "バックプロパゲーションを30秒で",
-    "text": "バックプロパゲーションを30秒で\n\n\n学習に必要なのは「各パラメータを動かすと損失がどう動くか」＝勾配。loss.backward() が自動で出してくれるやつ\n深いネットは変換の連なり。勾配は、通り道にある傾きの掛け算で入口まで運ばれる（連鎖律 chain rule）\n\n\\[\n\\text{入口に届く勾配} = (\\text{部品Cの傾き}) \\times (\\text{部品Bの傾き}) \\times (\\text{部品Aの傾き})\n\\]\n\n例：どの部品も傾きが 0.5 なら、3段で \\(0.5^3 = 0.125\\)、10段で \\(0.5^{10} \\approx 0.001\\)\n1より小さい傾きが続くだけで、入口の勾配は千分の1に痩せる — 勾配消失。深いネットの持病"
-  },
-  {
-    "objectID": "attention-qkv.html#保険1迂回路を付ける-残差接続",
-    "href": "attention-qkv.html#保険1迂回路を付ける-残差接続",
-    "title": "順序とカンニング",
-    "section": "保険1：迂回路を付ける — 残差接続",
-    "text": "保険1：迂回路を付ける — 残差接続\n\n\n対策：部品を迂回路つきにする\n\n\\[\nx \\leftarrow x + f(x)\n\\]\n\n出力＝「元の \\(x\\)」＋「部品の仕事ぶん」。勾配は足し算の枝を素通りして入口まで届く\n残差接続（residual connection）。コードでは x + f(x) と書くだけ\n\n\n\n「積む」が「元の情報に修正を足していく」に変わる — 深くしても壊れにくい設計"
-  },
-  {
-    "objectID": "attention-qkv.html#保険2入力を揃えてから渡す-layernorm",
-    "href": "attention-qkv.html#保険2入力を揃えてから渡す-layernorm",
-    "title": "順序とカンニング",
-    "section": "保険2：入力を揃えてから渡す — LayerNorm",
-    "text": "保険2：入力を揃えてから渡す — LayerNorm\n\n\n深く積むと、途中のベクトルの大きさがバラバラに育って学習が不安定になる\n各位置のベクトルを平均0・ばらつき1に揃える部品を、各部品の直前に置く\n\n#| echo: true\nimport torch\nimport torch.nn as nn\n\ntorch.manual_seed(0)\nx = torch.randn(2, 5, 96) * 7 + 3          # 平均3・ばらつき7のベクトルたち\nln = nn.LayerNorm(96)\ny = ln(x)\nprint(f\"before: mean {x.mean():.2f} / std {x.std():.2f}\")\nprint(f\"after : mean {y.mean():.2f} / std {y.std():.2f}\")\n\nLayerNorm（layer normalization）— 「測る前に平均0・ばらつき1へ揃える」標準化の仲間（テストの素点を偏差値に直すのと同じ発想）\n揃えたあとに掛ける・足す用の小さなパラメータ（γ・β）だけ学習される"
-  },
-  {
-    "objectID": "attention-qkv.html#ブロック-transformer-の1段",
-    "href": "attention-qkv.html#ブロック-transformer-の1段",
-    "title": "順序とカンニング",
-    "section": "ブロック — Transformer の1段",
-    "text": "ブロック — Transformer の1段\n\n\n4部品を決まった順に組む。この1段をブロック（Transformer block）と呼ぶ\n\n\n\n#| echo: true\nclass Block(nn.Module):\n    def __init__(self, n_embd, n_head, block_size):\n        super().__init__()\n        self.sa = MultiHead(n_embd, n_head, block_size)\n        self.ff = FeedForward(n_embd)\n        self.ln1 = nn.LayerNorm(n_embd)\n        self.ln2 = nn.LayerNorm(n_embd)\n\n    def forward(self, x):\n        x = x + self.sa(self.ln1(x))   # 揃えて→会議→迂回路で合流\n        x = x + self.ff(self.ln2(x))   # 揃えて→考える→合流\n        return x\n\n\n\n\nブロックは入口と出口が同じ形（T×n_embd）→ いくらでも積み重ねられる"
-  },
-  {
-    "objectID": "attention-qkv.html#peek-gpt-class",
-    "href": "attention-qkv.html#peek-gpt-class",
-    "title": "順序とカンニング",
-    "section": "全身を組む — これが GPT",
-    "text": "全身を組む — これが GPT\n\n#| echo: true\nclass GPT(nn.Module):\n    def __init__(self, vocab_size, n_embd, n_head, n_layer, block_size):\n        super().__init__()\n        self.block_size = block_size\n        self.tok_emb = nn.Embedding(vocab_size, n_embd)   # 文字の埋め込み\n        self.pos_emb = nn.Embedding(block_size, n_embd)   # 位置の埋め込み\n        self.blocks = nn.Sequential(\n            *[Block(n_embd, n_head, block_size) for _ in range(n_layer)])\n        self.ln_f = nn.LayerNorm(n_embd)\n        self.head = nn.Linear(n_embd, vocab_size)         # 語彙スコアに戻す\n\n    def forward(self, idx):                               # idx: (B, T) 文字番号\n        B, T = idx.shape\n        x = self.tok_emb(idx) + self.pos_emb(torch.arange(T))\n        x = self.blocks(x)\n        return self.head(self.ln_f(x))                    # (B, T, vocab) ロジット\n\nmodel = GPT(vocab_size=3045, n_embd=96, n_head=4, n_layer=2, block_size=64)\nlogits = model(torch.randint(3045, (2, 10)))              # 2文・各10文字を試しに\nprint(logits.shape)\nprint(f\"パラメータ数: {sum(p.numel() for p in model.parameters()):,}\")\n\n入口は文字番号の列、出口は全位置ぶんの「次の1文字」スコア — バイグラムと同じ約束\n語彙3,045（『吾輩は猫である』サイズ）で約82万パラメータ"
-  },
-  {
-    "objectID": "attention-qkv.html#中身の勘定",
-    "href": "attention-qkv.html#中身の勘定",
-    "title": "順序とカンニング",
-    "section": "中身の勘定",
-    "text": "中身の勘定\n\n#| echo: true\n#| output-location: fragment\nparts = {\"埋め込み（文字+位置）\": [model.tok_emb, model.pos_emb],\n         \"ブロック×2\": [model.blocks],\n         \"仕上げの語彙スコア\": [model.head]}\nfor name, mods in parts.items():\n    n = sum(p.numel() for m in mods for p in m.parameters())\n    print(f\"{name:12s}: {n:8,d}\")\n\n\n埋め込みと語彙スコアだけで7割超。この体格で日本語3,045字と戦う\nGPT-2 も GPT-4 も、この設計図のまま各部品を大きくして積んだだけ（ブロック数十段・次元数千）"
-  },
-  {
-    "objectID": "attention-qkv.html#tweak-設計図の数字で遊ぶ",
-    "href": "attention-qkv.html#tweak-設計図の数字で遊ぶ",
-    "title": "順序とカンニング",
-    "section": "Tweak 設計図の数字で遊ぶ",
-    "text": "Tweak 設計図の数字で遊ぶ\n\n\nGPTクラスのコード の設定を変えて、形とパラメータ数を確認（訓練はしないので一瞬）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\nn_layer=2 → 8\nパラメータはどこがどれだけ増える？（内訳の勘定で確認）\n\n\nn_embd=96 → 192\n層を増やすのと次元を増やすの、効き方の違いは？\n\n\nblock_size=64 → 128\n増えるのは1部品だけ。どれ？（内訳の勘定はヒントにならない — なぜ？）\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\nblock_size を倍にして増えるのは位置の埋め込み表だけ：64×96 = 6,144 → 128×96 = 12,288。パラメータ的には安い買い物（ただし視線の表は T×T に広がるので、計算の手間は別勘定）\n内訳の勘定で pos_emb は「埋め込み」の行に混ざっている — 増分 6,144 はそこに現れる"
-  },
-  {
-    "objectID": "attention-qkv.html#全身を歩く-うちの子",
-    "href": "attention-qkv.html#全身を歩く-うちの子",
-    "title": "順序とカンニング",
-    "section": "全身を歩く — うちの子",
-    "text": "全身を歩く — うちの子\n\nいま組んだ GPT クラスの中身を、訓練済みの実重みで上から下まで歩く。\n\n\n\n左の箱を入力から順にクリックして、各部品の出力（ヒートマップ）を眺める\n「＋ 残差」の前後でヒートマップの模様が大きくは変わらないことを確認 — 迂回路の実感\n各箱が今日の GPT クラスのどの行にあたるか、コードと突き合わせる\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "attention-qkv.html#本物の中を歩く",
-    "href": "attention-qkv.html#本物の中を歩く",
-    "title": "順序とカンニング",
-    "section": "本物の中を歩く",
-    "text": "本物の中を歩く\n\n同じ設計図の実物大も歩ける。nanoGPT の中身を3Dで見られる公開デモ：\n\n\n\nうちの子の箱と対応する部品を3つ見つけて、隣の人に30秒で説明（Embedding／Attention／MLP＝FFN…）\nブラウザ内で GPT-2 を動かせる Transformer Explainer も同じ遊びができる／LLM Visualization を別タブで開く\n\n\n\n\n\n\n\nノート\n\n\nどちらのデモにも、今日までに自作していない部品は（ほぼ）出てこない。 「知らない箱」が出たら、それはたいてい名前が違うだけ — 対応表を作れたら勝ち。"
-  },
-  {
-    "objectID": "attention-qkv.html#まとめ-2",
-    "href": "attention-qkv.html#まとめ-2",
-    "title": "順序とカンニング",
-    "section": "まとめ",
-    "text": "まとめ\n\n\n深さの税金は2つ：勾配消失（傾きの掛け算で痩せる）とベクトルの暴れ\n残差＝ \\(x + f(x)\\) の迂回路で勾配を守る。LayerNorm＝部品の前でベクトルを揃える\nブロック＝「揃えて会議、揃えて自習、どちらも迂回路つき」。同じ形で積み放題\n埋め込み→ブロック×N→語彙スコアで GPT の全身が完成。語彙まわりがパラメータの7割\n\n\n\n\n\n\n\n\n次回予告\n\n\n設計図はできた。次回、『吾輩は猫である』32万字を流し込んで火を入れる。 デタラメしか言えない82万個の数が、言葉を覚えていく様子を定点観測する。"
-  },
-  {
-    "objectID": "attention-qkv.html#練習問題-2",
-    "href": "attention-qkv.html#練習問題-2",
-    "title": "順序とカンニング",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：迂回路の効果を勾配で確かめる\n残差接続の有無で入口に届く勾配がどう変わるか、ミニ実験で確かめよ。\n\nf = nn.Sequential(nn.Linear(16, 16), nn.ReLU()) を10個作り、x = torch.randn(1, 16, requires_grad=True) を用意\n残差なし（x に順に f を適用）と残差あり（x + f(x) を繰り返す）の2通りで出力の合計を backward()\nx.grad.abs().mean() を比較（残差ありの方が桁違いに大きいはず）\n\n問題2：語彙のコスト\nvocab_size を 3,045（文字レベル日本語）と 65（英語の文字レベル相当）にした GPT のパラメータ数を比べよ。差はどの部品から来るか、内訳の勘定で示せ。"
-  },
-  {
-    "objectID": "attention-qkv.html#解答例-2",
-    "href": "attention-qkv.html#解答例-2",
-    "title": "順序とカンニング",
-    "section": "解答例",
-    "text": "解答例\n\n#| echo: true\n#| code-fold: true\n#| code-summary: \"解答例を見る\"\nimport torch\nimport torch.nn as nn\n\n# 問題1\ntorch.manual_seed(0)\nlayers = [nn.Sequential(nn.Linear(16, 16), nn.ReLU()) for _ in range(10)]\n\nx1 = torch.randn(1, 16, requires_grad=True)\nh = x1\nfor f in layers:\n    h = f(h)              # 残差なし\nh.sum().backward()\n\nx2 = x1.detach().clone().requires_grad_(True)\nh = x2\nfor f in layers:\n    h = h + f(h)          # 残差あり\nh.sum().backward()\n\nprint(f\"残差なしの入口勾配: {x1.grad.abs().mean():.6f}\")\nprint(f\"残差ありの入口勾配: {x2.grad.abs().mean():.6f}\")\n\n# 問題2\nfor v in [3045, 65]:\n    m = GPT(vocab_size=v, n_embd=96, n_head=4, n_layer=2, block_size=64)\n    n_emb = m.tok_emb.weight.numel() + sum(p.numel() for p in m.head.parameters())\n    print(f\"vocab {v:5d}: 全体 {sum(p.numel() for p in m.parameters()):8,d}\"\n          f\"（うち語彙まわり {n_emb:7,d}）\")\n\n問題1：ReLU 10段の掛け算で勾配は目に見えて痩せる（30秒リキャップの \\(0.5^{10}\\) が現物で出る）。迂回路があると入口まで太いまま届く\n問題2：ブロック部分は同じなのに全体は3倍近く違う — 大語彙のコストは埋め込みと出口に集中する。実物の LLM が文字でなくサブワード（BPE）を使う理由のひとつ"
-  },
-  {
-    "objectID": "attention-qkv.html#前回の振り返り-3",
-    "href": "attention-qkv.html#前回の振り返り-3",
-    "title": "順序とカンニング",
-    "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\nGPT の全身が完成した：埋め込み → ブロック×2 → 語彙スコア。約82万パラメータ\nただし中身はまだ乱数 — 今日、『吾輩は猫である』32万字を流し込んで学習させる\n\n\n\n\n\n\n\nノート\n\n\n今日から前回組んだクラス一式を gpt.py として使う。 gpt.py をダウンロードして、自分のスクリプトと同じフォルダに置く。"
-  },
-  {
-    "objectID": "attention-qkv.html#訓練データの形-1枚で64問",
-    "href": "attention-qkv.html#訓練データの形-1枚で64問",
-    "title": "順序とカンニング",
-    "section": "訓練データの形 — 1枚で64問",
-    "text": "訓練データの形 — 1枚で64問\n\n\n文章を 64文字（block_size）ずつ切り出し、「1文字ずらし」を正解にする\n\n#| echo: false\nimport sys\n\nsys.path.append(\"tools/refimpl\")\n#| echo: true\nimport torch\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nchars = sorted(set(text))\nstoi = {c: i for i, c in enumerate(chars)}\n\ndata = torch.tensor([stoi[c] for c in text])\nn = int(len(data) * 0.9)\ntrain_data, val_data = data[:n], data[n:]    # 採点用の1割は隠しておく\n\nx = data[:8]                                  # 短い例で仕組みを見る\ny = data[1:9]\nprint(\"入力:\", \"\".join(chars[i] for i in x))\nprint(\"正解:\", \"\".join(chars[i] for i in y))\n\n入力の各位置に「その次の文字」が正解として並ぶ\n因果マスクのおかげで、64文字の1枚が「次を当てる問題」64問ぶんになる — 前回のマスクはこのための仕込みだった"
-  },
-  {
-    "objectID": "attention-qkv.html#ミニバッチを切り出す",
-    "href": "attention-qkv.html#ミニバッチを切り出す",
-    "title": "順序とカンニング",
-    "section": "ミニバッチを切り出す",
-    "text": "ミニバッチを切り出す\n\n#| echo: true\ndef get_batch(data, block_size=64, batch_size=32):\n    ix = torch.randint(len(data) - block_size - 1, (batch_size,))\n    x = torch.stack([data[i:i + block_size] for i in ix])\n    y = torch.stack([data[i + 1:i + block_size + 1] for i in ix])\n    return x, y\n\nxb, yb = get_batch(train_data)\nprint(xb.shape, yb.shape)     # (32文, 64文字) が2組\n\nランダムな一部だけで1歩、のミニバッチをここでも使う。1バッチ＝32×64＝2,048問\ntorch.stack は同じ形のテンソルを重ねて1段上の次元を作る：64文字の棒32本 → (32, 64) の板"
-  },
-  {
-    "objectID": "attention-qkv.html#peek-gpt-train",
-    "href": "attention-qkv.html#peek-gpt-train",
-    "title": "順序とカンニング",
-    "section": "火入れ — 300回だけ回してみる",
-    "text": "火入れ — 300回だけ回してみる\n\n#| echo: true\nimport torch.nn.functional as F\nfrom gpt import GPT\n\ntorch.set_num_threads(1)                     # CPUではこの方が速いことが多い\ntorch.manual_seed(42)\nmodel = GPT(vocab_size=len(chars), n_embd=96, n_head=4, n_layer=2, block_size=64)\nopt = torch.optim.AdamW(model.parameters(), lr=1e-3)\n\nfor it in range(1, 301):\n    xb, yb = get_batch(train_data)\n    opt.zero_grad()\n    logits = model(xb)                                    # (32, 64, 3045)\n    loss = F.cross_entropy(logits.view(-1, len(chars)),   # 2,048問まとめて採点\n                           yb.view(-1))\n    loss.backward()\n    opt.step()\n    if it in (1, 100, 200, 300):\n        print(f\"更新 {it:3d}回 | Loss: {loss.item():.4f}\")\n\n3拍子の学習ループは一字一句このまま — モデルが GPT になっただけ\nview(-1, V) は並べ直しだけ：(32, 64, 3045) の答案の束を「2,048行の答案リスト」にして交差エントロピーへ\n初期損失は約8.2（\\(=\\ln 3045\\)、何も知らない状態の罰点）。そこから一気に転がり落ちる"
-  },
-  {
-    "objectID": "attention-qkv.html#生成してみる-300回時点の実力",
-    "href": "attention-qkv.html#生成してみる-300回時点の実力",
-    "title": "順序とカンニング",
-    "section": "生成してみる — 300回時点の実力",
-    "text": "生成してみる — 300回時点の実力\n\n#| echo: true\n@torch.no_grad()\ndef generate(model, prompt, n):\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    for _ in range(n):\n        logits = model(idx[:, -64:])[:, -1, :]   # 見えるのは直近64文字まで\n        probs = F.softmax(logits, dim=-1)\n        idx = torch.cat([idx, torch.multinomial(probs, 1)], dim=1)\n    return \"\".join(chars[i] for i in idx[0].tolist())\n\ntorch.manual_seed(0)\nprint(generate(model, \"吾輩は\", 80))\n\n自己回帰の生成ループはバイグラムの回と同じ考え方：出た文字を入力の尻に足して繰り返す\nまだ怪しい。だがもう「日本語の音」はしはじめている — ここから先は回数の勝負"
-  },
-  {
-    "objectID": "attention-qkv.html#言葉を覚えていく定点観測",
-    "href": "attention-qkv.html#言葉を覚えていく定点観測",
-    "title": "順序とカンニング",
-    "section": "言葉を覚えていく定点観測",
-    "text": "言葉を覚えていく定点観測\n\n同じスクリプト（train_neko.py）を回し続け、節目ごとに生成させた記録：\n\n\n\n\n\n\n\n0回（乱数のまま）\n\n\n寺吹瞳麼Q次軒融亡項多忙鴻武箝未肯美汚ヘ煙促喪襟欣銷京紫胎篤銅狎撮腹杭棄羊骨絞煉果物孤葵層幣穴姿他娘誦磯持……\n\n\n\n\n\n\n\n\n\n\n\n50回 — ひらがなと句読点を発見\n\n\nだなり大ではて融んて多こょ武箝未そに汚。をるしずせ銷っの大が御や。ててて時す。な果物のとう幣てる今…い。持ののてあ師合面たでけっん……\n\n\n\n\n\n\n\n\n\n\n\n500回 — 言葉のかけらが出る\n\n\n「なりゃでは、融んだ多忙いわんです。汚ヘを促しずせている大き御やり腹の男時はなさ。物を受けると云っている。第存に待し合面白いけに区物を食え」……\n\n\n\n\n\n\n\n\n\n\n\n2,000回 — 文の形になる\n\n\n果物を受けるところだと椽側のごとく眼を面白いかに区別らしておく。群鶴館なのみなんだ。それから感心みたら君の下へはもっとよい切って行きっと正おると間違える。吾輩は……\n\n\n\n\n\n\n\n\n\n\n\n10,000回（約50分）\n\n\n「なるほどは、融突然多忙ですよ。それじゃ、私しゃボイがメンチボーの御師匠さんが、果物を一層の通り今日に至るまで遠征を入れた時改急に一生懸命になって上げなければ……\n\n\n\n\n\n文字 → かな → 単語 → 文 — 人間の子どもと同じ順番で言葉を覚えていく"
-  },
-  {
-    "objectID": "attention-qkv.html#クイズ10000回回すと何が起きる",
-    "href": "attention-qkv.html#クイズ10000回回すと何が起きる",
-    "title": "順序とカンニング",
-    "section": "クイズ：10,000回回すと何が起きる？",
-    "text": "クイズ：10,000回回すと何が起きる？\n\n\n\n\n\n\n\n\nクイズ\n\n\n損失のグラフはどうなっていると思う？ 訓練データ（見た文章）と、隠しておいた1割（初見の文章）の2本の線を想像してから、めくる。\n\n\n\n\n\n#| echo: false\nimport japanize_matplotlib\nimport matplotlib.pyplot as plt\nimport pandas as pd\n\nlog = pd.read_csv(\"data/runs/neko/loss_main.csv\")\nfig, ax = plt.subplots(figsize=(7.5, 3.9))\nax.plot(log[\"iter\"], log[\"train_loss\"], \"o-\", color=\"#5dade2\", ms=3.5, label=\"train（見た文章）\")\nax.plot(log[\"iter\"], log[\"val_loss\"], \"o-\", color=\"#e74c3c\", ms=3.5, label=\"val（初見の文章）\")\nax.axvline(2500, color=\"gray\", ls=\"--\", lw=1)\nax.annotate(\"val の底\", xy=(2500, 3.6), xytext=(4200, 4.6),\n            arrowprops=dict(arrowstyle=\"-&gt;\", color=\"#555\"))\nax.set_xlabel(\"更新回数\")\nax.set_ylabel(\"損失\")\nax.legend()\nplt.tight_layout()\nplt.show()\n\n\n\nval は2,500回あたりで底（約3.6）を打ち、その後は悪化 — train だけが下がり続ける\n32万字を10,000回で約64周も読んだ（\\(10000 \\times 2048 \\div 321139\\)）— 同じ本の読みすぎ"
-  },
-  {
-    "objectID": "attention-qkv.html#過学習最終決戦",
-    "href": "attention-qkv.html#過学習最終決戦",
-    "title": "順序とカンニング",
-    "section": "過学習、最終決戦",
-    "text": "過学習、最終決戦\n\n\n地名MLPの回とまったく同じ形（過学習）が、GPT でも出た — モデルが変わっても病気は同じ\n訓練文の細かい癖に最適化が進み、初見の文章への実力はむしろ落ちていく\n対策も同じ発想：val が底を打ったところで止めて、その時点の重みを使う（早期終了）\n\n\n\n\n\n\n\nノート\n\n\n本物の LLM はこの逆で「同じ文章を何周もしない」規模のデータを使う — データの量で過学習をねじ伏せている（この話は「ChatGPTまでの距離」の回で）。"
-  },
-  {
-    "objectID": "attention-qkv.html#訓練済みの重みを読み込む",
-    "href": "attention-qkv.html#訓練済みの重みを読み込む",
-    "title": "順序とカンニング",
-    "section": "訓練済みの重みを読み込む",
-    "text": "訓練済みの重みを読み込む\n\n\n訓練は途中の重みを保存できる。val の底で保存した配布用チェックポイントを用意した\nckpt_best.pt（3.4MB）をダウンロードして data/runs/neko/ に置く\n\n#| echo: true\nimport torch\nfrom gpt import GPT\n\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])    # 82万個の数を一括で流し込む\nmodel.eval()\n\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\ntorch.manual_seed(1)\nprint(generate(model, \"吾輩は\", 100))\n\n同じ train_neko.py を3,500回（このPCで約20分）回しただけの重み。魔法の材料はゼロ"
-  },
-  {
-    "objectID": "attention-qkv.html#育った視線を覗く",
-    "href": "attention-qkv.html#育った視線を覗く",
-    "title": "順序とカンニング",
-    "section": "育った視線を覗く",
-    "text": "育った視線を覗く\n\n\n部品を組んだときの宿題を回収する：ヘッドはどんな「係」に育ったのか\n訓練済みモデルに冒頭の一文を読ませ、層×ヘッドの視線の表を取り出して眺める\n\n#| echo: false\nimport japanize_matplotlib\nimport matplotlib.pyplot as plt\nfrom inspect_attention import attention_maps\n\nprobe = \"吾輩は猫である。名前はまだ無い。\"\nidx = torch.tensor([[stoi[c] for c in probe]])\nmaps = attention_maps(model, idx)\nT = len(probe)\n\nfig, axes = plt.subplots(1, 2, figsize=(9.8, 4.6))\nfor ax, (li, hi), title in [(axes[0], (0, 1), \"layer 0 head 1\"),\n                            (axes[1], (0, 3), \"layer 0 head 3\")]:\n    ax.imshow(maps[li][hi], cmap=\"Blues\", vmin=0, vmax=1)\n    ax.set_xticks(range(T)); ax.set_yticks(range(T))\n    ax.set_xticklabels(list(probe), fontsize=7)\n    ax.set_yticklabels(list(probe), fontsize=7)\n    ax.set_xlabel(\"見られる側\"); ax.set_ylabel(\"見る側\")\n    ax.set_title(title, fontsize=11)\nplt.tight_layout()\nplt.show()\n\n左（head 1）は副対角線1本：どの文字も直前の1文字だけを重み約99%で見る係 — バイグラムの再発明\n右（head 3）は遠くまで広く薄く見る係 — 同じ式・同じデータから、正反対の分業が勝手に育った"
-  },
-  {
-    "objectID": "attention-qkv.html#名前はまだの視線",
-    "href": "attention-qkv.html#名前はまだの視線",
-    "title": "順序とカンニング",
-    "section": "「名前はまだ」の視線",
-    "text": "「名前はまだ」の視線\n\n#| echo: false\n# reuse kernel state: maps, probe, T\nfig, ax = plt.subplots(figsize=(5.4, 4.8))\nax.imshow(maps[1][3], cmap=\"Blues\", vmin=0, vmax=1)\nax.set_xticks(range(T)); ax.set_yticks(range(T))\nax.set_xticklabels(list(probe), fontsize=7)\nax.set_yticklabels(list(probe), fontsize=7)\nax.set_xlabel(\"見られる側\"); ax.set_ylabel(\"見る側\")\nax.set_title(\"layer 1 head 3\", fontsize=11)\nplt.tight_layout()\nplt.show()\n\n「…名前はまだ→（？）」を予測する瞬間（「だ」の行）、この係の視線は「は」に41%、「名」に22%\n注目という発想の回の手計算（「まだ」から「名前」へ視線が飛ぶ）が、実物の中で本当に起きている"
-  },
-  {
-    "objectID": "attention-qkv.html#文字前のカッコを見る係",
-    "href": "attention-qkv.html#文字前のカッコを見る係",
-    "title": "順序とカンニング",
-    "section": "14文字前のカッコを見る係",
-    "text": "14文字前のカッコを見る係\n\n#| echo: false\n# reuse kernel state: attention_maps, model, stoi\nprobe2 = \"「どっちの方角へ足が向くかね」と主人は真面目な顔をして、\"\nidx2 = torch.tensor([[stoi[c] for c in probe2]])\nmaps2 = attention_maps(model, idx2)\nT2 = len(probe2)\n\nfig, ax = plt.subplots(figsize=(6.6, 6.0))\nax.imshow(maps2[1][2], cmap=\"Blues\", vmin=0, vmax=1)\nax.set_xticks(range(T2)); ax.set_yticks(range(T2))\nax.set_xticklabels(list(probe2), fontsize=6.5)\nax.set_yticklabels(list(probe2), fontsize=6.5)\nax.set_xlabel(\"見られる側\"); ax.set_ylabel(\"見る側\")\nax.set_title(\"layer 1 head 2 — 会話文を読ませたとき\", fontsize=11)\nplt.tight_layout()\nplt.show()\n\n「「」と「と」の列に縦の縞 — カッコ・引用の構造を追いかける係\n「」」の位置からは、14文字前の「「」に28%の視線。「、」からは12文字前の「と」に85%\n窓では届かない距離を、位置ではなく内容で見ている — 固定の窓を捨てて手に入れたものが、ここに写っている"
-  },
-  {
-    "objectID": "attention-qkv.html#視線と対話する-bertviz",
-    "href": "attention-qkv.html#視線と対話する-bertviz",
-    "title": "順序とカンニング",
-    "section": "視線と対話する — BertViz",
-    "text": "視線と対話する — BertViz\n\n\n静止画は1枚ずつしか見られない。BertViz というライブラリなら、トークンをなぞって全ヘッドの視線を対話的に眺められる（下の埋め込みで今すぐ試せる）\n\n\n\n#| echo: true\n#| eval: false\n#| code-fold: true\n#| code-summary: \"自分の手元で動かすコード（pip install bertviz が必要）\"\nimport torch\nfrom bertviz import head_view\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ntext = \"吾輩は猫である。名前はまだ無い。\"        # 語彙にある文字なら何でも\nidx = torch.tensor([[stoi[c] for c in text]])\n\nmaps = []                                        # 各ブロックを歩き直して視線を回収\nwith torch.no_grad():\n    x = model.tok_emb(idx) + model.pos_emb(torch.arange(idx.shape[1]))\n    for block in model.blocks:\n        h_in = block.ln1(x)\n        layer = []\n        for head in block.sa.heads:\n            q, k = head.query(h_in), head.key(h_in)\n            w = q @ k.transpose(-2, -1) / (k.shape[-1] ** 0.5)\n            w = w.masked_fill(head.tril[:idx.shape[1], :idx.shape[1]] == 0,\n                              float(\"-inf\"))\n            layer.append(torch.softmax(w, dim=-1))\n        maps.append(torch.stack(layer, dim=1))   # (1, ヘッド数, T, T)\n        x = x + block.sa(h_in)\n        x = x + block.ff(block.ln2(x))\n\nhtml = head_view(maps, list(text), html_action=\"return\")\nopen(\"attn_view.html\", \"w\", encoding=\"utf-8\").write(\n    \"&lt;html&gt;&lt;head&gt;&lt;meta charset='utf-8'&gt;&lt;/head&gt;&lt;body&gt;\" + html.data + \"&lt;/body&gt;&lt;/html&gt;\")\nprint(\"attn_view.html をブラウザで開く\")\n\n好きな文（語彙にある文字だけ）に差し替えて、お気に入りのヘッドを1つ見つけて「係の名前」を付ける — 隣の人と見つけた係を交換\n線の濃さ＝視線の重み。左の列でレイヤを切り替えられる\n\n\n\n\n\n\n\nノート\n\n\n表示には d3.js などを CDN から読むためネット接続が要る。pip install bertviz は初回のみ。"
-  },
-  {
-    "objectID": "attention-qkv.html#全部品を一望する-うちの子エクスプローラ",
-    "href": "attention-qkv.html#全部品を一望する-うちの子エクスプローラ",
-    "title": "順序とカンニング",
-    "section": "全部品を一望する — うちの子エクスプローラ",
-    "text": "全部品を一望する — うちの子エクスプローラ\n\n視線だけでなく、全部品の中身を歩ける。埋め込みから次の1文字の予想まで、ぜんぶ訓練済みの実物の数値。\n\n\n\nいま開いているのは「吾」だけ読んだ位置の予想 — 1位は「輩」71.4%（ことばの地図の回の「吾→輩」がここでも生きている）\n文字を順にクリックして、予想が文脈で変わっていく様子を歩く\n途中の部品（LayerNorm・FFN・残差）も開いて、ヒートマップの模様の移り変わりを眺める\n隣の人に、好きな部品を1つ選んで「この箱は◯◯をしている」と30秒で説明\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "attention-qkv.html#tweak-火加減を変える",
-    "href": "attention-qkv.html#tweak-火加減を変える",
-    "title": "順序とカンニング",
-    "section": "Tweak 火加減を変える",
-    "text": "Tweak 火加減を変える\n\n\n300回訓練のコード を書き換えて、生成まで続けて実行\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\nrange(1, 301) → range(1, 1001)\n3倍待つと生成文はどれだけ変わる？（時間も測ってみる）\n\n\nbatch_size=32 → 8\n1回が速くなる代わりに、Loss の下がり方はどうなる？\n\n\ngenerate(model, \"猫は\", 80)\n書き出しを変える。語彙にある文字なら何でも使える\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\n訓練を伸ばすほど良くなるのは（このサイズとデータでは）val の底まで。「長く回す＝偉い」ではないことをグラフが示している"
-  },
-  {
-    "objectID": "attention-qkv.html#まとめ-3",
-    "href": "attention-qkv.html#まとめ-3",
-    "title": "順序とカンニング",
-    "section": "まとめ",
-    "text": "まとめ\n\n\n訓練データ＝「64文字の窓」と「1文字ずらしの正解」。マスクのおかげで1枚が64問になる\n学習ループは3拍子のまま。損失 8.2（無知）→ 3.6（val の底）\n生成の定点観測：文字 → かな → 単語 → 文 の順に覚えていく\n過学習は GPT でも起きる。val を見張り、底の重みを使う（早期終了）\n育った視線は係に分かれていた：直前の1文字係・広く見る係・カッコ係 — マルチヘッドの分業は本物だった\n\n\n\n\n\n\n\n\n次回予告\n\n\n訓練済みモデルを手に入れた。次回は生成のツマミ（temperature・top-k）を握って、 「無難な文」と「壊れた文」のあいだを自由に行き来する。"
-  },
-  {
-    "objectID": "attention-qkv.html#練習問題-3",
-    "href": "attention-qkv.html#練習問題-3",
-    "title": "順序とカンニング",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：何周読んだか\nバッチ32本×64文字で10,000回更新したとき、モデルが処理した総文字数を計算し、『吾輩は猫である』（321,139字）の何周ぶんにあたるか求めよ。500回・3,500回ならそれぞれ何周か。\n問題2：チェックポイントの中身\nckpt_best.pt を読み込み、以下を表示せよ。\n\n保存されている語彙のサイズ（len(blob[\"vocab\"])）\nモデル設定（blob[\"cfg\"]）\nstate_dict の中で一番大きいパラメータの名前と形（blob[\"state_dict\"].items() を numel() で比べる）"
-  },
-  {
-    "objectID": "attention-qkv.html#解答例-3",
-    "href": "attention-qkv.html#解答例-3",
-    "title": "順序とカンニング",
-    "section": "解答例",
-    "text": "解答例\n\n#| echo: true\n#| code-fold: true\n#| code-summary: \"解答例を見る\"\nimport torch\n\n# 問題1\ncorpus = 321139\nfor iters in [500, 3500, 10000]:\n    total = iters * 32 * 64\n    print(f\"{iters:6d}回 → {total / corpus:6.1f} 周\")\n\n# 問題2\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nprint(\"語彙:\", len(blob[\"vocab\"]), \"| 設定:\", blob[\"cfg\"])\nname, p = max(blob[\"state_dict\"].items(), key=lambda kv: kv[1].numel())\nprint(\"最大のパラメータ:\", name, tuple(p.shape))\n\n問題1：3,500回でもすでに22周。データより回数が多い訓練は、いつか暗記に向かう\n問題2：最大は文字の埋め込み表（3045×96）— 実は出口の語彙スコアの行列も同じ大きさで同率1位。大語彙のコストがここでも主役"
-  },
-  {
-    "objectID": "attention-qkv.html#前回の振り返り-4",
-    "href": "attention-qkv.html#前回の振り返り-4",
-    "title": "順序とカンニング",
-    "section": "前回の振り返り",
-    "text": "前回の振り返り\n\n\n自己注意が完成した：\\(\\mathrm{softmax}(QK^\\top/\\sqrt{d})\\,V\\) — 行列積2回と softmax\n予告した「2つの大問題」を、今日は事件の再現から始める\n\n\n\n\n\n\n\n\nクイズ\n\n\n自己注意に「ねこがねず」と「こねがねず」（前4文字を並べ替え、最後は同じ）を入れる。 最後の文字の出力は変わるか？"
-  },
-  {
-    "objectID": "attention-qkv.html#事件1順番を替えても何も変わらない",
-    "href": "attention-qkv.html#事件1順番を替えても何も変わらない",
-    "title": "順序とカンニング",
-    "section": "事件1：順番を替えても何も変わらない",
-    "text": "事件1：順番を替えても何も変わらない\n\n#| echo: true\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass SelfAttention(nn.Module):                     # 前回のクラスそのまま\n    def __init__(self, n_embd, head_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)\n        self.key   = nn.Linear(n_embd, head_size, bias=False)\n        self.value = nn.Linear(n_embd, head_size, bias=False)\n\n    def forward(self, x):\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = F.softmax(q @ k.T / k.shape[-1] ** 0.5, dim=-1)\n        return w @ v\n\ntorch.manual_seed(0)\nsa = SelfAttention(n_embd=8, head_size=4)\nemb = nn.Embedding(10, 8)\n\ntokens   = torch.tensor([3, 1, 4, 1, 5])\nshuffled = torch.tensor([1, 4, 1, 3, 5])            # 前4文字を並べ替え\ndiff = (sa(emb(tokens))[-1] - sa(emb(shuffled))[-1]).abs().max()\nprint(f\"最後の文字の出力の差: {diff:.1e}\")\n\n差はほぼ0（丸め誤差だけ）。「がねこ」と「ねこが」の区別が付いていない\n原因は仕組みそのもの：重み付き平均は足し算 — 足す順番を替えても答えは同じ\n自己注意は文を「文字の集合」として見ている。日本語で順序が消えたら大惨事"
-  },
-  {
-    "objectID": "attention-qkv.html#解決1位置にも埋め込みを配る",
-    "href": "attention-qkv.html#解決1位置にも埋め込みを配る",
-    "title": "順序とカンニング",
-    "section": "解決1：位置にも埋め込みを配る",
-    "text": "解決1：位置にも埋め込みを配る\n\n\n「何文字目か」という情報も、文字と同じように埋め込みベクトルにしてしまう\n文字のベクトルに足してから自己注意に渡す\n\n\n#| echo: true\npos = nn.Embedding(16, 8)                 # 位置番号 0〜15 の埋め込み表\n\ndef with_pos(t):\n    return emb(t) + pos(torch.arange(len(t)))\n\ndiff = (sa(with_pos(tokens))[-1] - sa(with_pos(shuffled))[-1]).abs().max()\nprint(f\"位置を足した後の差: {diff:.4f}\")\n\n差が出た — 同じ「ね」でも1文字目のねと4文字目のねは別のベクトルになる\n位置の表（pos）も学習される。「位置の使い方」まで勾配降下まかせ"
-  },
-  {
-    "objectID": "attention-qkv.html#事件2訓練中の視線は未来を見ている",
-    "href": "attention-qkv.html#事件2訓練中の視線は未来を見ている",
-    "title": "順序とカンニング",
-    "section": "事件2：訓練中の視線は未来を見ている",
-    "text": "事件2：訓練中の視線は未来を見ている\n\n\n言語モデルの訓練は「各位置で次の文字を当てる」だった\nところが視線の表は \\(T \\times T\\) 全部埋まっている — 3文字目の行が5文字目も見ている\n\n\n\n\n\n\n\n\nクイズ\n\n\n「次の文字を当てよ」というテスト中に、答えの文字そのものが見えていたら何が起きる？ 訓練の成績と、生成（本番）の成績、それぞれどうなる？\n\n\n\n\n\n\n訓練：正解を丸写しできるのでほぼ満点\n本番の生成：未来の文字はまだ存在しないので、丸写し戦略は白紙 — 大崩壊\n「あやしい満点」、三たび。今回は過学習ではなくカンニングが原因"
-  },
-  {
-    "objectID": "attention-qkv.html#解決2因果マスク-未来の視線を封じる",
-    "href": "attention-qkv.html#解決2因果マスク-未来の視線を封じる",
-    "title": "順序とカンニング",
-    "section": "解決2：因果マスク — 未来の視線を封じる",
-    "text": "解決2：因果マスク — 未来の視線を封じる\n\n\n視線の表の「未来」のマス（右上半分）を、softmax の前に \\(-\\infty\\) にする\n\n#| echo: true\nimport torch\nimport torch.nn.functional as F\n\nscores = torch.arange(1.0, 17.0).reshape(4, 4)     # 視線スコアの例\ntril = torch.tril(torch.ones(4, 4))                # 左下三角だけ1\nmasked = scores.masked_fill(tril == 0, float(\"-inf\"))\nprint(masked)\nprint(F.softmax(masked, dim=-1).round(decimals=3))\n\nsoftmax を通すと \\(e^{-\\infty} = 0\\) — 未来の重みがきっかり0%になる\n1文字目は自分しか見えない、2文字目は2人まで…… 段々畑の視線になる\n前回エクスプローラで見た「視線の表の右上半分が空」の正体がこれ — 訓練済みの本物には最初からこのマスクが入っていた\n\n\n\n\n\n\n\n\nなぜ 0 ではなく −∞ を入れる？\n\n\nスコアに 0 を入れても \\(e^0 = 1\\) で票が入ってしまう（3人同点なら33%ずつ）。 「見えない」を作れるのは \\(-\\infty\\) だけ。"
-  },
-  {
-    "objectID": "attention-qkv.html#注意ヘッド完成",
-    "href": "attention-qkv.html#注意ヘッド完成",
-    "title": "順序とカンニング",
-    "section": "注意ヘッド、完成",
-    "text": "注意ヘッド、完成\n\n\n位置は入口で足すので、注意側の変更はマスクの2行だけ。この形をヘッド（head）と呼ぶ\n\n#| echo: true\nimport torch\nimport torch.nn as nn\nimport torch.nn.functional as F\n\nclass Head(nn.Module):\n    \"\"\"マスク付き自己注意（言語モデル用の完成形）\"\"\"\n\n    def __init__(self, n_embd, head_size, block_size):\n        super().__init__()\n        self.query = nn.Linear(n_embd, head_size, bias=False)\n        self.key   = nn.Linear(n_embd, head_size, bias=False)\n        self.value = nn.Linear(n_embd, head_size, bias=False)\n        self.register_buffer(\"tril\", torch.tril(torch.ones(block_size, block_size)))\n\n    def forward(self, x):                            # x: (T, n_embd)\n        T = x.shape[0]\n        q, k, v = self.query(x), self.key(x), self.value(x)\n        w = q @ k.T / k.shape[-1] ** 0.5\n        w = w.masked_fill(self.tril[:T, :T] == 0, float(\"-inf\"))   # 未来は見ない\n        w = F.softmax(w, dim=-1)\n        return w @ v\n\ntorch.manual_seed(0)\nhead = Head(n_embd=8, head_size=4, block_size=16)\nprint(head(torch.randn(5, 8)).shape)\n\nblock_size は「一度に見られる最大文字数」。register_buffer は「学習しない定数」の置き場"
-  },
-  {
-    "objectID": "attention-qkv.html#マスク前後の視線",
-    "href": "attention-qkv.html#マスク前後の視線",
-    "title": "順序とカンニング",
-    "section": "マスク前後の視線",
-    "text": "マスク前後の視線\n\n#| echo: false\nimport japanize_matplotlib\nimport matplotlib.pyplot as plt\n\ntorch.manual_seed(3)\nx5 = torch.randn(5, 8)\nq, k = head.query(x5), head.key(x5)\nw_raw = F.softmax(q @ k.T / 2.0, dim=-1).detach()\nw_masked = F.softmax((q @ k.T / 2.0).masked_fill(head.tril[:5, :5] == 0, float(\"-inf\")),\n                     dim=-1).detach()\n\nfig, axes = plt.subplots(1, 2, figsize=(9.2, 4.0))\nfor ax, w, title in [(axes[0], w_raw, \"マスクなし（全員が全員を見る）\"),\n                     (axes[1], w_masked, \"因果マスクあり（未来は0%）\")]:\n    ax.imshow(w, cmap=\"Blues\", vmin=0, vmax=1)\n    for i in range(5):\n        for j in range(5):\n            ax.text(j, i, f\"{w[i, j]:.2f}\", ha=\"center\", va=\"center\", fontsize=8,\n                    color=\"white\" if w[i, j] &gt; 0.5 else \"#1a5276\")\n    ax.set_xticks(range(5)); ax.set_yticks(range(5))\n    ax.set_xlabel(\"見られる側\"); ax.set_ylabel(\"見る側\")\n    ax.set_title(title, fontsize=11)\nplt.tight_layout()\nplt.show()\n\n右：どの行も自分から左だけで合計100%。生成のときと同じ条件で訓練できる"
-  },
-  {
-    "objectID": "attention-qkv.html#tweak-事件をもう一度起こす",
-    "href": "attention-qkv.html#tweak-事件をもう一度起こす",
-    "title": "順序とカンニング",
-    "section": "Tweak 事件をもう一度起こす",
-    "text": "Tweak 事件をもう一度起こす\n\n\n本編のコードを組み合わせて実験（Head と with_pos を1つのファイルにまとめて実行）\n\n\n\n\n\n\n\n\n\n変えること\n何が起きるか\n\n\n\n\nmasked_fill の行をコメントアウト\n視線の表の右上が復活する（ヒートマップで確認）\n\n\nfloat(\"-inf\") → 0.0\n「見えない」が「同点の1票」に化ける。1行目の重みで確認\n\n\npos(...) を足すのをやめる\nシャッフル実験の差がまたほぼ0に戻る\n\n\n\n\n\n\n\n\n\n\nここで観察\n\n\n\n3つとも「壊す実験」。部品の役割は、外したときに一番よく分かる\nマスクを外した瞬間、訓練成績だけが不当に良くなる — 数字が良くなる変更が改善とは限らない"
-  },
-  {
-    "objectID": "attention-qkv.html#まとめ-4",
-    "href": "attention-qkv.html#まとめ-4",
-    "title": "順序とカンニング",
-    "section": "まとめ",
-    "text": "まとめ\n\n\n事件1：自己注意は順序を知らない（足し算だから）→ 位置埋め込みを文字の埋め込みに足す\n事件2：訓練中に未来が見える（カンニング）→ 因果マスクで右上を \\(-\\infty\\) に\n\\(e^{-\\infty} = 0\\) が「見えない」を作る。0 ではダメ（票が入る）\n言語モデル用の注意ヘッドが完成 — Head クラスはこの先そのまま使う\n\n\n\n\n\n\n\n\n次回予告\n\n\nヘッド1本では視線が1系統しかない — 「直前を見る」と「カッコを見る」は両立できない。 次回、ヘッドを束ねて視線を複線化し、集めた情報に考える場所を付ける。"
-  },
-  {
-    "objectID": "attention-qkv.html#練習問題-4",
-    "href": "attention-qkv.html#練習問題-4",
-    "title": "順序とカンニング",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：−∞ と 0 の違い\nスコア \\((-\\infty, 0, 0)\\) と \\((0, 0, 0)\\) をそれぞれ softmax に通し、結果の違いを表示せよ。「マスクに 0 を使ってはいけない理由」を出力を根拠に1行で述べよ。\n問題2：コンテキスト長の正体\nHead(n_embd=8, head_size=4, block_size=16) に 17文字（torch.randn(17, 8)）を入れると何が起きるか。予想してから実行し、エラーの原因を tril の形から説明せよ。\n\n実行してエラーメッセージを読む\nChatGPT の仕様表にある「コンテキスト長（一度に扱える長さ）」が何によって決まっていたか、今日の部品で説明"
-  },
-  {
-    "objectID": "attention-qkv.html#解答例-4",
-    "href": "attention-qkv.html#解答例-4",
-    "title": "順序とカンニング",
-    "section": "解答例",
-    "text": "解答例\n\n#| echo: true\n#| code-fold: true\n#| code-summary: \"解答例を見る\"\nimport torch\nimport torch.nn.functional as F\n\n# 問題1\nprint(F.softmax(torch.tensor([float(\"-inf\"), 0.0, 0.0]), dim=0))   # (0, 0.5, 0.5)\nprint(F.softmax(torch.tensor([0.0, 0.0, 0.0]), dim=0))             # (1/3, 1/3, 1/3)\n# 0 は「同点の候補」として票をもらえてしまう。視線を消せるのは -inf だけ\n\n# 問題2\nhead17 = Head(n_embd=8, head_size=4, block_size=16)\ntry:\n    head17(torch.randn(17, 8))\nexcept RuntimeError as e:\n    print(\"RuntimeError:\", str(e)[:60], \"...\")\n# tril が 16×16 しかないので、17文字目のマスクが存在しない。\n# 「コンテキスト長」の正体は block_size — マスクと位置の表の大きさで決まる"
-  },
-  {
-    "objectID": "gpt-training.html#全部品を一望する-うちの子エクスプローラ",
-    "href": "gpt-training.html#全部品を一望する-うちの子エクスプローラ",
-    "title": "小さなGPTを訓練する",
-    "section": "全部品を一望する — うちの子エクスプローラ",
-    "text": "全部品を一望する — うちの子エクスプローラ\n\n視線だけでなく、全部品の中身を歩ける。埋め込みから次の1文字の予想まで、ぜんぶ訓練済みの実物の数値。\n\n\n\nいま開いているのは「吾」だけ読んだ位置の予想 — 1位は「輩」71.4%（ことばの地図の回の「吾→輩」がここでも生きている）\n文字を順にクリックして、予想が文脈で変わっていく様子を歩く\n途中の部品（LayerNorm・FFN・残差）も開いて、ヒートマップの模様の移り変わりを眺める\n隣の人に、好きな部品を1つ選んで「この箱は◯◯をしている」と30秒で説明\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "bigram-neural.html#道具箱の再点検-pytorch",
-    "href": "bigram-neural.html#道具箱の再点検-pytorch",
-    "title": "学習で当てる",
-    "section": "道具箱の再点検 — PyTorch",
-    "text": "道具箱の再点検 — PyTorch\n\n\n今日から PyTorch を使う。基本の箱は tensor — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚\n\n\nimport torch\n\na = torch.tensor([[1.0, 2.0], [3.0, 4.0]])\nb = torch.tensor([10.0, 100.0])\nprint(a.shape)          # 形の確認も同じ\nprint(a @ b)            # 行列×ベクトルも @ 一発\n\ntorch.Size([2, 2])\ntensor([210., 430.])\n\n\n\nここまでは NumPy と見た目が違うだけ。ではなぜわざわざ乗り換えるのか — tensor には決定的な特技が1つある"
-  },
-  {
-    "objectID": "bigram-neural.html#softmax-の形-es-は差の増幅器",
-    "href": "bigram-neural.html#softmax-の形-es-は差の増幅器",
-    "title": "学習で当てる",
-    "section": "softmax の形 — \\(e^s\\) は差の増幅器",
-    "text": "softmax の形 — \\(e^s\\) は差の増幅器\n\n\n\n\n\n\n\n\n\n\n\n左：\\(e^s\\) はどんな負の数も正に直し、スコアが1増えるだけで約2.7倍にする増幅器\nだから確率の比はスコアの差だけで決まる：\\(p_i / p_j = e^{s_i - s_j}\\) — 全員に同じ数を足しても出力は不変\n右：クラスが2つなら softmax はシグモイド（前コースの2クラス分類の出力層に居たS字カーブ）と完全に一致\n\n\\[\n\\mathrm{softmax}(s,\\, 0)_1 = \\frac{e^{s}}{e^{s} + e^{0}} = \\frac{1}{1 + e^{-s}} = \\sigma(s)\n\\]\n\nsoftmax はシグモイドの多クラス版 — 新しい部品ではなく、知っている部品の一般形"
-  },
-  {
-    "objectID": "mlp-lm.html#実験線形線形線形",
-    "href": "mlp-lm.html#実験線形線形線形",
-    "title": "窓を広げる",
-    "section": "実験：線形×線形＝線形",
-    "text": "実験：線形×線形＝線形\n\n\nimport torch\nimport torch.nn as nn\n\ntorch.manual_seed(0)\nf = nn.Sequential(nn.Linear(2, 2, bias=False), nn.Linear(2, 2, bias=False))\nW = f[1].weight @ f[0].weight        # 2枚の行列を先に掛けて1枚にまとめる\n\nx = torch.randn(3, 2)\nprint(f(x))                          # 2枚に順に通した結果\nprint(x @ W.T)                       # まとめた1枚に通した結果\n\ntensor([[ 0.4006,  0.7693],\n        [-0.2132, -0.3805],\n        [ 0.1598,  0.3545]], grad_fn=&lt;MmBackward0&gt;)\ntensor([[ 0.4006,  0.7693],\n        [-0.2132, -0.3805],\n        [ 0.1598,  0.3545]], grad_fn=&lt;MmBackward0&gt;)\n\n\n\n出力は完全に一致 — 何枚重ねても、まとめれば線形1枚と同じ。表現力は1ミリも増えない\n線形の限界：各入力の「持ち点」を足すことしかできない。窓に3文字入れても、3文字の組み合わせ（「この並びのときだけ」）には反応できない"
-  },
-  {
-    "objectID": "mlp-lm.html#非線形の最小部品-relu",
-    "href": "mlp-lm.html#非線形の最小部品-relu",
-    "title": "窓を広げる",
-    "section": "非線形の最小部品 — ReLU",
-    "text": "非線形の最小部品 — ReLU\n\n\nそこで、線形のあいだに直線ではない部品を挟む。最小の候補：負の数を0に折るだけの関数\n\n\\[\n\\mathrm{ReLU}(x) = \\max(0,\\ x)\n\\]\n\n\n\n\n\n\n\n\n\n\nimport torch\nimport torch.nn as nn\n\nx = torch.tensor([[-2.0, -0.5, 0.0, 1.0, 3.0]])\nprint(nn.ReLU()(x))          # 負だけ0に折られる\n\ntensor([[0., 0., 0., 1., 3.]])\n\n\n\n名前は ReLU（Rectified Linear Unit）。中身はこれだけ — だが0のところに折り目がある"
-  },
-  {
-    "objectID": "mlp-lm.html#折り目を足すと曲がった規則が作れる",
-    "href": "mlp-lm.html#折り目を足すと曲がった規則が作れる",
-    "title": "窓を広げる",
-    "section": "折り目を足すと、曲がった規則が作れる",
-    "text": "折り目を足すと、曲がった規則が作れる\n\n\n\n\n\n\n\n\n\n\n\nReLU 1個＝折り目1個。重み付きで足し合わせると、折り目の数だけ曲がる折れ線が作れる\n折る位置（1枚目の線形）も混ぜ方（2枚目の線形）も、勾配降下で学習される — 折り紙は機械が自分で折る"
-  },
-  {
-    "objectID": "mlp-lm.html#線形-折る-線形-mlp",
-    "href": "mlp-lm.html#線形-折る-線形-mlp",
-    "title": "窓を広げる",
-    "section": "線形 → 折る → 線形 ＝ MLP",
-    "text": "線形 → 折る → 線形 ＝ MLP\n\n\n\nこの3段重ねが多層ネットワーク（MLP multi-layer perceptron）\n今日の窓モデルは 24次元 → 64（折り目64本）→ 75クラス\n線形1枚では書けなかった「組み合わせの規則」（「か」の次は前後しだいで「わ」にも「み」にも）がこれで書ける"
-  },
-  {
-    "objectID": "position-mask.html#犯人は足し算-混ぜ物に順番はない",
-    "href": "position-mask.html#犯人は足し算-混ぜ物に順番はない",
-    "title": "順序とカンニング",
-    "section": "犯人は足し算 — 混ぜ物に順番はない",
-    "text": "犯人は足し算 — 混ぜ物に順番はない\n\n\n\n注意の出力は \\(v\\) の重み付き平均 — つまり足し算。足す順番を替えても合計は変わらない\n重みを決めるスコア \\(q \\cdot k\\) も1対1の内積で、「何番目か」はどこにも入っていない\n自己注意は文を文字の集合（袋）として見ている — 「ねこが」も「がねこ」も同じ袋。日本語で順序が消えたら大惨事"
-  },
-  {
-    "objectID": "position-mask.html#学習された位置の表を覗く",
-    "href": "position-mask.html#学習された位置の表を覗く",
-    "title": "順序とカンニング",
-    "section": "学習された「位置の表」を覗く",
-    "text": "学習された「位置の表」を覗く\n\n\nでは、訓練を終えた表には何が入っているのか。完成品（最終回のモデル）から64本を取り出して比べる\n\n\n\n\n\n\n\n\n\n\n\n赤いのは対角線（自分×自分）だけ — どの位置とも似ていない、ほぼ直交の「住所札」64本\n隣どうしすら似せていない（隣接位置の平均類似度 0.08）。このモデルに必要だったのは「近さ」ではなく区別だった"
-  },
-  {
-    "objectID": "multihead-ffn.html#幅の会計-等分してつないで元通り",
-    "href": "multihead-ffn.html#幅の会計-等分してつないで元通り",
-    "title": "束ねて、考える",
-    "section": "幅の会計 — 等分して、つないで、元通り",
-    "text": "幅の会計 — 等分して、つないで、元通り\n\n\n\nhead_size = n_embd ÷ n_head ＝ 96 ÷ 4 ＝ 24。幅を等分するから、つなぐと元の幅に戻る\nヘッドを増やしても総コストはほぼ一定 — 増えるのは視線の系統数、減るのは1系統あたりの解像度（幅）\n割り切れない頭数（96÷5）だと帳尻が合わずに壊れる — あとの Tweak で実際に壊してみる"
-  },
-  {
-    "objectID": "multihead-ffn.html#なぜいったん4倍に広げるのか",
-    "href": "multihead-ffn.html#なぜいったん4倍に広げるのか",
-    "title": "束ねて、考える",
-    "section": "なぜ、いったん4倍に広げるのか",
-    "text": "なぜ、いったん4倍に広げるのか\n\n\nFFN の中身は 96 → 384 → 96。広げて、折って、戻す\n折り紙の勘定（窓を広げるの回でやった折れ線細工）：ReLU の折り目は中間の幅のぶんだけ作れる — 1位置あたり384本\n入口と同じ幅のままだと折り目96本 — 「考える広間」は入口より広く取るのが定石で、4倍は GPT の定番（GPT-2 も GPT-3 も 4×）\n\n\n\n\n\n\n\nノート\n\n\nFFN はパラメータの大食らいでもある：\\(96 \\times 384 \\times 2 \\approx 74{,}000\\) 個/ブロック — マルチヘッド注意（約37,000個）の2倍。 Transformer の「考える」は、見た目より物量で支えられている。"
-  },
-  {
-    "objectID": "sampling.html#なぜ堂々巡りになるのか",
-    "href": "sampling.html#なぜ堂々巡りになるのか",
-    "title": "生成を操る",
-    "section": "なぜ堂々巡りになるのか",
-    "text": "なぜ堂々巡りになるのか\n\n\n\nモデルは同じ入力に必ず同じ分布を返す。1位だけ選ぶなら、次の文字も必ず同じ\n生成中に「前に見た窓の中身」へ一度でも戻ると、そこから先は永遠に同じ道 — 「ぷんぷん」の正体\nサイコロ（確率での抽選）は、このループを破る唯一の乱数源。問題は「どれくらい揺らすか」"
-  },
-  {
-    "objectID": "sampling.html#t-を手計算サイズで確かめる",
-    "href": "sampling.html#t-を手計算サイズで確かめる",
-    "title": "生成を操る",
-    "section": "T を手計算サイズで確かめる",
-    "text": "T を手計算サイズで確かめる\n\n\nsoftmax の回のスコア (2, 1, −1) を、\\(T\\) で割ってから通すと：\n\n\nimport torch\nimport torch.nn.functional as F\n\ns = torch.tensor([2.0, 1.0, -1.0])\nfor T in [0.5, 1.0, 2.0]:\n    print(f\"T={T}:\", F.softmax(s / T, dim=0).round(decimals=3))\n\nT=0.5: tensor([0.8790, 0.1190, 0.0020])\nT=1.0: tensor([0.7050, 0.2590, 0.0350])\nT=2.0: tensor([0.5470, 0.3310, 0.1220])\n\n\n\n\\(T=0.5\\)：スコア差が2倍に開いて1位が独走（0.88）。\\(T=2.0\\)：差が半分に縮んで接戦（0.55 / 0.33 / 0.12）\nモデルは1ミリも変わっていない。変わったのは softmax に渡す前の「差の広げ方」だけ\n\\(e^s\\) は差の増幅器だった — \\(T\\) はその増幅率のツマミ"
-  },
-  {
-    "objectID": "to-chatgpt.html#大きさを重さで実感する",
-    "href": "to-chatgpt.html#大きさを重さで実感する",
-    "title": "ChatGPT までの距離",
-    "section": "大きさを重さで実感する",
-    "text": "大きさを重さで実感する\n\n\nパラメータは float32 の数 — 1個が4バイト。個数を掛ければ「モデルの重さ」が出る\n\n\nfor name, p in [(\"自作GPT\", 817_125), (\"GPT-2\", 1.5e9), (\"GPT-3\", 175e9)]:\n    print(f\"{name}\\t{p * 4 / 1e9:,.4f} GB\")   # 数1個 = 4バイト\n\n自作GPT   0.0033 GB\nGPT-2   6.0000 GB\nGPT-3   700.0000 GB\n\n\n\n配布した ckpt_best.pt は実測 3.4MB（語彙表なども同梱）— メールに添付できる重さ。『猫』本文は約 0.96MB だから、自作GPTは原作より重い\nGPT-3 は 700GB — ノートPCのSSDに丸ごとは入らない。「大きい」はディスクの重さでも実感できる"
-  },
-  {
-    "objectID": "to-chatgpt.html#語彙は数えて作る",
-    "href": "to-chatgpt.html#語彙は数えて作る",
-    "title": "ChatGPT までの距離",
-    "section": "語彙は数えて作る",
-    "text": "語彙は数えて作る\n\n\n誰かが5万語を選んだのではない。よく隣り合う2つを合体、をひたすら繰り返すだけ — BPE（byte pair encoding）と呼ぶ\n『猫』の前半10万字で実際に回した結果：\n\n\n\n\n\n\n\n\nマージ回数\n起きたこと\n\n\n\n\n20回\n「って」「る。」に続いて 「主人」「吾輩」「云う」が1トークンに\n\n\n100回\n最長トークンは「である。」。「吾輩は」「ところ」「そんな」も1トークン\n\n\n\n\n数えただけで、『猫』の主役たち（主人・吾輩）が真っ先に単語になる — 語彙はコーパスの鏡\nトークン数は 100,000 → 91,366（20回）→ 81,286（100回）と縮む — 合体するほど窓に長い文章が入る\n作り方は回数外の BPE の付録 で、数え上げから1行ずつ自作する"
-  },
-  {
-    "objectID": "to-chatgpt.html#実物を操作する-ブラウザの中の-gpt-2",
-    "href": "to-chatgpt.html#実物を操作する-ブラウザの中の-gpt-2",
-    "title": "ChatGPT までの距離",
-    "section": "実物を操作する — ブラウザの中の GPT-2",
-    "text": "実物を操作する — ブラウザの中の GPT-2\n\n本物の GPT-2（小型版・1.2億パラメータ）をブラウザ内で動かして中を覗ける公開デモ。ここまでの距離を実物で確かめる。\n\n\n\n好きな英文を入れて、右端の次トークンの確率を眺める\n入力がサブワードに割れているのを確認 — 文字でも単語でもない切れ方（距離2の実物）\nTemperature のスライダを動かして、分布が平ら↔︎尖りに変わるのを確認（生成を操るの回のツマミの実物）\n部品の箱を入口から出口までたどって、「習っていない箱」を探す — あってもたいてい名前が違うだけ\n\n\n\n\n\n\n\nノート\n\n\nこの GPT-2 は事前学習だけの素の姿 — 次の距離（仕込み）を、まだ通っていない。\n\n\n\nTransformer Explainer を別タブで開く"
-  },
-  {
-    "objectID": "to-chatgpt.html#実験うちの子に質問してみる",
-    "href": "to-chatgpt.html#実験うちの子に質問してみる",
-    "title": "ChatGPT までの距離",
-    "section": "実験：うちの子に質問してみる",
-    "text": "実験：うちの子に質問してみる\n\n\nimport torch\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ndef gen(prompt, n, seed=0):\n    torch.manual_seed(seed)\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    out = model.generate(idx, n, temperature=0.8, top_k=40)\n    return \"\".join(chars[i] for i in out[0].tolist())\n\nprint(gen(\"「君の名前は何かね」\", 60, seed=1))\n\n「君の名前は何かね」\n「それでね、どうですかも知れないのは、どうです、どうだってもしない」\n「あらあ」\n「あの伯父さん」\n「ええ」と大蔵様は\n\n\n\n返ってきたのは答えではなく、芝居の続きの台本 — 質問を「登場人物のセリフ」としか読めていない\n考えてみれば当然：訓練で見た世界には文の続きしかない。「質問に答える」という行為は『猫』のどこにも定義されていない\n\n\n\n\n\n\n\nノート\n\n\n「質問：〜」「答え：〜」の形式では、そもそも入力すらできない — 「：」は 3,045 字の語彙にない（stoi[\"：\"] で KeyError）。 『猫』に出てこない文字は、うちの子の世界に存在しない（文字を数にするの回）。"
-  },
-  {
-    "objectID": "to-chatgpt.html#しつけの中身-台本で追加訓練",
-    "href": "to-chatgpt.html#しつけの中身-台本で追加訓練",
-    "title": "ChatGPT までの距離",
-    "section": "しつけの中身 — 台本で追加訓練",
-    "text": "しつけの中身 — 台本で追加訓練\n\n\n指示チューニングのデータは「指示 → 望ましい応答」の台本。人が書いた手本を数万〜数百万組読ませる（形のイメージ）：\n\n\n\n\n指示（人が書く）\n応答の手本（人が書く）\n\n\n\n\n日本でいちばん高い山は？\n富士山です。標高は 3,776 m です。\n\n\n「吾輩は猫である」を現代語に言い換えて\n私は猫です。\n\n\n\n\nここが要点：追加訓練でもやることは次の1トークン予測のまま。変わるのは読ませる台本のほう\n「質問の続き」＝「その答え」という世界で育ち直す — 仕組みには1ミリも手を入れない\n自作GPTとの違いは訓練の中身ではなく、コーパスに「答える」という行為が書いてあるかどうか"
-  },
-  {
-    "objectID": "to-chatgpt.html#ハルシネーションの解剖",
-    "href": "to-chatgpt.html#ハルシネーションの解剖",
-    "title": "ChatGPT までの距離",
-    "section": "ハルシネーションの解剖",
-    "text": "ハルシネーションの解剖\n\n\nprint(gen(\"吾輩の主人は\", 60, seed=0))\n\n吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も\n\n\n\n途中に「寒月君は猫としてはならんのだから」— それらしい主張。本文と照合する：\n\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nprint(\"寒月君は:\", text.count(\"寒月君は\"), \"回\")\nprint(\"猫として:\", text.count(\"猫として\"), \"回\")\nprint(\"寒月君は猫:\", \"寒月君は猫\" in text)\n\n寒月君は: 59 回\n猫として: 4 回\n寒月君は猫: False\n\n\n\n部品はどちらも本文に実在する。組み合わせだけが作り話\n数えるだけの言語モデルの回でやった「でたらめ地名の解剖」と同じ構造 — 一歩一歩は正しいのに、全体は迷子\nありそうなかけらを、ありそうな順につないだ結果が、そのまま「堂々とした嘘」になる"
-  },
-  {
-    "objectID": "lm-introduction.html#何を手がかりに見分けた",
-    "href": "lm-introduction.html#何を手がかりに見分けた",
-    "title": "ことばを当てる機械",
-    "section": "何を手がかりに見分けた？",
-    "text": "何を手がかりに見分けた？\n\nいま挙げた手の根拠を言語化しておく。\n\n4つの文章に「本物っぽさ」を◎○△×で採点\nいちばん怪しい文章の、怪しい箇所に下線 — 単語が変？　つながりが変？　意味が迷子？\n下線の理由を一言メモして、隣の人と見比べ。同じ箇所を挙げていたら、そこが「機械のしっぽ」\n\n\n\n\n\n\n\nノート\n\n\n採点表は捨てずに取っておく — 最終回の種明かしのとき、自分の目がどこまで確かだったか答え合わせできる。\n\n\n\n\nいま使った「日本語らしさ」の感覚 — それを数で作り直すのが、この講義の仕事"
-  },
-  {
-    "objectID": "lm-introduction.html#当てやすさには濃淡がある",
-    "href": "lm-introduction.html#当てやすさには濃淡がある",
-    "title": "ことばを当てる機械",
-    "section": "当てやすさには濃淡がある",
-    "text": "当てやすさには濃淡がある\n\n\n第1問「こんにち（　）」：候補が事実上1つ — ほぼ確信\n第3問「今日の晩ご飯は（　）」：カレーも寿司も鍋もあり — お手上げの総当たり\nつまり「次の1文字」には当てやすさの濃淡がある — これを数で表したものが確率分布\n\n確信 → 1本の棒がそびえる尖った分布\nお手上げ → 低い棒がずらりと並ぶ平らな分布\n\n人間は文脈からこの分布を頭の中で作っている。同じことを機械にやらせたい"
-  },
-  {
-    "objectID": "lm-introduction.html#尖った分布と平らな分布",
-    "href": "lm-introduction.html#尖った分布と平らな分布",
-    "title": "ことばを当てる機械",
-    "section": "尖った分布と、平らな分布",
-    "text": "尖った分布と、平らな分布\n\n\n体験ゲームの「確信」と「お手上げ」も、数えれば形になる。「であ」の次と「、」の次：\n\n\n\n\n\n\n\n\n\n\n\n「であ」の次は「る」が 84.5%、候補は全部で12種類 — 第1問（こんにち）の世界\n「、」の次は1位の「そ」でも 6.3%、候補は1,044種類 — 第3問（晩ご飯）の世界\n予測のしやすさ＝分布の形。言語モデルの実力は、この形をどれだけ本物の続きに近づけられるか"
-  },
-  {
-    "objectID": "lm-introduction.html#生成を1歩ずつほどく",
-    "href": "lm-introduction.html#生成を1歩ずつほどく",
-    "title": "ことばを当てる機械",
-    "section": "生成を1歩ずつほどく",
-    "text": "生成を1歩ずつほどく\n\n\nぐるぐる回る絵を、まっすぐ伸ばして3歩ぶん：\n\n\n\n毎歩やることは同じ：いまの文脈を入れる → 棒グラフをもらう → 1本引く → 尻に足す\n機械は1台きり。伸びていくのは文脈のほう\n「引く」は抽選 — 同じ書き出しでも、実行のたびに違う文章になりうる。ChatGPT の答えが毎回少し違う理由も、ここ（ツマミの調べ方は「生成を操る」の回で）"
-  },
-  {
-    "objectID": "sampling.html#聞き比べどれがどの温度",
-    "href": "sampling.html#聞き比べどれがどの温度",
-    "title": "生成を操る",
-    "section": "聞き比べ：どれがどの温度？",
-    "text": "聞き比べ：どれがどの温度？\n\n\n\n\n\n\n\n\nクイズ\n\n\nT ＝ 0.2・0.8・2.0 のどれかで生成した3つ。どれがどの温度？\n\n\n\n\n\n\n--- A ---\n吾輩は登ぱり何音野株か知るシ囃通り数が奇秘をも刑い台み掻…死絽を溜ごし嘔算吾私製霞如世一来出で』裁めて爆面引る前将見田置し日武捐虞だ、飴ん悟り激纏珍騒振る所以早顔心で \n\n--- B ---\n吾輩はこの猫を捉まっている。\n　主人は「それでもいい、そんなになっても、あなたのです」と主人は少々焦れる。\n「それではないか」と主人は「そんな事はないから、そんなに利 \n\n--- C ---\n吾輩はあるまいと思うくらいならよりほかには元来主人のみを反対の穴があって、吾輩の頭をあつかない。それはこの事なら、何しかしこまでも同じ事を悟ってはいっしゃるまい。また \n\n\n\n\n\nA は T=2.0：漢字の豪雨 — 分布の尻尾にいたレア文字が当選しまくる\nB は T=0.2：文法は安定、しかし語彙が貧しく同じ言い回しを繰り返す（無難の刑）\nC は T=0.8：ほどよく揺れて、いちばん「漱石風」\n作り方は3つとも gen(\"吾輩は\", 80, temperature=T)（種は0で共通）"
-  },
-  {
-    "objectID": "sampling.html#top-p-尻尾を合計で切る",
-    "href": "sampling.html#top-p-尻尾を合計で切る",
-    "title": "生成を操る",
-    "section": "top-p — 尻尾を「合計」で切る",
-    "text": "top-p — 尻尾を「合計」で切る\n\n\ntop-k の弱点：常に k 席の固定枠 — 自信満々の場面では広すぎ、大混戦では狭すぎる\ntop-p（nucleus sampling）は席数でなく得票の合計で切る：確率の高い順に足していき、合計が \\(p\\) に達したら打ち止め\n\n\n\n\n\n\n\n\n\n\n\n「吾輩は猫であ」の次は1文字（「る」92%）で到達、「吾輩は」の次は299文字 — 枠の広さが分布の形に追随する\n自作GPTの generate のツマミは temperature と top-k の2つ。top-p は実物の API を読むための知識として持ち帰る"
-  },
-  {
-    "objectID": "sampling.html#サイコロの種-揺れを再現する",
-    "href": "sampling.html#サイコロの種-揺れを再現する",
-    "title": "生成を操る",
-    "section": "サイコロの種 — 揺れを再現する",
-    "text": "サイコロの種 — 揺れを再現する\n\n\n「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は疑似乱数で、種（シード）が同じなら出目の列も同じ\n\n\ntorch.manual_seed(0)\nprint(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))\ntorch.manual_seed(0)\nprint(torch.multinomial(torch.tensor([0.7, 0.2, 0.1]), 8, replacement=True))\n\ntensor([2, 1, 0, 2, 0, 1, 0, 0])\ntensor([2, 1, 0, 2, 0, 1, 0, 0])\n\n\n\na = gen(\"吾輩は\", 40, temperature=0.8, seed=7)\nb = gen(\"吾輩は\", 40, temperature=0.8, seed=7)   # 同じ種でもう一度\nc = gen(\"吾輩は\", 40, temperature=0.8, seed=8)   # 種を変える\nprint(a)\nprint(\"同じ種:\", a == b, \"／ 違う種:\", a == c)\nprint(c)\n\n吾輩はようやくのは、融通の人のごときは違っている。主人は甚然として御互に願いて、まずし\n同じ種: True ／ 違う種: False\n吾輩は便宜者だから、ここを絞殺して見る小供はあって、これからでまた当人の二絃琴の真中は\n\n\n\nこの講義のセルに毎回 manual_seed が入っていた種明かし — スライドの出力を君の手元で完全再現するため\n「揺れ」がほしいときは種を変える。「証拠」にしたいときは種を固定して、種の値も一緒に記録する（レポートの作法）"
-  },
-  {
-    "objectID": "tokenization.html#対応表は機械の入り口と出口",
-    "href": "tokenization.html#対応表は機械の入り口と出口",
-    "title": "文字を数にする",
-    "section": "対応表は、機械の入り口と出口",
-    "text": "対応表は、機械の入り口と出口\n\n\n完成形の中で encode / decode がどこに立つか、先に見ておく：\n\n\n\nモデルの中を流れるのは番号だけ。「し」の字の形も意味も、モデルは一生見ない\nencode は玄関、decode は出口 — この2つの外側だけが人間の世界\nただし番号はまだ「ただの整理番号」— 41番と42番が似ているわけではない。番号に意味を持たせる工夫は「ことばの地図」の回で"
-  },
-  {
-    "objectID": "tokenization.html#語彙の外とどう付き合うか",
-    "href": "tokenization.html#語彙の外とどう付き合うか",
-    "title": "文字を数にする",
-    "section": "語彙の外と、どう付き合うか",
-    "text": "語彙の外と、どう付き合うか\n\n\n\n\n\n\n\n\nクイズ\n\n\nChatGPT に絵文字や顔文字を打ち込んでも、KeyError では止まらない。どう解決していると思う？\n\n\n\n\n\n語彙に無い文字への作戦は、だいたい3択：\n\n\n\n\n\n\n\n\n\n作戦\n中身\n代償\n\n\n\n\n黙って捨てる\n知らない文字を無視して続行\n入力が化ける（最悪）\n\n\n「その他」の枠\n未知の文字を全部、未知語トークン（unknown token）1つに置き換え\n情報が消える\n\n\n部品を細かくする\nバイト単位まで割れば何でも表せる\n列が長くなる\n\n\n\n\n\n実物の答えは3つ目：GPT-2 以降の語彙はバイトまで割れる部品を常備 — 地球上のどんな文字列も語彙外にならない\n自作の encode が KeyError で止まるのも立派な設計 — 黙って捨てるくらいなら、その場で叫ぶ"
-  },
-  {
-    "objectID": "tokenization.html#第3の割り方-サブワード",
-    "href": "tokenization.html#第3の割り方-サブワード",
-    "title": "文字を数にする",
-    "section": "第3の割り方 — サブワード",
-    "text": "第3の割り方 — サブワード\n\n\n単語ごとは種類が多すぎ、文字ごとは『猫』でも3,045種。実物は中間を取る：\n\n\n\n\n割り方\n「吾輩は猫である。」\n種類\n\n\n\n\n単語ごと\n吾輩 / は / 猫 / で / ある / 。\n数十万〜\n\n\nサブワード\n吾輩は / 猫 / である。\n数万\n\n\n文字ごと\n吾 / 輩 / は / 猫 / で / あ / る / 。\n数十〜数千\n\n\n\n\n作り方は意外なほど素朴：よく隣り合う2文字を数えて、合体を繰り返すだけ（BPE と呼ぶ）\n『猫』の前半10万字で実際に回すと、合体20回で「吾輩」「主人」が部品になり、100回で「である。」が丸ごと1部品になる\n本編は最後まで文字ごとで通す。合体の職人技は回数外の BPE の付録 で1から自作できる"
-  },
-  {
-    "objectID": "bungo-project.html#提出前の身体検査-盗作チェック",
-    "href": "bungo-project.html#提出前の身体検査-盗作チェック",
-    "title": "最終プロジェクト：推し文豪ボット",
-    "section": "提出前の身体検査 — 盗作チェック",
-    "text": "提出前の身体検査 — 盗作チェック\n\n\n過学習ぎみの重みや低い temperature では、本文の丸写しに近い文が出ることがある。偽物は文体の創作であって暗記の吐き出しではないこと — 大会のフェアプレー\nコーパスとのひと続きの最長一致を測ってから提出する：\n\n\ndef longest_match(fake, text):\n    best = \"\"\n    for i in range(len(fake)):\n        j = i + len(best) + 1\n        while j &lt;= len(fake) and fake[i:j] in text:\n            best = fake[i:j]\n            j += 1\n    return best\n\nfake = \"……\"   # 提出する偽物をここに\ntext = open(\"data/mybungo.txt\", encoding=\"utf-8\").read()\nm = longest_match(fake, text)\nprint(len(m), \"字:\", m)\n\n\n参考値：文豪テストの機械文 B・D は最長一致 8字・9字（決まり文句レベル）\n逆に本物の文を入れれば全文一致するはず — 検査コード自体の動作確認になる\n文が丸ごと一致したら：val の底より手前の重みを選び直すか、temperature を少し上げる"
-  },
-  {
-    "objectID": "bungo-project.html#大会の進行",
-    "href": "bungo-project.html#大会の進行",
-    "title": "最終プロジェクト：推し文豪ボット",
-    "section": "大会の進行",
-    "text": "大会の進行\n\n1組あたり3分弱。流れ：\n\n出題：本物と偽物を並べて提示（どちらが偽物かは伏せる。並び順はコイントスで）\n全員30秒の黙読 → 「偽物はどっち？」で一斉に挙手\n開票 → 出題者が正解とツマミ・訓練の記録を開示（1分）\n記録係が「騙した人数」をスコア表に記入\n\n\n全組が終わったら表彰は2部門：最多得票の偽物と、最も鮮やかにバレた偽物（バレた理由の解剖が見事だったもの）\n時間が余ったら：優勝作をみんなで解剖 — どの一節が「らしさ」を出したのか"
-  },
-  {
-    "objectID": "to-chatgpt.html#実験自作gptに質問してみる",
-    "href": "to-chatgpt.html#実験自作gptに質問してみる",
-    "title": "ChatGPT までの距離",
-    "section": "実験：自作GPTに質問してみる",
-    "text": "実験：自作GPTに質問してみる\n\n\nimport torch\nfrom gpt import GPT\n\ntorch.set_num_threads(1)\nblob = torch.load(\"data/runs/neko/ckpt_best.pt\", weights_only=True)\nmodel = GPT(vocab_size=len(blob[\"vocab\"]), **blob[\"cfg\"])\nmodel.load_state_dict(blob[\"state_dict\"])\nmodel.eval()\nchars = blob[\"vocab\"]\nstoi = {c: i for i, c in enumerate(chars)}\n\ndef gen(prompt, n, seed=0):\n    torch.manual_seed(seed)\n    idx = torch.tensor([[stoi[c] for c in prompt]])\n    out = model.generate(idx, n, temperature=0.8, top_k=40)\n    return \"\".join(chars[i] for i in out[0].tolist())\n\nprint(gen(\"「君の名前は何かね」\", 60, seed=1))\n\n「君の名前は何かね」\n「それでね、どうですかも知れないのは、どうです、どうだってもしない」\n「あらあ」\n「あの伯父さん」\n「ええ」と大蔵様は\n\n\n\n返ってきたのは答えではなく、芝居の続きの台本 — 質問を「登場人物のセリフ」としか読めていない\n考えてみれば当然：訓練で見た世界には文の続きしかない。「質問に答える」という行為は『猫』のどこにも定義されていない\n\n\n\n\n\n\n\nノート\n\n\n「質問：〜」「答え：〜」の形式では、そもそも入力すらできない — 「：」は 3,045 字の語彙にない（stoi[\"：\"] で KeyError）。 『猫』に出てこない文字は、自作GPTの世界に存在しない（文字を数にするの回）。"
-  },
-  {
-    "objectID": "to-chatgpt.html#実験自作gptに事実を聞く",
-    "href": "to-chatgpt.html#実験自作gptに事実を聞く",
-    "title": "ChatGPT までの距離",
-    "section": "実験：自作GPTに事実を聞く",
-    "text": "実験：自作GPTに事実を聞く\n\n\nprint(gen(\"主人の名前は\", 50, seed=1))\n\n主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」\n\n\n\n流暢に何も答えていない。しかも「名前はまだ…」と続けたがる — コーパスで一番有名な「名前」の文脈（「名前はまだ無い」）を引きずっている\n喋っているのは事実ではなく統計 — 「ありそうな続き」製造機の正直な姿"
-  },
-  {
-    "objectID": "transformer-block.html#全身を歩く-自作gpt",
-    "href": "transformer-block.html#全身を歩く-自作gpt",
-    "title": "深く積む",
-    "section": "全身を歩く — 自作GPT",
-    "text": "全身を歩く — 自作GPT\n\nいま組んだ GPT クラスの中身を、訓練済みの実重みで上から下まで歩く。\n\n\n\n左の箱を入力から順にクリックして、各部品の出力（ヒートマップ）を眺める\n「＋ 残差」の前後でヒートマップの模様が大きくは変わらないことを確認 — 迂回路の実感\n各箱が今日の GPT クラスのどの行にあたるか、コードと突き合わせる\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "gpt-training.html#全部品を一望する-自作gptエクスプローラ",
-    "href": "gpt-training.html#全部品を一望する-自作gptエクスプローラ",
-    "title": "小さなGPTを訓練する",
-    "section": "全部品を一望する — 自作GPTエクスプローラ",
-    "text": "全部品を一望する — 自作GPTエクスプローラ\n\n視線だけでなく、全部品の中身を歩ける。埋め込みから次の1文字の予想まで、ぜんぶ訓練済みの実物の数値。\n\n\n\nいま開いているのは「吾」だけ読んだ位置の予想 — 1位は「輩」71.4%（ことばの地図の回の「吾→輩」がここでも生きている）\n文字を順にクリックして、予想が文脈で変わっていく様子を歩く\n途中の部品（LayerNorm・FFN・残差）も開いて、ヒートマップの模様の移り変わりを眺める\n隣の人に、好きな部品を1つ選んで「この箱は◯◯をしている」と30秒で説明\n\nエクスプローラを別タブで開く"
-  },
-  {
-    "objectID": "attention-qkv.html#qkv-の作り方-行列を1枚ずつ",
-    "href": "attention-qkv.html#qkv-の作り方-行列を1枚ずつ",
-    "title": "Q・K・V を開ける",
-    "section": "q・k・v の作り方 — 行列を1枚ずつ",
-    "text": "q・k・v の作り方 — 行列を1枚ずつ\n\n\n文字の埋め込み \\(\\vec{\\vphantom{b}x}\\) から、3種類のベクトルを作る：\n\n\\[\n\\vec{\\vphantom{b}q} = \\vec{\\vphantom{b}x}\\, W_Q \\qquad\n\\vec{\\vphantom{b}k} = \\vec{\\vphantom{b}x}\\, W_K \\qquad\n\\vec{\\vphantom{b}v} = \\vec{\\vphantom{b}x}\\, W_V\n\\]\n\n\n\n\n\n\n\n\n記号\n名前\n役割\n\n\n\n\n\\(Q\\)\nクエリ（query）\n探しもの：「いま何の情報が欲しいか」\n\n\n\\(K\\)\nキー（key）\n名札：「私はこういう情報を持っている」\n\n\n\\(V\\)\nバリュー（value）\n中身：実際に混ぜられて運ばれる情報\n\n\n\n\n\n\\(W_Q, W_K, W_V\\) は勾配降下で学習されるただの行列 — 「どこを見るべきか」が学習されるとは、この3枚が育つこと"
-  },
-  {
-    "objectID": "lm-introduction.html#練習問題",
-    "href": "lm-introduction.html#練習問題",
-    "title": "ことばを当てる機械",
-    "section": "練習問題",
-    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：尖りと平らを実測する\n『吾輩は猫である』で、「であ」の次に来る文字と「、」の次に来る文字をそれぞれ数え、候補の種類数と1位の文字とその確率を表示せよ。\n\nneko.txt を data/ に置く（演習と同じ）\n演習のコードの「猫」を「であ」「、」に替えて数える（次の文字の位置は i + len(文脈)）\n種類数は len(nxt)、1位は nxt.most_common(1) で取り、「種類数」「1位の文字：確率」を表示\nどちらが「こんにち」型で、どちらが「晩ご飯」型か、本編の図と見比べる"
-  },
-  {
-    "objectID": "lm-introduction.html#解答例",
-    "href": "lm-introduction.html#解答例",
-    "title": "ことばを当てる機械",
-    "section": "解答例",
-    "text": "解答例\n\n\n\n解答例を見る\nfrom collections import Counter\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\n\nfor ctx in [\"であ\", \"、\"]:\n    nxt = Counter()\n    i = text.find(ctx)\n    while i != -1:\n        j = i + len(ctx)\n        if j &lt; len(text):\n            nxt[text[j]] += 1\n        i = text.find(ctx, i + 1)\n    total = sum(nxt.values())\n    c, n = nxt.most_common(1)[0]\n    print(f\"「{ctx}」の次: {len(nxt)}種類 | 1位「{c}」 {n / total:.1%}\")\n\n\n「であ」の次: 12種類 | 1位「る」 84.5%\n「、」の次: 1044種類 | 1位「そ」 6.3%"
-  },
-  {
-    "objectID": "sampling.html#分布の形を実物で歩く",
-    "href": "sampling.html#分布の形を実物で歩く",
-    "title": "生成を操る",
-    "section": "分布の形を、実物で歩く",
-    "text": "分布の形を、実物で歩く\n\n\ntop-p のカーブが要約していたもの — 位置ごとの分布の形 — をエクスプローラで1つずつ覗ける\n\n\n\n\nいま開いているのは「吾輩は」まで読んだ位置 — 低い棒がずらり（お手上げ型。1位「こ」でも 15.5%）\n「あ」（吾輩は猫であ）の位置をクリック — 「る」が 92% でそびえる（確信型）\nプリセットを会話文に替えて、いちばん平らな位置といちばん尖った位置を探す\n見つけた2箇所で「top-p (\\(p=0.9\\)) の枠に何文字入るか」を目分量で予想 — 尖りは1桁、平らは3桁\n\nエクスプローラを別タブで開く"
   },
   {
     "objectID": "rnn-history-appendix.html#この資料について",
@@ -2170,11 +1645,11 @@
     "text": "聞いてみる — 架空地名、RNN 版\n\n\n生成も1文字ずつ：\\(h\\) を空にして始め、引いた文字を入れてはまた引く\n\n\ng = torch.Generator().manual_seed(1)\nfor _ in range(10):\n    h = torch.zeros(1, 64)\n    i, name = 0, \"\"\n    while True:\n        h = torch.tanh(model.wx(model.emb(torch.tensor([i]))) + model.wh(h))\n        i = torch.multinomial(F.softmax(model.out(h), dim=-1)[0], 1, generator=g).item()\n        if i == 0:\n            break\n        name += chars[i]\n    print(name)\n\nおおのつちょう\nみつしべつし\nぬまじし\nあわじしらちょう\nみなみやまきし\nうらがはし\nたいねきむら\nとよさつし\nあいきし\nつかいししべし\n\n\n\n「おおのつちょう」「ぬまじし」…… 10件とも実在しない新作 — 耳で聞くかぎり MLP に負けていない"
   },
   {
-    "objectID": "rnn-history-appendix.html#成績表前任者勝つ",
-    "href": "rnn-history-appendix.html#成績表前任者勝つ",
-    "title": "RNN小史 — 前任者の物語",
-    "section": "成績表：前任者、勝つ",
-    "text": "成績表：前任者、勝つ\n\n同じ分け方（9:1）・同じ採点（1遷移あたりの平均 \\(-\\log P\\)）での勝負：\n\n\n\nモデル\n記憶の形\nval\n\n\n\n\n数えるだけ（バイグラム）\n直前1文字\n2.62\n\n\nMLP（窓2）\n直前2文字\n2.59\n\n\nRNN（valの底）\nここまで全部\n==2.37==\n\n\n\n\n窓なしの記憶は本当に効く — 前任者は実力で主役だった\nでは、なぜ君たちの GPT に RNN は入っていないのか。理由は3つ、すべて「訓練のしにくさ」"
+    "objectID": "rnn-history-appendix.html#成績表rnn勝つ",
+    "href": "rnn-history-appendix.html#成績表rnn勝つ",
+    "title": "RNN小史 — 記憶を手渡す機械",
+    "section": "成績表：RNN、勝つ",
+    "text": "成績表：RNN、勝つ\n\n同じ分け方（9:1）・同じ採点（1遷移あたりの平均 \\(-\\log P\\)）での勝負：\n\n\n\nモデル\n記憶の形\nval\n\n\n\n\n数えるだけ（バイグラム）\n直前1文字\n2.62\n\n\nMLP（窓2）\n直前2文字\n2.59\n\n\nRNN（valの底）\nここまで全部\n==2.37==\n\n\n\n\n窓なしの記憶は本当に効く — RNNは実力で主役だった\nでは、なぜ君たちの GPT に RNN は入っていないのか。理由は3つ、すべて「訓練のしにくさ」"
   },
   {
     "objectID": "rnn-history-appendix.html#つまずき①-過学習が速い",
@@ -2219,13 +1694,6 @@
     "text": "まとめ\n\n\nRNN は実力で主役だった — 地名では窓付き MLP に勝つ（val 2.37 vs 2.59）\n降板の理由は精度ではなく訓練のしにくさ：消える勾配（10⁻²⁰ のバケツリレー）と、並列化できない逐次性\n注意はこの2つを一挙に解決した — 遠くへ直接橋を架け、全位置を一括計算する\nだから本編は「窓 → 注意」の最短路を歩いた。歴史は回り道の中で、同じ2つの壁を確かめていた"
   },
   {
-    "objectID": "gpt-training.html#peek-earlystop",
-    "href": "gpt-training.html#peek-earlystop",
-    "title": "小さなGPTを訓練する",
-    "section": "過学習、最終決戦",
-    "text": "過学習、最終決戦\n\n\n地名MLPの回とまったく同じ形（過学習）が、GPT でも出た — モデルが変わっても病気は同じ\n訓練文の細かい癖に最適化が進み、初見の文章への実力はむしろ落ちていく\n対策も同じ発想：val が底を打ったところで止めて、その時点の重みを使う — 早期終了（early stopping）と呼ぶ\n\n\n\n\n\n\n\nノート\n\n\n本物の LLM はこの逆で「同じ文章を何周もしない」規模のデータを使う — データの量で過学習をねじ伏せている（この話は「ChatGPTまでの距離」の回で）。"
-  },
-  {
     "objectID": "scaling-appendix.html#この資料について",
     "href": "scaling-appendix.html#この資料について",
     "title": "スケーリング則の直感",
@@ -2233,11 +1701,11 @@
     "text": "この資料について\n\n\n自作GPTは 約82万パラメータ。ChatGPT までの距離の回では、GPT-3 がその約21万倍だと見た\n残った問い：部品を増やすだけで、本当に予測は上手くなるのか？\n同じ『吾輩は猫である』・同じGPT・同じ訓練歩数で、幅だけを変えた5台を競わせる"
   },
   {
-    "objectID": "scaling-appendix.html#クイズ幅だけ広げると",
-    "href": "scaling-appendix.html#クイズ幅だけ広げると",
+    "objectID": "scaling-appendix.html#質問幅だけ広げると",
+    "href": "scaling-appendix.html#質問幅だけ広げると",
     "title": "スケーリング則の直感",
-    "section": "クイズ：幅だけ広げると？",
-    "text": "クイズ：幅だけ広げると？\n\nデータも訓練歩数も同じまま、モデルの幅を16倍にする。初見の文章を当てる val loss はどうなると思う？\n\n\n\n予想\n起きそうなこと\n\n\n\n\nA\n小さい方が有利 — 大きいモデルは学びきれない\n\n\nB\n大きい方が有利 — 複雑な規則を持てる\n\n\nC\n途中までは改善するが、大きすぎると逆転する\n\n\n\n\n\n\n\n\n\n重要\n\n\n先に1つ選べ。答えは実測した5点で決める。"
+    "section": "質問：幅だけ広げると？",
+    "text": "質問：幅だけ広げると？\n\nデータも訓練歩数も同じまま、モデルの幅を16倍にする。初見の文章を当てる val loss はどうなると思う？\n\n\n\n予想\n起きそうなこと\n\n\n\n\nA\n小さい方が有利 — 大きいモデルは学びきれない\n\n\nB\n大きい方が有利 — 複雑な規則を持てる\n\n\nC\n途中までは改善するが、大きすぎると逆転する\n\n\n\n\n\n\n\n\n\n重要\n\n\n先に1つ選べ。答えは実測した5点で決める。"
   },
   {
     "objectID": "scaling-appendix.html#大きくする-ベクトルの幅を広げる",
@@ -2265,7 +1733,7 @@
     "href": "scaling-appendix.html#結果大きいほど底が下がった",
     "title": "スケーリング則の直感",
     "section": "結果：大きいほど、底が下がった",
-    "text": "結果：大きいほど、底が下がった\n\n\n\n\n\n\n\n\n\n\n\nクイズの答えは、「最良点」で比べれば B"
+    "text": "結果：大きいほど、底が下がった\n\n\n\n\n\n\n\n\n\n\n\n質問の答えは、「最良点」で比べれば B"
   },
   {
     "objectID": "scaling-appendix.html#耳でも比べる",
@@ -2287,6 +1755,13 @@
     "title": "スケーリング則の直感",
     "section": "ただし最大モデルだけ、Uターン",
     "text": "ただし最大モデルだけ、Uターン\n\n\n\n\n\n\n\n\n\n\n\n幅192は1,500歩で 3.558、2,000歩では 3.634 に悪化。一方、train loss は2,000歩まで下がり続けた"
+  },
+  {
+    "objectID": "scaling-appendix.html#同じ2000歩でも公平とは限らない",
+    "href": "scaling-appendix.html#同じ2000歩でも公平とは限らない",
+    "title": "スケーリング則の直感",
+    "section": "同じ2,000歩でも、公平とは限らない",
+    "text": "同じ2,000歩でも、公平とは限らない\n\n\n容量が大きいほど、同じ1冊の細部まで覚えやすい — 早期終了が早く必要になる\n2,000歩の最後だけで順位を決めると、幅96が幅192に勝つ。質問の C も半分正しかった\n各モデルの best val を比べれば、幅192が優勝 — 保存したチェックポイントから底を選ぶ"
   },
   {
     "objectID": "scaling-appendix.html#幅が増えると何が増える",
@@ -2324,11 +1799,11 @@
     "text": "大きさの請求書\n\n\n\n\n幅\nパラメータ\n重みだけの容量（float32）\n\n\n\n\n12\n80,613\n0.32 MB\n\n\n96\n817,125\n3.27 MB\n\n\n192\n2,073,573\n8.29 MB\n\n\n\n\n訓練中は重みだけでなく、勾配・AdamWの状態・途中の活性も持つため、必要メモリはさらに増える\n推論でも、モデルが大きいほど保存容量・計算・電力・待ち時間が増える\nscaling law は「大きくすれば無料で勝てる法則」ではなく、追加コストを払ったときの改善を予測する法則"
   },
   {
-    "objectID": "scaling-appendix.html#読み解きクイズ",
-    "href": "scaling-appendix.html#読み解きクイズ",
+    "objectID": "scaling-appendix.html#読み解き問題",
+    "href": "scaling-appendix.html#読み解き問題",
     "title": "スケーリング則の直感",
-    "section": "読み解きクイズ",
-    "text": "読み解きクイズ\n\n学習曲線CSV と成績表を見て答えよ。\n\n500歩時点で最も val loss が低い幅\n全測定点で最も低い val loss と、その幅・歩数\n2,000歩の最終値だけで比べた優勝モデル\n2と3の答えが違う理由"
+    "section": "読み解き問題",
+    "text": "読み解き問題\n\n学習曲線CSV と成績表を見て答えよ。\n\n500歩時点で最も val loss が低い幅\n全測定点で最も低い val loss と、その幅・歩数\n2,000歩の最終値だけで比べた優勝モデル\n2と3の答えが違う理由"
   },
   {
     "objectID": "scaling-appendix.html#答え合わせ",
@@ -2345,31 +1820,122 @@
     "text": "まとめ\n\n\n幅を16倍にするとパラメータは約26倍になり、最良 val loss は 4.397 → 3.558 に改善した\n大きいモデルはより低い地点へ、より速く到達した — 複雑な手がかりを持つ容量が増える\nただし最大モデルは同じ1冊を早く覚えすぎた — 早期終了と十分なデータが必要\nスケーリング則は、モデル \\(N\\)・データ \\(D\\)・計算 \\(C\\) を増やしたときの改善を予測する経験則\n「大きければ正義」ではない。3つの資源の釣り合いまで含めて設計する"
   },
   {
-    "objectID": "scaling-appendix.html#同じ2000歩でも公平とは限らない",
-    "href": "scaling-appendix.html#同じ2000歩でも公平とは限らない",
-    "title": "スケーリング則の直感",
-    "section": "同じ2,000歩でも、公平とは限らない",
-    "text": "同じ2,000歩でも、公平とは限らない\n\n\n容量が大きいほど、同じ1冊の細部まで覚えやすい — 早期終了が早く必要になる\n2,000歩の最後だけで順位を決めると、幅96が幅192に勝つ。クイズの C も半分正しかった\n各モデルの best val を比べれば、幅192が優勝 — 保存したチェックポイントから底を選ぶ"
+    "objectID": "tokenization.html#前回の宿題",
+    "href": "tokenization.html#前回の宿題",
+    "title": "文字を数にする",
+    "section": "前回の宿題",
+    "text": "前回の宿題\n\n\n言語モデルは「次の1文字を当てる」分類器 — ここまでは前回の話\nところで、第1コースで学習に使った材料を思い出すと……\n\nMNIST の画像：28×28 の数値（明るさ 0〜1）\n損失も勾配も、ぜんぶ数値の計算だった\n\n\n\n\n\n\n\n\n\n質問\n\n\n「あ」は数字ではない。ニューラルネットに「あ」をどうやって入れる？\n\n\n\n\n\n\n答えはあっけない：番号を振る。今日はそれを自分の手でやる"
   },
   {
-    "objectID": "rnn-history-appendix.html#成績表rnn勝つ",
-    "href": "rnn-history-appendix.html#成績表rnn勝つ",
-    "title": "RNN小史 — 記憶を手渡す機械",
-    "section": "成績表：RNN、勝つ",
-    "text": "成績表：RNN、勝つ\n\n同じ分け方（9:1）・同じ採点（1遷移あたりの平均 \\(-\\log P\\)）での勝負：\n\n\n\nモデル\n記憶の形\nval\n\n\n\n\n数えるだけ（バイグラム）\n直前1文字\n2.62\n\n\nMLP（窓2）\n直前2文字\n2.59\n\n\nRNN（valの底）\nここまで全部\n==2.37==\n\n\n\n\n窓なしの記憶は本当に効く — RNNは実力で主役だった\nでは、なぜ君たちの GPT に RNN は入っていないのか。理由は3つ、すべて「訓練のしにくさ」"
+    "objectID": "tokenization.html#文章を部品に割る-トークン化",
+    "href": "tokenization.html#文章を部品に割る-トークン化",
+    "title": "文字を数にする",
+    "section": "文章を部品に割る — トークン化",
+    "text": "文章を部品に割る — トークン化\n\n\n文章をモデルに渡す単位に割ることをトークン化（tokenization）、1つ1つの部品をトークン（token）と呼ぶ\n割り方は選べる：\n\n\n\n\n割り方\n「吾輩は猫である」の例\n部品の種類\n\n\n\n\n単語ごと\n吾輩 / は / 猫 / で / ある\n数十万〜\n\n\n文字ごと\n吾 / 輩 / は / 猫 / で / あ / る\n数十〜数千\n\n\n\n\nこの講義では文字ごとで通す — 部品が少なく、仕組みがぜんぶ見える\n\n\n\n\n\n\n\nノート\n\n\nChatGPT などの実物は中間のサブワード（subword）単位を使う — この回の終わりに一目だけ見る。"
   },
   {
-    "objectID": "bungo-project.html#段階で仕上げる",
-    "href": "bungo-project.html#段階で仕上げる",
-    "title": "最終プロジェクト：推し文豪ボット",
-    "section": "3段階で仕上げる",
-    "text": "3段階で仕上げる\n\n\n\n\n\n\n\n\n\n段階\n見せるもの\n完了の目印\n\n\n\n\n材料検査\n作家・作品名、字数、語彙サイズ、冒頭200字\n洗った本文が読める\n\n\n試運転\n500回までの train / val、所要時間\nmy_ckpt_500.pt ができる\n\n\n本番\n選んだ重み、偽物と本物、生成のツマミ\n選択理由を説明できる\n\n\n\n\n途中で失敗しても、最後に成功した段階から再開する\n最終日に初めて訓練するのではなく、段階ごとに動作を確かめる"
+    "objectID": "tokenization.html#材料日本の市区町村名",
+    "href": "tokenization.html#材料日本の市区町村名",
+    "title": "文字を数にする",
+    "section": "材料：日本の市区町村名",
+    "text": "材料：日本の市区町村名\n\n\nこれから数回の材料は、全国 1,747 市区町村の名前の「よみがな」\nchimei.csv をダウンロードして、作業フォルダの data/ に置く\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nprint(len(names), \"件\")\nprint(names[:5])\n\n1747 件\n['あいおいし', 'あいかわまち', 'あいさいし', 'あいしょうちょう', 'あいずみちょう']\n\n\n\n\n\n\n\n\n\n出典\n\n\n総務省「全国地方公共団体コード」より作成（政府標準利用規約）。カタカナ表記をひらがなに変換してある。"
   },
   {
-    "objectID": "bungo-project.html#分に収める",
-    "href": "bungo-project.html#分に収める",
-    "title": "最終プロジェクト：推し文豪ボット",
-    "section": "15〜30分に収める",
-    "text": "15〜30分に収める\n\n\n標準は MAX_ITERS = 1000。まず100回の表示で、自分のPCの所要時間を確認\n1000回の見込みが30分を超えるなら 750、15分未満なら 1500 まで延長してよい\n500回の重みができれば試運転は完了 — 時間内に終わらなくても、そこから生成と分析へ進める\n速さを競う課題ではない。回数より、train / val を見て重みを選んだ理由が採点対象"
+    "objectID": "tokenization.html#この材料で何をするか",
+    "href": "tokenization.html#この材料で何をするか",
+    "title": "文字を数にする",
+    "section": "この材料で何をするか",
+    "text": "この材料で何をするか\n\n\nゴール：この名前たちを読み込んで、実在しない「架空の市町村名」を作る機械を育てる\n名前は短い・ひらがなだけ・でも「らしさ」がある — 練習台として最高の性質\n\n\n\nどこまで「本物っぽく」なるかは、これから作るモデルの腕次第"
+  },
+  {
+    "objectID": "tokenization.html#語彙-使う文字の一覧表",
+    "href": "tokenization.html#語彙-使う文字の一覧表",
+    "title": "文字を数にする",
+    "section": "語彙 — 使う文字の一覧表",
+    "text": "語彙 — 使う文字の一覧表\n\n\nデータに出てくる文字を全部集めた集合を語彙（vocabulary）と呼ぶ\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))   # 全部つなげて、重複を消して、並べる\nprint(\"語彙サイズ:\", len(chars))\nprint(\"\".join(chars))\n\n語彙サイズ: 74\nあいうえおかがきぎくぐけげこごさざしじすずせぜそぞただちぢっつづてでとどなにぬねのはばぱひびぴふぶぷへべぺほぼぽまみむめもゃやゅゆょよらりるれろわん\n\n\n\nひらがな74種類だけ — 「ゑ」も「ー」も地名には出てこない\n語彙の1文字1文字に、この並び順で番号を振る"
+  },
+  {
+    "objectID": "tokenization.html#番号との対応表を作る",
+    "href": "tokenization.html#番号との対応表を作る",
+    "title": "文字を数にする",
+    "section": "番号との対応表を作る",
+    "text": "番号との対応表を作る\n\n\n文字→番号の辞書と、番号→文字のリスト。この2つで変換は両方向できる\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\n\nstoi = {c: i for i, c in enumerate(chars)}   # string to int\nitos = chars                                  # int to string（リストのまま使える）\nprint(stoi[\"あ\"], stoi[\"ん\"])\nprint(itos[0], itos[73])\n\n0 73\nあ ん\n\n\n\nstoi / itos という変数名はこの先の回でもずっと使う"
+  },
+  {
+    "objectID": "tokenization.html#encode-と-decode",
+    "href": "tokenization.html#encode-と-decode",
+    "title": "文字を数にする",
+    "section": "encode と decode",
+    "text": "encode と decode\n\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nitos = chars\n\ndef encode(s):\n    return [stoi[c] for c in s]\n\ndef decode(ids):\n    return \"\".join(itos[i] for i in ids)\n\nprint(encode(\"しぶや\"))\nprint(decode(encode(\"しぶや\")))\n\n[17, 48, 62]\nしぶや\n\n\n\n行って戻ってこられる（往復できる）ことが対応表の合格条件"
+  },
+  {
+    "objectID": "tokenization.html#対応表は機械の入り口と出口",
+    "href": "tokenization.html#対応表は機械の入り口と出口",
+    "title": "文字を数にする",
+    "section": "対応表は、機械の入り口と出口",
+    "text": "対応表は、機械の入り口と出口\n\n\n完成形の中で encode / decode がどこに立つか、先に見ておく：\n\n\n\nモデルの中を流れるのは番号だけ。「し」の字の形も意味も、モデルは一生見ない\nencode は玄関、decode は出口 — この2つの外側だけが人間の世界\nただし番号はまだ「ただの整理番号」— 41番と42番が似ているわけではない。番号に意味を持たせる工夫は「ことばの地図」の回で"
+  },
+  {
+    "objectID": "tokenization.html#演習往復させる",
+    "href": "tokenization.html#演習往復させる",
+    "title": "文字を数にする",
+    "section": "演習：往復させる",
+    "text": "演習：往復させる\n\n自作の encode / decode が往復できることを確かめよ。\n\nさっきのスライドのコードを .py ファイルにコピーして実行\n好きな市区町村名（ひらがな）を encode して番号列を表示\nその番号列を decode して元に戻ることを確認（== で比較した結果も表示）\n「とうきょう」のようにデータに実在しない並びでも往復できることを確認\n\n\n\n解答例を見る\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nchars = sorted(set(\"\".join(names)))\nstoi = {c: i for i, c in enumerate(chars)}\nitos = chars\n\ndef encode(s):\n    return [stoi[c] for c in s]\n\ndef decode(ids):\n    return \"\".join(itos[i] for i in ids)\n\nword = \"とうきょう\"\nids = encode(word)\nprint(ids)\nprint(decode(ids))\nprint(decode(ids) == word)   # True — 実在しない並びでも文字さえ語彙にあれば往復できる"
+  },
+  {
+    "objectID": "tokenization.html#表に無い文字が来たら",
+    "href": "tokenization.html#表に無い文字が来たら",
+    "title": "文字を数にする",
+    "section": "表に無い文字が来たら？",
+    "text": "表に無い文字が来たら？\n\n\n\n\n\n\n\n\n質問\n\n\nencode(\"パリ\") を実行したら何が起きる？予想してから実行。\n\n\n\n\n\n\nKeyError: 'パ' — 語彙に無い文字は変換できずにエラーで止まる\nこれは正しい挙動。だまって握りつぶすより、その場で止まって教えてくれる方がいい\n実物の LLM も同じ問題を抱えている：語彙にどんな部品を揃えるかは設計の急所"
+  },
+  {
+    "objectID": "tokenization.html#語彙の外とどう付き合うか",
+    "href": "tokenization.html#語彙の外とどう付き合うか",
+    "title": "文字を数にする",
+    "section": "語彙の外と、どう付き合うか",
+    "text": "語彙の外と、どう付き合うか\n\n\n\n\n\n\n\n\n質問\n\n\nChatGPT に絵文字や顔文字を打ち込んでも、KeyError では止まらない。どう解決していると思う？\n\n\n\n\n\n語彙に無い文字への作戦は、だいたい3択：\n\n\n\n\n\n\n\n\n\n作戦\n中身\n代償\n\n\n\n\n黙って捨てる\n知らない文字を無視して続行\n入力が化ける（最悪）\n\n\n「その他」の枠\n未知の文字を全部、未知語トークン（unknown token）1つに置き換え\n情報が消える\n\n\n部品を細かくする\nバイト単位まで割れば何でも表せる\n列が長くなる\n\n\n\n\n\n実物の答えは3つ目：GPT-2 以降の語彙はバイトまで割れる部品を常備 — 地球上のどんな文字列も語彙外にならない\n自作の encode が KeyError で止まるのも立派な設計 — 黙って捨てるくらいなら、その場で叫ぶ"
+  },
+  {
+    "objectID": "tokenization.html#大きな文章だと語彙はどうなる",
+    "href": "tokenization.html#大きな文章だと語彙はどうなる",
+    "title": "文字を数にする",
+    "section": "大きな文章だと語彙はどうなる？",
+    "text": "大きな文章だと語彙はどうなる？\n\n\n最終回に使う材料も、ここで一目だけ：夏目漱石『吾輩は猫である』全文\nneko.txt をダウンロードして data/ に置く\n\n\n\n\n\n\n\n\n質問\n\n\n『吾輩は猫である』全文（約32万字）に出てくる文字は何種類？ ひらがな＋カタカナで約170、そこに漢字が乗る。1000？ 2000？\n\n\n\n\n\ntext = open(\"data/neko.txt\", encoding=\"utf-8\").read()\nprint(\"総文字数:\", len(text))\nprint(\"語彙サイズ:\", len(set(text)))\n\n\n\n総文字数: 321139\n語彙サイズ: 3045\n\n\n\n\n3,000超 — 日本語の文字レベル言語モデルは、この大語彙と戦うことになる\n\n\n\n\n\n\n\n\n\n出典\n\n\n青空文庫『吾輩は猫である』（著作権消滅済み）。ルビ・注記を除去したテキスト。"
+  },
+  {
+    "objectID": "tokenization.html#語彙サイズ比較",
+    "href": "tokenization.html#語彙サイズ比較",
+    "title": "文字を数にする",
+    "section": "語彙サイズ比較",
+    "text": "語彙サイズ比較\n\n\n\n\n\n\n\n\n\n\n\n同じ「日本語」でも、材料しだいで語彙は40倍違う\n語彙が大きい＝分類の選択肢が多い＝当てるのが難しい。まずは74択の地名から"
+  },
+  {
+    "objectID": "tokenization.html#第3の割り方-サブワード",
+    "href": "tokenization.html#第3の割り方-サブワード",
+    "title": "文字を数にする",
+    "section": "第3の割り方 — サブワード",
+    "text": "第3の割り方 — サブワード\n\n\n単語ごとは種類が多すぎ、文字ごとは『猫』でも3,045種。実物は中間を取る：\n\n\n\n\n割り方\n「吾輩は猫である。」\n種類\n\n\n\n\n単語ごと\n吾輩 / は / 猫 / で / ある / 。\n数十万〜\n\n\nサブワード\n吾輩は / 猫 / である。\n数万\n\n\n文字ごと\n吾 / 輩 / は / 猫 / で / あ / る / 。\n数十〜数千\n\n\n\n\n作り方は意外なほど素朴：よく隣り合う2文字を数えて、合体を繰り返すだけ（BPE と呼ぶ）\n『猫』の前半10万字で実際に回すと、合体20回で「吾輩」「主人」が部品になり、100回で「である。」が丸ごと1部品になる\n本編は最後まで文字ごとで通す。合体の職人技は回数外の BPE の付録 で1から自作できる"
+  },
+  {
+    "objectID": "tokenization.html#まとめ",
+    "href": "tokenization.html#まとめ",
+    "title": "文字を数にする",
+    "section": "まとめ",
+    "text": "まとめ\n\n\nことばを数にする手順：トークン化（文字ごとに割る）→ 語彙（文字一覧）→ 番号の対応表\nstoi / itos / encode / decode — この4点セットはこの講義の全域で使い回す\n語彙に無い文字はエラー — 実物はバイトまで割って逃がす。地名は74種類、『猫』は3,000超、実物のサブワードは数万\n\n\n現在の設計図　文章 → 文字に分割 → 番号 → モデル → 番号 → 文字\n\n\n\n\n\n\n\n\n次回予告\n\n\n数になったので、いよいよ「次の1文字を当てる」が始められる。 最初のモデルは学習すらしない — 数えるだけ。それでも名前が作れてしまう。"
+  },
+  {
+    "objectID": "tokenization.html#練習問題",
+    "href": "tokenization.html#練習問題",
+    "title": "文字を数にする",
+    "section": "練習問題",
+    "text": "練習問題\n\n以下の問題をPythonコードで解け。\n問題1：一番よく使われる文字\n地名データ全体（1,747件をつなげた文字列）で、登場回数の多い文字トップ5を回数つきで表示せよ。\n\nchimei.csv を読み込み、\"\".join(...) で1本の文字列に\n各文字の回数を辞書で数える（collections.Counter を使ってもよい）\n多い順に並べてトップ5を表示\n\n問題2：使われていないひらがな\n五十音の基本46文字（\"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん\"）のうち、地名のよみに1度も使われていない文字をすべて表示せよ。\n問題3：秘密のメッセージ\n本編の対応表（stoi / itos）で、次の番号列を decode せよ。\n[66, 59, 25, 67, 14, 2, 5, 9, 30, 8, 41, 56, 27, 40, 36, 56, 3, 26]\n読めたら、その文はこの講義の次回予告になっている。"
+  },
+  {
+    "objectID": "tokenization.html#解答例",
+    "href": "tokenization.html#解答例",
+    "title": "文字を数にする",
+    "section": "解答例",
+    "text": "解答例\n\n\n\n解答例を見る\nfrom collections import Counter\n\nimport pandas as pd\n\nnames = pd.read_csv(\"data/chimei.csv\")[\"yomi\"].tolist()\nall_text = \"\".join(names)\n\n# 問題1\ncounts = Counter(all_text)\nfor c, n in counts.most_common(5):\n    print(c, n)\n\n# 問題2\ngojuon = \"あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん\"\nunused = [c for c in gojuon if c not in counts]\nprint(\"未使用:\", unused)\n\n# 問題3\nchars = sorted(set(all_text))\nids = [66, 59, 25, 67, 14, 2, 5, 9, 30, 8, 41, 56, 27, 40, 36, 56, 3, 26]\nprint(\"\".join(chars[i] for i in ids))\n\n\nし 1116\nち 860\nう 730\nま 593\nょ 514\n未使用: ['を']\nよめたらごうかくつぎはまちのなまえだ"
   }
 ]

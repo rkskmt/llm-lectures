@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -219,14 +263,14 @@ rkskmt
 <section id="まずは自分で読んでみる" class="slide level2">
 <h2>まずは自分で読んでみる</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>次の（　）に入る言葉は？</p>
@@ -307,7 +351,7 @@ rkskmt
 <p><span class="math display">\[
 (1, 1) \cdot (2, 2) = 1 \times 2 + 1 \times 2 = 4
 \]</span></p>
-<div id="75a8e44e" class="cell" data-execution_count="1">
+<div id="603bbb7c" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -380,14 +424,14 @@ rkskmt
 </ol>
 <ul>
 <li>「まだ」の探しものと一番似た名札は「名前」→ <span class="hl">「名前」の情報が半分を占めた</span></li>
-<li>冒頭のクイズで目が「名前」に飛んだ、あの動きを数で再現した1往復</li>
+<li>冒頭の質問で目が「名前」に飛んだ、あの動きを数で再現した1往復</li>
 </ul>
 </div>
 </section>
 <section id="peek-attn-calc" class="slide level2">
 <h2>検算 — コードだと3行</h2>
 <div class="slide-body">
-<div id="dcd97c74" class="cell" data-execution_count="2">
+<div id="edb0171e" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>K <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>]])   <span class="co"># 名札（「名前」「は」「まだ」）</span></span>
@@ -411,14 +455,14 @@ rkskmt
 <section id="割合化には落とし穴がある" class="slide level2">
 <h2>割合化には落とし穴がある</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>関連度が <span class="math inline">\((2, -1, -1)\)</span> になったら？「合計で割る」方式で割合を作ってみると……</p>
@@ -433,7 +477,7 @@ rkskmt
 <li>その専用部品はすでに使っている — <a href="./bigram-neural.html#peek-softmax" class="peek">「学習で当てる」の <strong>softmax</strong></a>（<span class="math inline">\(e^s\)</span> を取って合計で割る）</li>
 </ul>
 </div>
-<div id="e2dabbb8" class="cell" data-execution_count="3">
+<div id="2b238275" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a></a></span>
 <span id="cb3-3"><a></a><span class="kw">def</span> softmax(s):</span>
@@ -583,7 +627,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="f7914073" class="cell" data-execution_count="4">
+<div id="64c6ed05" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -907,7 +951,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

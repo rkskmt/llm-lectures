@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -224,14 +268,14 @@ rkskmt
 <li>ただしモデルはまだバイグラム：<span class="hl">直前の1文字</span>しか見ていない</li>
 <li>地名バイグラムの損失は<strong>2.34の壁</strong>に当たった — 作戦自体の限界だった</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>「かみ」まで読んだ。次は？「かわ」まで読んだ。次は？ <strong>2文字</strong>見えるだけで、どれくらい予想が変わるだろう。</p>
@@ -261,14 +305,14 @@ rkskmt
 <li>バイグラムのモデルは<strong>線形1枚</strong>（掛けて足すだけ）だった。今日はここに部品を足して「多層」にする</li>
 <li>なぜ足す必要があるのか — まず線形の弱点を自分の目で確かめる</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>線形1枚で力不足なら、<strong>線形を2枚重ねれば</strong>賢くなるはず。本当か？</p>
@@ -281,7 +325,7 @@ rkskmt
 <section id="実験線形線形線形" class="slide level2">
 <h2>実験：線形×線形＝線形</h2>
 <div class="slide-body">
-<div id="2fd8c039" class="cell" data-execution_count="1">
+<div id="bc08989d" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb1-3"><a></a></span>
@@ -316,7 +360,7 @@ tensor([[ 0.4006,  0.7693],
 <p><span class="math display">\[
 \mathrm{ReLU}(x) = \max(0,\ x)
 \]</span></p>
-<div id="ac382ec7" class="cell" data-execution_count="2">
+<div id="b2aff490" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -325,7 +369,7 @@ tensor([[ 0.4006,  0.7693],
 </div>
 </div>
 </div>
-<div id="5fac6877" class="cell" data-execution_count="3">
+<div id="45c8d38b" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb3-3"><a></a></span>
@@ -343,7 +387,7 @@ tensor([[ 0.4006,  0.7693],
 <section id="折り目を足すと曲がった規則が作れる" class="slide level2">
 <h2>折り目を足すと、曲がった規則が作れる</h2>
 <div class="slide-body">
-<div id="022675ba" class="cell" data-execution_count="4">
+<div id="3225750d" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -375,7 +419,7 @@ tensor([[ 0.4006,  0.7693],
 <ul>
 <li>名前の前に窓ぶんの「・」を敷いてから、1文字ずつずらして切る</li>
 </ul>
-<div id="ba6df2dd" class="cell" data-execution_count="5">
+<div id="d80570d0" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb5-2"><a></a></span>
 <span id="cb5-3"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -418,7 +462,7 @@ tensor([[ 0.4006,  0.7693],
 </ul></li>
 <li>見せていない175件で当てられたら、それは暗記ではなく<strong>実力</strong></li>
 </ul>
-<div id="615476fb" class="cell" data-execution_count="6">
+<div id="2d0d9d1c" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb7-2"><a></a><span class="im">import</span> torch</span>
 <span id="cb7-3"><a></a></span>
@@ -439,7 +483,7 @@ tensor([[ 0.4006,  0.7693],
 <section id="peek-mlp-train" class="slide level2">
 <h2>MLP言語モデルを組んで学習</h2>
 <div class="slide-body">
-<div id="ce87bf0e" class="cell" data-execution_count="7">
+<div id="2ff6c2c8" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb9-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb9-3"><a></a></span>
@@ -483,7 +527,7 @@ val   loss: 2.6139</code></pre>
 <ul>
 <li>分布からのサイコロは <code>torch.multinomial(確率, 1)</code> — bigram の回の <code>np.random.choice(p=...)</code> の torch 版</li>
 </ul>
-<div id="dbd4a14f" class="cell" data-execution_count="8">
+<div id="83472863" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a>torch.manual_seed(<span class="dv">1</span>)</span>
 <span id="cb11-2"><a></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
 <span id="cb11-3"><a></a>    window, s <span class="op">=</span> [<span class="dv">0</span>] <span class="op">*</span> ctx, <span class="st">""</span></span>
@@ -542,7 +586,7 @@ val   loss: 2.6139</code></pre>
 <section id="うますぎる名前には気をつける" class="slide level2">
 <h2>うますぎる名前には気をつける</h2>
 <div class="slide-body">
-<div id="8434ef4d" class="cell" data-execution_count="9">
+<div id="e87417fe" class="cell" data-execution_count="9">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a></a>made <span class="op">=</span> [<span class="st">"おおじたわらまち"</span>, <span class="st">"つるぎし"</span>, <span class="st">"きょうおんし"</span>, <span class="st">"みなみちょう"</span>, <span class="st">"おおのし"</span>]</span>
 <span id="cb13-2"><a></a><span class="cf">for</span> s <span class="kw">in</span> made:</span>
 <span id="cb13-3"><a></a>    <span class="bu">print</span>(s, <span class="st">"→"</span>, <span class="st">"実在する"</span> <span class="cf">if</span> s <span class="kw">in</span> names <span class="cf">else</span> <span class="st">"新作"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
@@ -560,17 +604,17 @@ val   loss: 2.6139</code></pre>
 </ul>
 </div>
 </section>
-<section id="クイズ窓を広げれば広げるほど良い" class="slide level2">
-<h2>クイズ：窓を広げれば広げるほど良い？</h2>
+<section id="質問窓を広げれば広げるほど良い" class="slide level2">
+<h2>質問：窓を広げれば広げるほど良い？</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>窓を 1 → 2 → 3 → 5 文字と広げると、<strong>見せていないデータでの損失</strong>はどうなる？ 予想してから、めくる。</p>
@@ -578,7 +622,7 @@ val   loss: 2.6139</code></pre>
 </div>
 </div>
 </div>
-<div id="845dd79d" class="cell" data-execution_count="10">
+<div id="893aff19" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -775,7 +819,7 @@ val   loss: 2.6139</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="7c746317" class="cell" data-execution_count="11">
+<div id="a279eaf8" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a></a><span class="co"># 問題1（本編の model, stoi, chars が残っている前提）</span></span>
@@ -1094,7 +1138,7 @@ val   loss: 2.6139</code></pre>
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

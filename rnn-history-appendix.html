@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -257,7 +301,7 @@ rkskmt
 <li>新しい数学はゼロ：埋め込み・行列・tanh（シグモイドの親戚のS字カーブ）・softmax</li>
 <li>違いは<strong>ループが構造の中にある</strong>ことだけ — forward の中に「1文字ずつ」の for 文が入る</li>
 </ul>
-<div id="9f57e80c" class="cell" data-execution_count="1">
+<div id="a571e93b" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a></a><span class="im">import</span> torch</span>
 <span id="cb1-3"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
@@ -292,7 +336,7 @@ rkskmt
 <h2>実験：地名メーカーを RNN で</h2>
 <div class="slide-body">
 <p><a href="data/chimei.csv">chimei.csv</a> を <code>data/</code> に置き、いつもの地名ストリームで訓練する（500歩・約30秒）。</p>
-<div id="fa2a85a1" class="cell" data-execution_count="2">
+<div id="07215486" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
 <span id="cb2-2"><a></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
 <span id="cb2-3"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
@@ -327,7 +371,7 @@ rkskmt
 <ul>
 <li>生成も1文字ずつ：<span class="math inline">\(h\)</span> を空にして始め、引いた文字を入れてはまた引く</li>
 </ul>
-<div id="4ccba7f6" class="cell" data-execution_count="3">
+<div id="0262cfe7" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a>g <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">1</span>)</span>
 <span id="cb4-2"><a></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
 <span id="cb4-3"><a></a>    h <span class="op">=</span> torch.zeros(<span class="dv">1</span>, <span class="dv">64</span>)</span>
@@ -396,7 +440,7 @@ rkskmt
 <section id="つまずき①-過学習が速い" class="slide level2">
 <h2>つまずき① 過学習が速い</h2>
 <div class="slide-body">
-<div id="0d0c5d70" class="cell" data-execution_count="4">
+<div id="54fa1ec3" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -418,7 +462,7 @@ rkskmt
 <li>記憶は毎歩、<span class="math inline">\(\tanh\)</span> と <span class="math inline">\(W_h\)</span> の<strong>同じ関所</strong>を通る。誤差が入口へ<strong>戻る</strong>ときも同じ関所を逆に通る</li>
 <li>64文字さかのぼるなら関所64回 — 1回ごとに少し痩せる勾配は、<span class="hl">指数関数的に消えていく</span></li>
 </ul>
-<div id="54108f72" class="cell" data-execution_count="5">
+<div id="691b5d54" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -450,7 +494,7 @@ rkskmt
 <li><span class="math inline">\(h_t\)</span> は <span class="math inline">\(h_{t-1}\)</span> 待ち — <strong>今日の1歩は、昨日の1歩が終わるまで始まらない</strong></li>
 <li>並列計算機（GPU）は「同時にたくさん」が取り柄なのに、RNN の訓練はその取り柄を使えない</li>
 </ul>
-<div id="dcaf016d" class="cell" data-execution_count="6">
+<div id="fd224296" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-stdout">
 <pre><code>forward 1回 (32文×64文字、1スレッドCPU):
   RNN（1層のループ64歩）   : 1692 ms
@@ -774,7 +818,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

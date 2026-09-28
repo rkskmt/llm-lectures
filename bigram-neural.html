@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -226,14 +270,14 @@ rkskmt
 <li>損失を決めて、その損失が減る向きへ数値を少しずつ動かした — <strong>学習</strong></li>
 </ul></li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>前回の表と同じものを、数えずに<strong>勾配降下法だけ</strong>で作れるか？</p>
@@ -297,7 +341,7 @@ rkskmt
 <ul>
 <li>今日から <strong>PyTorch</strong> を使う。基本の箱は <strong>tensor</strong> — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚</li>
 </ul>
-<div id="167f435a" class="cell" data-execution_count="1">
+<div id="92e85b20" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>a <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">2.0</span>], [<span class="fl">3.0</span>, <span class="fl">4.0</span>]])</span>
@@ -320,7 +364,7 @@ tensor([210., 430.])</code></pre>
 <ul>
 <li>tensor は<span class="hl">自分がどう計算されたかを覚えている</span>。だから「結果を入力で微分した傾き」を自動で出せる</li>
 </ul>
-<div id="3d17a15f" class="cell" data-execution_count="2">
+<div id="49d627a1" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a></a></span>
 <span id="cb3-3"><a></a>x <span class="op">=</span> torch.tensor(<span class="fl">3.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)   <span class="co"># 「微分を追跡せよ」の印</span></span>
@@ -346,7 +390,7 @@ tensor([210., 430.])</code></pre>
 <li>モデルに入れるために、文字番号を75次元のベクトルにする</li>
 <li><strong>one-hot ベクトル</strong>：その文字の位置だけ 1、あとは全部 0</li>
 </ul>
-<div id="2f191f78" class="cell" data-execution_count="3">
+<div id="57ace2e1" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb5-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb5-3"><a></a></span>
@@ -392,7 +436,7 @@ tensor([1., 0., 0., 0., 0., 0.]) ...</code></pre>
 <p><span class="math display">\[
 \mathrm{softmax}(s_k) = \frac{e^{s_k}}{\sum_j e^{s_j}}
 \]</span></p>
-<div id="a8c3f055" class="cell" data-execution_count="4">
+<div id="31523f02" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb7-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb7-3"><a></a></span>
@@ -414,7 +458,7 @@ tensor(1.0000)</code></pre>
 <section id="softmax-の形-es-は差の増幅器" class="slide level2">
 <h2>softmax の形 — <span class="math inline">\(e^s\)</span> は差の増幅器</h2>
 <div class="slide-body">
-<div id="dd3a1253" class="cell" data-execution_count="5">
+<div id="d6b79741" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -445,7 +489,7 @@ tensor(1.0000)</code></pre>
 <p><span class="math display">\[
 \text{損失} = -\log\big(\text{正解に付けた確率}\big)
 \]</span></p>
-<div id="80acd9db" class="cell" data-execution_count="6">
+<div id="c9a87cf7" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -483,7 +527,7 @@ tensor(1.0000)</code></pre>
 <li>損失は <span class="math inline">\(W\)</span>（5,625個の数）しだいで変わる。<span class="math inline">\(W\)</span> をどっちに動かせば損失が減る？</li>
 <li><code>backward()</code> が出す<strong>勾配</strong>（<span class="en">gradient</span>）＝「どちらへ動かすと損失が増えるか」の矢印。<span class="hl">その逆へ少しずつ動かし続ける</span>のが<strong>勾配降下法</strong>（<span class="en">gradient descent</span>）。1歩の幅が<strong>学習率</strong>（<code>lr</code>）</li>
 </ul>
-<div id="cc1f38ee" class="cell" data-execution_count="7">
+<div id="a4bfdc3d" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -545,7 +589,7 @@ tensor(1.0000)</code></pre>
 <section id="peek-neural-bigram" class="slide level2">
 <h2>学習ループを回す</h2>
 <div class="slide-body">
-<div id="4fcfff23" class="cell" data-execution_count="8">
+<div id="849a2f4a" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb9-2"><a></a><span class="im">import</span> torch</span>
 <span id="cb9-3"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
@@ -590,7 +634,7 @@ tensor(1.0000)</code></pre>
 <ul>
 <li>学習した <span class="math inline">\(W\)</span> を softmax で確率にして、前回の「数えた表」と比べる</li>
 </ul>
-<div id="5a51219b" class="cell" data-execution_count="9">
+<div id="86e02179" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -599,7 +643,7 @@ tensor(1.0000)</code></pre>
 </div>
 </div>
 </div>
-<div id="58dddaa1" class="cell" data-execution_count="10">
+<div id="c06fc842" class="cell" data-execution_count="10">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a><span class="bu">print</span>(<span class="st">"確率の差の最大:"</span>, np.<span class="bu">abs</span>(P_learn <span class="op">-</span> P_count).<span class="bu">max</span>().<span class="bu">round</span>(<span class="dv">4</span>))</span>
 <span id="cb11-2"><a></a><span class="bu">print</span>(<span class="st">"P(う|ょ)  数え:"</span>, P_count[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>),</span>
 <span id="cb11-3"><a></a>      <span class="st">" 学習:"</span>, P_learn[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
@@ -623,14 +667,14 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <ul>
 <li>数える方が速くて正確なのに、遠回りした理由：</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>「直前の<strong>5文字</strong>を見て次を当てる」を表で作ると、行はいくつ必要？</p>
@@ -653,7 +697,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <ul>
 <li>前回の生成コードの <code>P</code> を <code>P_learn</code> に差し替えるだけ</li>
 </ul>
-<div id="84edc672" class="cell" data-execution_count="11">
+<div id="3f7e6b98" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb13-2"><a></a></span>
 <span id="cb13-3"><a></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
@@ -788,7 +832,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="cab68e6b" class="cell" data-execution_count="12">
+<div id="396c17e5" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -1137,7 +1181,7 @@ tensor([0.7054, 0.2595, 0.0351])
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

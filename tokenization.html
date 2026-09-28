@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -227,14 +271,14 @@ rkskmt
 <li>損失も勾配も、ぜんぶ<strong>数値の計算</strong>だった</li>
 </ul></li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>「あ」は数字ではない。ニューラルネットに「あ」をどうやって入れる？</p>
@@ -302,7 +346,7 @@ rkskmt
 <li>これから数回の材料は、<strong>全国 1,747 市区町村の名前の「よみがな」</strong></li>
 <li><a href="data/chimei.csv">chimei.csv</a> をダウンロードして、作業フォルダの <code>data/</code> に置く</li>
 </ul>
-<div id="75b0ee8f" class="cell" data-execution_count="1">
+<div id="0b7d0de8" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -349,7 +393,7 @@ rkskmt
 <ul>
 <li>データに出てくる文字を全部集めた集合を<strong>語彙</strong>（<span class="en">vocabulary</span>）と呼ぶ</li>
 </ul>
-<div id="ef21820a" class="cell" data-execution_count="2">
+<div id="d3f9a1e7" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb3-2"><a></a></span>
 <span id="cb3-3"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -373,7 +417,7 @@ rkskmt
 <ul>
 <li>文字→番号の辞書と、番号→文字のリスト。この2つで変換は両方向できる</li>
 </ul>
-<div id="79ba9d81" class="cell" data-execution_count="3">
+<div id="bf5ff3e5" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb5-2"><a></a></span>
 <span id="cb5-3"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -396,7 +440,7 @@ rkskmt
 <section id="encode-と-decode" class="slide level2">
 <h2>encode と decode</h2>
 <div class="slide-body">
-<div id="62b2a38e" class="cell" data-execution_count="4">
+<div id="5a71da28" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb7-2"><a></a></span>
 <span id="cb7-3"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -447,7 +491,7 @@ rkskmt
 <li>その番号列を <code>decode</code> して元に戻ることを確認（<code>==</code> で比較した結果も表示）</li>
 <li>「とうきょう」のように<strong>データに実在しない並び</strong>でも往復できることを確認</li>
 </ol>
-<div id="3af1bdb3" class="cell" data-execution_count="5">
+<div id="c9208893" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -475,14 +519,14 @@ rkskmt
 <section id="表に無い文字が来たら" class="slide level2">
 <h2>表に無い文字が来たら？</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p><code>encode("パリ")</code> を実行したら何が起きる？予想してから実行。</p>
@@ -502,14 +546,14 @@ rkskmt
 <section id="語彙の外とどう付き合うか" class="slide level2">
 <h2>語彙の外と、どう付き合うか</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>ChatGPT に絵文字や顔文字を打ち込んでも、KeyError では止まらない。どう解決していると思う？</p>
@@ -566,14 +610,14 @@ rkskmt
 <li>最終回に使う材料も、ここで一目だけ：夏目漱石<strong>『吾輩は猫である』全文</strong></li>
 <li><a href="data/neko.txt">neko.txt</a> をダウンロードして <code>data/</code> に置く</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>『吾輩は猫である』全文（約32万字）に出てくる文字は<strong>何種類</strong>？ ひらがな＋カタカナで約170、そこに漢字が乗る。1000？ 2000？</p>
@@ -581,7 +625,7 @@ rkskmt
 </div>
 </div>
 </div>
-<div id="a2d18dd7" class="cell" data-execution_count="6">
+<div id="d62051b4" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
 <span id="cb10-2"><a></a><span class="bu">print</span>(<span class="st">"総文字数:"</span>, <span class="bu">len</span>(text))</span>
 <span id="cb10-3"><a></a><span class="bu">print</span>(<span class="st">"語彙サイズ:"</span>, <span class="bu">len</span>(<span class="bu">set</span>(text)))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
@@ -617,7 +661,7 @@ rkskmt
 <section id="語彙サイズ比較" class="slide level2">
 <h2>語彙サイズ比較</h2>
 <div class="slide-body">
-<div id="1564d91f" class="cell" data-execution_count="7">
+<div id="a2730a9e" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -721,7 +765,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="eab000b0" class="cell" data-execution_count="8">
+<div id="57ce82e3" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
@@ -1048,7 +1092,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

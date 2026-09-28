@@ -190,6 +190,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -202,7 +246,7 @@
 
 <section id="title-slide" class="quarto-title-block center">
   <h1 class="title">最終プロジェクト：推し文豪ボット</h1>
-  <p class="subtitle">自分のGPTを育てる — そして文豪テストの種明かし</p>
+  <p class="subtitle">自分のGPTを育てる — そして文豪テストの答え合わせ</p>
 
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
@@ -250,8 +294,8 @@ rkskmt
 </ul>
 </div>
 </section>
-<section id="種明かしの種明かし" class="slide level2">
-<h2>種明かしの種明かし</h2>
+<section id="偽物の正体" class="slide level2">
+<h2>偽物の正体</h2>
 <div class="slide-body">
 <ul>
 <li>生成文と本文の一致は最長でも<strong>9文字</strong> — 暗記の吐き出しではなく、<strong>文体の統計</strong>が書いた偽物</li>
@@ -349,7 +393,7 @@ rkskmt
 <ul>
 <li>青空文庫のテキストは Shift_JIS で、ルビ《…》や注記［＃…］が混ざっている。洗ってから使う</li>
 </ul>
-<div id="c9201879" class="cell" data-execution_count="1">
+<div id="fce40f11" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> re</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>raw <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/ginga_tetsudo.txt"</span>, encoding<span class="op">=</span><span class="st">"cp932"</span>).read()   <span class="co"># DLした生テキスト</span></span>
@@ -379,7 +423,7 @@ rkskmt
 <li>訓練コードは<strong>小さなGPTの回のものを1行だけ差し替える</strong>：読み込むファイル名だけ</li>
 <li><a href="tools/refimpl/gpt.py">gpt.py</a> を自分のスクリプトと同じフォルダに置く（小さなGPTの回と同じ配置）</li>
 </ul>
-<div id="ccd214ef" class="cell" data-execution_count="2">
+<div id="8f77a26a" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="im">import</span> time</span>
 <span id="cb2-2"><a></a></span>
 <span id="cb2-3"><a></a><span class="im">import</span> torch</span>
@@ -498,7 +542,7 @@ rkskmt
 <section id="偽物を提出する" class="slide level2 scrollable">
 <h2>偽物を提出する</h2>
 <div class="slide-body">
-<div id="5f7393ce" class="cell" data-execution_count="3">
+<div id="198a4610" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb3-3"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
@@ -532,7 +576,7 @@ rkskmt
 <li>過学習ぎみの重みや低い temperature では、<span class="hl">本文の丸写しに近い文</span>が出ることがある。偽物は文体の<strong>創作</strong>であって暗記の吐き出しではないこと — 大会のフェアプレー</li>
 <li>コーパスとのひと続きの<strong>最長一致</strong>を測ってから提出する：</li>
 </ul>
-<div id="1489336f" class="cell" data-execution_count="4">
+<div id="91250c06" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a><span class="kw">def</span> longest_match(fake, text):</span>
 <span id="cb4-2"><a></a>    best <span class="op">=</span> <span class="st">""</span></span>
 <span id="cb4-3"><a></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(fake)):</span>
@@ -1002,7 +1046,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

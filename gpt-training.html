@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -244,7 +288,7 @@ rkskmt
 <ul>
 <li>文章を <strong>64文字</strong>（<code>block_size</code>）ずつ切り出し、「1文字ずらし」を正解にする</li>
 </ul>
-<div id="51409456" class="cell" data-execution_count="2">
+<div id="c64709b7" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
@@ -277,7 +321,7 @@ rkskmt
 <section id="ミニバッチを切り出す" class="slide level2">
 <h2>ミニバッチを切り出す</h2>
 <div class="slide-body">
-<div id="76a98908" class="cell" data-execution_count="3">
+<div id="76fd04fa" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="kw">def</span> get_batch(data, block_size<span class="op">=</span><span class="dv">64</span>, batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb3-2"><a></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(data) <span class="op">-</span> block_size <span class="op">-</span> <span class="dv">1</span>, (batch_size,))</span>
 <span id="cb3-3"><a></a>    x <span class="op">=</span> torch.stack([data[i:i <span class="op">+</span> block_size] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
@@ -299,7 +343,7 @@ rkskmt
 <section id="peek-gpt-train" class="slide level2">
 <h2>火入れ — 300回だけ回してみる</h2>
 <div class="slide-body">
-<div id="b74d30f9" class="cell" data-execution_count="4">
+<div id="41e2eaa2" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb5-2"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb5-3"><a></a></span>
@@ -335,7 +379,7 @@ rkskmt
 <section id="生成してみる-300回時点の実力" class="slide level2">
 <h2>生成してみる — 300回時点の実力</h2>
 <div class="slide-body">
-<div id="edaed601" class="cell" data-execution_count="5">
+<div id="bda5768f" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="at">@torch.no_grad</span>()</span>
 <span id="cb7-2"><a></a><span class="kw">def</span> generate(model, prompt, n):</span>
 <span id="cb7-3"><a></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
@@ -441,17 +485,17 @@ rkskmt
 </ul>
 </div>
 </section>
-<section id="クイズ10000回回すと何が起きる" class="slide level2">
-<h2>クイズ：10,000回回すと何が起きる？</h2>
+<section id="質問10000回回すと何が起きる" class="slide level2">
+<h2>質問：10,000回回すと何が起きる？</h2>
 <div class="slide-body">
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>損失のグラフはどうなっていると思う？ 訓練データ（見た文章）と、隠しておいた1割（初見の文章）の<strong>2本の線</strong>を想像してから、めくる。</p>
@@ -460,7 +504,7 @@ rkskmt
 </div>
 </div>
 <div class="fragment">
-<div id="da1849e4" class="cell" data-execution_count="6">
+<div id="8a88dc7c" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -508,7 +552,7 @@ rkskmt
 <li>訓練は途中の重みを保存できる — この保存ファイルが<strong>チェックポイント</strong>（<span class="en">checkpoint</span>）。val の底で保存した配布用を用意した</li>
 <li><a href="data/runs/neko/ckpt_best.pt">ckpt_best.pt</a>（3.4MB）をダウンロードして <code>data/runs/neko/</code> に置く</li>
 </ul>
-<div id="1d0563ec" class="cell" data-execution_count="7">
+<div id="89c8974d" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb9-2"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb9-3"><a></a></span>
@@ -538,7 +582,7 @@ rkskmt
 <li>「束ねて、考える」の回の宿題を回収する — あのとき<span class="hl">どのヘッドがどんな「係」（視線の分業）になるかは学習まかせ</span>と約束した</li>
 <li>訓練済みモデルに冒頭の一文を読ませ、層×ヘッドの<strong>視線の表</strong>（Q・K・V の回で作った「誰が誰を見るか」の表）を取り出して眺める</li>
 </ul>
-<div id="02107a9f" class="cell" data-execution_count="8">
+<div id="7d510761" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -556,7 +600,7 @@ rkskmt
 <section id="名前はまだの視線" class="slide level2">
 <h2>「名前はまだ」の視線</h2>
 <div class="slide-body">
-<div id="f27a548d" class="cell" data-execution_count="9">
+<div id="c1b17a08" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -574,7 +618,7 @@ rkskmt
 <section id="文字前のカッコを見る係" class="slide level2">
 <h2>14文字前のカッコを見る係</h2>
 <div class="slide-body">
-<div id="6f6dda93" class="cell" data-execution_count="10">
+<div id="13c92333" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -598,7 +642,7 @@ rkskmt
 </ul>
 <iframe src="data/runs/neko/attn_view.html" width="100%" height="430" style="border: 1px solid #ccc; border-radius: 6px; background: white;">
 </iframe>
-<div id="15fe47c9" class="cell" data-execution_count="11">
+<div id="3377037f" class="cell" data-execution_count="11">
 <details class="code-fold">
 <summary>自分の手元で動かすコード（pip install bertviz が必要）</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a><span class="im">import</span> torch</span>
@@ -771,7 +815,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="740066e6" class="cell" data-execution_count="12">
+<div id="7457552a" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a></a><span class="im">import</span> torch</span>
@@ -1092,7 +1136,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

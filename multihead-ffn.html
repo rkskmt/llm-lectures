@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -223,14 +267,14 @@ rkskmt
 <li>言語モデル用の注意ヘッドが完成した：位置埋め込み＋因果マスク付きの <code>Head</code></li>
 <li>でも、このヘッド1本ではまだ GPT は組めない。足りないものが2つ：</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>「」の対応を見る視線と、直前の文字を見る視線 — 1枚の「視線の表」で<strong>両方いっぺんに</strong>できるか？</p>
@@ -251,7 +295,7 @@ rkskmt
 <ul>
 <li>ミニバッチで学習するので、今日から入力は<span class="hl">複数の文をまとめた3次元</span>：（バッチ, 文字数, 次元）</li>
 </ul>
-<div id="70de7d9e" class="cell" data-execution_count="1">
+<div id="207c0f27" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a></a></span>
 <span id="cb1-3"><a></a>x <span class="op">=</span> torch.randn(<span class="dv">32</span>, <span class="dv">5</span>, <span class="dv">8</span>)              <span class="co"># 32文・5文字・8次元</span></span>
@@ -269,7 +313,7 @@ rkskmt
 <section id="ヘッドをバッチ対応にする" class="slide level2">
 <h2>ヘッドをバッチ対応にする</h2>
 <div class="slide-body">
-<div id="9bbc1821" class="cell" data-execution_count="2">
+<div id="bf5cedde" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> math</span>
 <span id="cb3-2"><a></a><span class="im">import</span> torch</span>
 <span id="cb3-3"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
@@ -322,7 +366,7 @@ rkskmt
 <section id="peek-multihead" class="slide level2">
 <h2>マルチヘッド注意</h2>
 <div class="slide-body">
-<div id="842f3a9f" class="cell" data-execution_count="3">
+<div id="a5a51a26" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="kw">class</span> MultiHead(nn.Module):</span>
 <span id="cb5-2"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd, n_head, block_size):</span>
 <span id="cb5-3"><a></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -392,7 +436,7 @@ rkskmt
 <li>注意は他の文字から情報を<strong>集める</strong>部品。集めた情報を<strong>加工する</strong>場所がまだない</li>
 <li>各位置ごとに、小さな2層ネット（線形 → ReLU → 線形）を通す</li>
 </ul>
-<div id="e88ad589" class="cell" data-execution_count="4">
+<div id="dc12d3ee" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="kw">class</span> FeedForward(nn.Module):</span>
 <span id="cb7-2"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd):</span>
 <span id="cb7-3"><a></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -539,7 +583,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="befd9877" class="cell" data-execution_count="5">
+<div id="22812590" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a></a><span class="co"># 問題1: 各ヘッド (2, 10, 24) → cat (2, 10, 96) → proj (2, 10, 96)</span></span>
@@ -858,7 +902,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

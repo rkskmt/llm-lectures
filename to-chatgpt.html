@@ -193,6 +193,50 @@
   </style>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="custom.css">
+  <script>
+  // MathJax v2's HTML-CSS renderer (Quarto hardcodes config=TeX-AMS_HTML-full)
+  // measures glyph widths in the live DOM, so when its TeX webfonts arrive
+  // after typesetting (VSCode webviews, high-DPI Windows, slow networks) the
+  // repaint leaves inline math wider than its reserved box and it overpaints
+  // the neighboring text. The CommonHTML renderer lays out from built-in
+  // metric tables and has no such race. Quarto offers no knob for this, so
+  // trap the Reveal global (reveal.js loads later, in <body>) and rewrite
+  // the math config before Reveal.initialize hands it to the math plugin.
+  //
+  // CommonHTML still sizes math by measuring an ex-height probe in the
+  // DOM next to each equation (matchFontHeight). reveal.css keeps every
+  // section display:none until Reveal's first layout, so when MathJax
+  // loads fast (warm HTTP cache) the initial whole-deck typeset runs
+  // against hidden slides: the probe measures 0, MathJax substitutes
+  // the 16px-body default ex but keeps the real 32px font-size, and
+  // every equation renders at ~50-61% — permanently, because MathJax
+  // never re-typesets processed math. A fixed scale with
+  // matchFontHeight off removes the DOM measurement entirely (which
+  // also fixes math inside collapsed code-fold / callout bodies —
+  // those always measured hidden). 127% is what the measurement
+  // itself yields for this theme's fonts when it works; retune it if
+  // the body font ever changes.
+  (function () {
+    var reveal;
+    Object.defineProperty(window, "Reveal", {
+      configurable: true,
+      get: function () { return reveal; },
+      set: function (value) {
+        reveal = value;
+        if (!value || typeof value.initialize !== "function" || value.__cskCHTML) return;
+        value.__cskCHTML = true;
+        var initialize = value.initialize;
+        value.initialize = function (config) {
+          if (config && config.math && typeof config.math.config === "string") {
+            config.math.config = config.math.config.replace("_HTML", "_CHTML");
+            config.math.CommonHTML = { scale: 127, matchFontHeight: false };
+          }
+          return initialize.call(this, config);
+        };
+      }
+    });
+  })();
+  </script>
   <script src="slide-ui.js" defer=""></script>
   <script src="search-ui.js" defer=""></script>
   <script src="peek-ui.js" defer=""></script>
@@ -223,14 +267,14 @@ rkskmt
 <li>手元にあるもの：82万パラメータ・『吾輩は猫である』1冊で育てた文字レベル GPT</li>
 <li>世の中にあるもの：ChatGPT</li>
 </ul>
-<div title="クイズ">
+<div title="質問">
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
-<p><strong>クイズ</strong></p>
+<p><strong>質問</strong></p>
 </div>
 <div class="callout-content">
 <p>自作GPTと ChatGPT の差は、次のどれが一番大きい？</p>
@@ -303,7 +347,7 @@ rkskmt
 <section id="距離1スケール" class="slide level2">
 <h2>距離1：スケール</h2>
 <div class="slide-body">
-<div id="679c4006" class="cell" data-execution_count="1">
+<div id="d3f99f02" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -324,7 +368,7 @@ rkskmt
 <ul>
 <li>パラメータは float32 の数 — <span class="hl">1個が4バイト</span>。個数を掛ければ「モデルの重さ」が出る</li>
 </ul>
-<div id="7e534699" class="cell" data-execution_count="2">
+<div id="331882dd" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"自作GPT"</span>, <span class="dv">817_125</span>), (<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
 <span id="cb1-2"><a></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>p <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="fl">1e9</span><span class="sc">:,.4f}</span><span class="ss"> GB"</span>)   <span class="co"># 数1個 = 4バイト</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -452,7 +496,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに質問してみる" class="slide level2">
 <h2>実験：自作GPTに質問してみる</h2>
 <div class="slide-body">
-<div id="72d6a934" class="cell" data-execution_count="4">
+<div id="1a6c3eb6" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb3-3"><a></a></span>
@@ -547,7 +591,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに事実を聞く" class="slide level2">
 <h2>実験：自作GPTに事実を聞く</h2>
 <div class="slide-body">
-<div id="b3e90cea" class="cell" data-execution_count="5">
+<div id="731aca13" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="bu">print</span>(gen(<span class="st">"主人の名前は"</span>, <span class="dv">50</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」</code></pre>
@@ -591,7 +635,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="ハルシネーションの解剖" class="slide level2">
 <h2>ハルシネーションの解剖</h2>
 <div class="slide-body">
-<div id="d25e9f8b" class="cell" data-execution_count="6">
+<div id="e7e82d03" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="bu">print</span>(gen(<span class="st">"吾輩の主人は"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">0</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も</code></pre>
@@ -600,7 +644,7 @@ GPT-3   700.0000 GB</code></pre>
 <ul>
 <li>途中に「<strong>寒月君は猫</strong>としてはならんのだから」— それらしい主張。本文と照合する：</li>
 </ul>
-<div id="c2418b4a" class="cell" data-execution_count="7">
+<div id="6eb0cc96" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
 <span id="cb9-2"><a></a><span class="bu">print</span>(<span class="st">"寒月君は:"</span>, text.count(<span class="st">"寒月君は"</span>), <span class="st">"回"</span>)</span>
 <span id="cb9-3"><a></a><span class="bu">print</span>(<span class="st">"猫として:"</span>, text.count(<span class="st">"猫として"</span>), <span class="st">"回"</span>)</span>
@@ -628,7 +672,7 @@ GPT-3   700.0000 GB</code></pre>
 <li>出力に含まれる「事実らしい主張」に下線を引く（紙でよい）</li>
 <li>その主張が本文にあるか、<code>in</code> 演算子や <code>count</code> で検索して判定（<code>"○○" in text</code> など）</li>
 </ol>
-<div id="87ea4db1" class="cell" data-execution_count="8">
+<div id="eac2d0e6" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答の型を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
@@ -699,7 +743,7 @@ GPT-3   700.0000 GB</code></pre>
 <p><strong>次回予告：最終回</strong></p>
 </div>
 <div class="callout-content">
-<p>仕上げは<strong>推し文豪ボット</strong> — 青空文庫から好きな作家を選んで、自分のGPTを育てる。 そして初回の<strong>文豪テスト</strong>の種明かしをする。</p>
+<p>仕上げは<strong>推し文豪ボット</strong> — 青空文庫から好きな作家を選んで、自分のGPTを育てる。 そして初回の<strong>文豪テスト</strong>の答え合わせをする。</p>
 </div>
 </div>
 </div>
@@ -723,7 +767,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="d759c424" class="cell" data-execution_count="9">
+<div id="3b4a1074" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a></a><span class="co"># 問題1</span></span>
@@ -1035,7 +1079,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp('/' + window.location.host + '/');
+            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }
