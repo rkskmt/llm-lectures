@@ -6,6 +6,8 @@
               .toLowerCase().indexOf('ja') === 0);
     var T = JA ? {
       home: 'Home（一覧に戻る）',
+      prevLabel: '前のスライド',
+      nextLabel: '次のスライド',
       copyTitle: 'コピー',
       copyLabel: 'コードをコピー',
       closeLabel: '閉じる',
@@ -13,6 +15,8 @@
       zoomLabel: 'コードを拡大表示'
     } : {
       home: 'Home (back to the index)',
+      prevLabel: 'Previous slide',
+      nextLabel: 'Next slide',
       copyTitle: 'Copy',
       copyLabel: 'Copy code',
       closeLabel: 'Close',
@@ -44,7 +48,16 @@
         if (!footer) return;
         var nav = document.createElement('span');
         nav.id = 'slide-nav';
-        nav.innerHTML = '<button id="nav-prev">&#9664;</button><span id="nav-counter">-/-</span><button id="nav-next">&#9654;</button>';
+        // thin stroke chevrons (not ◀ ▶ glyphs, which some platforms draw
+        // as color emoji); the counter sits between them
+        var chevron = function(d) {
+          return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + d + '"></path></svg>';
+        };
+        nav.innerHTML =
+          '<button type="button" id="nav-prev" aria-label="' + T.prevLabel + '">' + chevron('M15 5l-7 7 7 7') + '</button>' +
+          '<span id="nav-counter">-/-</span>' +
+          '<button type="button" id="nav-next" aria-label="' + T.nextLabel + '">' + chevron('M9 5l7 7-7 7') + '</button>';
         footer.appendChild(nav);
       } catch (e) {}
     }

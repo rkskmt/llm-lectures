@@ -92,6 +92,15 @@
 		],
 		"description": "Large outlined box for the slide's key message"
 	},
+	"Takeaway, dark (slide key message)": {
+		"prefix": "csk-takeaway-dark",
+		"body": [
+			"::: {.takeaway .dark}",
+			"${1:Key message}",
+			":::"
+		],
+		"description": "Large key-message box, white text on a black fill"
+	},
 	"Caption note": {
 		"prefix": "csk-caption",
 		"body": [

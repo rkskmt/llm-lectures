@@ -1,6 +1,6 @@
 // toc-ui.js — lightweight slide list ("目次") for fast in-deck navigation.
 //
-// A list button (stacked above the Home button, bottom-right) opens a right
+// A list button (stacked above the search button, bottom-right) opens a right
 // side drawer listing every slide title, built straight from the DOM — no
 // rendering, no thumbnails, so a 40-slide deck opens instantly. Break slides
 // (.break-title) show as section dividers, badge-* slides get a colored dot,
@@ -35,9 +35,10 @@
 
     var STYLE = [
       // same translucent-circle style as the home/search buttons, stacked
-      // above the home button in the bottom-right corner
+      // above the search button in the bottom-right corner cluster (offsets
+      // listed in custom.css)
       '#toc-btn {',
-      '  position: fixed; bottom: 98px; right: 14px; z-index: 100;',
+      '  position: fixed; bottom: 138px; right: 14px; z-index: 100;',
       '  width: 34px; height: 34px; box-sizing: border-box; padding: 0;',
       '  display: flex; align-items: center; justify-content: center;',
       '  border: 2px solid rgba(0,0,0,0.25); border-radius: 50%;',
@@ -165,19 +166,39 @@
       } catch (e) {}
     }
 
+    // Visible text of a node. MathJax leaves three copies of each formula in
+    // the DOM — the rendered output, a hidden assistive-MathML clone, and the
+    // original TeX in <script type="math/tex"> — so naive textContent triples
+    // every formula ("$z$" → "zzz"). Read only what the slide actually shows.
+    // (mjx-assistive-mml covers MathJax v3; aside.notes are speaker notes.)
+    function visibleText(node) {
+      var c = node.cloneNode(true);
+      var hidden = c.querySelectorAll(
+        'script[type^="math/"], .MJX_Assistive_MathML, .MathJax_Preview, ' +
+        'mjx-assistive-mml, aside.notes');
+      for (var i = hidden.length - 1; i >= 0; i--) {
+        hidden[i].parentNode.removeChild(hidden[i]);
+      }
+      return (c.textContent || '').replace(/\s+/g, ' ').trim();
+    }
+
     function slideLabel(sec) {
       // break/divider slides carry their text in .break-title, not the heading
       var bt = sec.querySelector('.break-title');
-      if (bt && bt.textContent.trim()) {
-        return { text: bt.textContent.trim(), kind: 'break' };
+      if (bt) {
+        var btText = visibleText(bt);
+        if (btText) return { text: btText, kind: 'break' };
       }
       var h = sec.querySelector('h1, h2, h3');
-      if (h && h.textContent.trim()) {
-        var isDivider = sec.classList.contains('break-slide') || h.tagName === 'H1';
-        return { text: h.textContent.trim(), kind: isDivider ? 'break' : 'slide' };
+      if (h) {
+        var hText = visibleText(h);
+        if (hText) {
+          var isDivider = sec.classList.contains('break-slide') || h.tagName === 'H1';
+          return { text: hText, kind: isDivider ? 'break' : 'slide' };
+        }
       }
       // untitled slide: first bit of body text so it is still recognizable
-      var t = (sec.textContent || '').replace(/\s+/g, ' ').trim();
+      var t = visibleText(sec);
       return {
         text: t ? t.slice(0, 42) + (t.length > 42 ? '…' : '') : T.untitled,
         kind: 'untitled'

@@ -26,6 +26,7 @@
     var DECK_W = 1280, DECK_H = 720;  // fallback deck size; refined from Reveal config
     var CHANNEL = 'cleanslidekit-peek-v1';
     var EMBED_PARAM = 'peek-embed';
+    var SLIDE_PARAM = 'peek-slide';
 
     // UI strings follow the document language: Japanese when <html lang>
     // starts with "ja" (the format default), English otherwise.
@@ -51,11 +52,18 @@
 
     // ================= embedded mode (this document IS the peeked slide) ====
     if (new RegExp('[?&]' + EMBED_PARAM + '=1(?:&|$)').test(window.location.search)) {
-      runEmbedded();
+      // The query parameter is authoritative because this script is deferred:
+      // Reveal may normalize the startup hash to the title slide before this
+      // code runs. Keep the hash as a fallback for older host pages.
+      var slideMatch = new RegExp('[?&]' + SLIDE_PARAM + '=([^&]*)').exec(window.location.search);
+      var requestedFrag = slideMatch
+        ? decodeURIComponent(slideMatch[1])
+        : window.location.hash.replace(/^#\/?/, '');
+      runEmbedded(requestedFrag);
       return;
     }
 
-    function runEmbedded() {
+    function runEmbedded(requestedFrag) {
       // strip every bit of deck chrome and the buttons slide-ui.js /
       // search-ui.js inject, so the peek shows nothing but the slide and
       // offers no way to navigate off it
@@ -128,7 +136,7 @@
           }
           // ensure we're actually on the requested slide (src hash should
           // already have done this, but re-assert in case init raced the hash)
-          var frag = window.location.hash.replace(/^#\/?/, '');
+          var frag = requestedFrag || window.location.hash.replace(/^#\/?/, '');
           if (frag) {
             try { window.location.hash = '#/' + frag; } catch (e) {}
           }
@@ -368,7 +376,8 @@
       var frame = document.createElement('iframe');
       frame.id = 'peek-frame';
       frame.setAttribute('title', T.frameTitle);
-      frame.src = base + (base.indexOf('?') >= 0 ? '&' : '?') + EMBED_PARAM + '=1#/' + frag;
+      frame.src = base + (base.indexOf('?') >= 0 ? '&' : '?') +
+        EMBED_PARAM + '=1&' + SLIDE_PARAM + '=' + encodeURIComponent(frag) + '#/' + frag;
       frame.addEventListener('load', function () {
         // a target rendered with an old kit never announces `ready`; drop the
         // loader after a grace period so the slide still shows (untuned)
