@@ -271,7 +271,25 @@ table tr:last-child td {
 table th:first-child,
 table td:first-child {
   font-weight: bold;
-  border-right: 2px solid #aaa;
+  border-right: var(--csk-first-col-rule, 2px) solid var(--csk-rule-color, #aaa);
+}
+/* Per-table rules and header alignment: wrap the table in
+   ::: {.table-style ...} (table-style.lua). The filter turns the wrapper's
+   attributes into the custom properties read here (first-col-rule above,
+   head-rule, col-rule, row-rules, rule-color) and puts .csk-col-rule on the
+   cells that carry a vertical rule (col-rules); head-align lands on the
+   header cells as the writer's own inline text-align. Every default
+   reproduces the plain theme table, so a wrapper without attributes changes
+   nothing. */
+.reveal table thead th {
+  border-bottom-width: var(--csk-head-rule, 2px);
+  border-bottom-color: var(--csk-rule-color, #D3D3D3);
+}
+.reveal .csk-col-rule {
+  border-right: var(--csk-col-rule, 1px) solid var(--csk-rule-color, #aaa);
+}
+.table-style table tbody tr + tr td {
+  border-top: var(--csk-row-rule, 0) solid var(--csk-rule-color, #D3D3D3);
 }
 /* Tweak slides: hands-on "change one line & see" practice.
    Each action is its OWN numbered row-band:  [#] | intent → key.  The left number

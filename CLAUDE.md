@@ -12,7 +12,9 @@ Identical to the sibling `ai` repo: Quarto website, vendored **cleanslidekit-rev
 
 ## Conventions
 
-**All conventions of `../ai/CLAUDE.md` apply verbatim.** In particular: `##` delimits slides; no numbers in slide headers or index links; bullet points not prose (except 演習 statements in 命令形＋体言止め steps); every echoed cell self-contained; `print(...)` not bare expressions; data files read by student code need a download link in the slide body; never fabricate figure data; `eval: false` 解答例 must be run manually before shipping; EN co-notation via `[…]{.en}` at first appearance; `==…==` highlight; one slide = one idea; Tweak / 練習問題 devices; identity scrub (never expose the school name — use 七夕 / example.com in examples).
+**All conventions of `../ai/CLAUDE.md` apply verbatim.** In particular: `##` delimits slides; no numbers in slide headers or index links; bullet points not prose (except 演習 statements in 命令形＋体言止め steps); every echoed cell self-contained; `print(...)` not bare expressions; data files read by student code need a download link in the slide body; never fabricate figure data; `eval: false` 解答例 must be run manually before shipping; EN co-notation via `[…]{.en}` at first appearance; `==…==` highlight; figure sizing via `#| classes: fig-small`/`fig-medium` or the `.fig` wrapper, never `out-width` (theme CSS overrides it); one slide = one idea; Tweak / 練習問題 devices; identity scrub (never expose the school name — use 七夕 / example.com in examples).
+
+Theme classes and their attributes (`.table-style`, `.table-compact`, `.fig`, `.peek`, badges, …) are catalogued in `_extensions/rkskmt/cleanslidekit/_schema.yml`, shipped inside the vendored theme; read it before proposing or writing layout markup instead of guessing class names.
 
 Course-specific additions:
 

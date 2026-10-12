@@ -63,6 +63,24 @@
 		],
 		"description": "Embed a Plotly HTML export as a sized iframe (plotly-iframe.lua)"
 	},
+	"Table style options": {
+		"prefix": "csk-table",
+		"body": [
+			"::: {.table-style widths=\"${1:auto}\" first-col-rule=\"${2:2px}\" col-rules=\"${3:all}\" head-rule=\"${4:2px}\" head-align=\"${5|center,left,right|}\"}",
+			"$0",
+			":::"
+		],
+		"description": "Per-table rules and header alignment (table-style.lua)"
+	},
+	"Compact table": {
+		"prefix": "csk-table-compact",
+		"body": [
+			"::: {.table-compact}",
+			"$0",
+			":::"
+		],
+		"description": "Small table at natural width, centered"
+	},
 	"Tweak practice block": {
 		"prefix": "csk-tweak",
 		"body": [

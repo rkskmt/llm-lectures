@@ -47,6 +47,10 @@ classes:
     description: "A neutral rounded frame marking a paragraph as the exercise statement."
   caption-note:
     description: "An annotation caption for whatever sits directly above it (a table, a figure, a code block)."
+  table-compact:
+    description: "Wraps a small markdown table so it keeps its natural width and sits centered instead of stretching across the slide."
+  table-style:
+    description: "Wraps a markdown table to set its rules, header alignment and column widths per table (table-style.lua). Attributes: first-col-rule, col-rules, col-rule, row-rules, head-rule, head-align, rule-color, widths; an unset one keeps the theme default."
   break-slide:
     description: "On an H2, renders a section-divider slide; it also appears as a divider in the slide-list drawer."
   break-title:
@@ -87,6 +91,7 @@ attributes:
     height:
       type: string
       description: "Rendered image height as a CSS size (e.g. '400px')."
+      examples: ["400px"]
   ".bg-cover":
     src:
       type: string
@@ -98,6 +103,7 @@ attributes:
     width:
       type: string
       description: "Target width for the scaled figure as a CSS size (e.g. '50%', '600px')."
+      examples: ["50%", "600px"]
   ".plotly-iframe":
     src:
       type: string
@@ -108,6 +114,42 @@ attributes:
     width:
       type: [string, number]
       description: "Iframe width in pixels or a CSS size."
+      examples: [900]
     height:
       type: [string, number]
       description: "Iframe height in pixels or a CSS size."
+      examples: [520]
+  ".table-style":
+    first-col-rule:
+      type: string
+      description: "Width of the rule right of the first column as a CSS size (e.g. '3px'); 'none' removes it. Default 2px."
+      examples: ["3px", "none"]
+    col-rules:
+      type: string
+      description: "Other columns that get a vertical rule on their right edge: 'all' or a comma list such as '2,3'. Column 1 is governed by first-col-rule; the last column never gets one."
+      examples: ["all", "2,3"]
+    col-rule:
+      type: string
+      description: "Width of the col-rules rules as a CSS size. Default 1px."
+      examples: ["1px"]
+    row-rules:
+      type: string
+      description: "Width of the rules between body rows as a CSS size (e.g. '1px'); 'none' (the default) draws none."
+      examples: ["1px"]
+    head-rule:
+      type: string
+      description: "Width of the rule under the header row as a CSS size. Default 2px."
+      examples: ["3px"]
+    head-align:
+      type: string
+      enum: [left, center, right]
+      examples: [center]
+      description: "Alignment of the header cells only; body cells keep the column markers (|:--:|)."
+    rule-color:
+      type: string
+      description: "CSS color for every rule of this table (e.g. '#888'). Default: the theme's grays (#aaa vertical, #D3D3D3 horizontal)."
+      examples: ["#aaa"]
+    widths:
+      type: string
+      description: "Column widths: 'auto' lets the browser size every column by its content instead of the separator row's dash counts; a comma list such as 'auto,auto,45%,auto' fixes the listed columns to a share of the table width and leaves the rest automatic."
+      examples: ["auto", "auto,auto,45%,auto"]
