@@ -10,7 +10,7 @@ subtitle: "トークン化と語彙 — ことばを機械に食べさせる下�
   - MNIST の画像：28×28 の**数値**（明るさ 0〜1）
   - 損失も勾配も、ぜんぶ**数値の計算**だった
 
-::: {.callout-important title="クイズ"}
+::: {.callout-important title="質問"}
 「あ」は数字ではない。ニューラルネットに「あ」をどうやって入れる？
 :::
 
@@ -200,7 +200,7 @@ print(decode(ids) == word)   # True — 実在しない並びでも文字さえ�
 
 ## 表に無い文字が来たら？
 
-::: {.callout-important title="クイズ"}
+::: {.callout-important title="質問"}
 `encode("パリ")` を実行したら何が起きる？予想してから実行。
 :::
 
@@ -213,7 +213,7 @@ print(decode(ids) == word)   # True — 実在しない並びでも文字さえ�
 
 ## 語彙の外と、どう付き合うか
 
-::: {.callout-important title="クイズ"}
+::: {.callout-important title="質問"}
 ChatGPT に絵文字や顔文字を打ち込んでも、KeyError では止まらない。どう解決していると思う？
 :::
 
@@ -236,7 +236,7 @@ ChatGPT に絵文字や顔文字を打ち込んでも、KeyError では止まら
 - 最終回に使う材料も、ここで一目だけ：夏目漱石**『吾輩は猫である』全文**
 - [neko.txt](data/neko.txt) をダウンロードして `data/` に置く
 
-::: {.callout-important title="クイズ"}
+::: {.callout-important title="質問"}
 『吾輩は猫である』全文（約32万字）に出てくる文字は**何種類**？
 ひらがな＋カタカナで約170、そこに漢字が乗る。1000？ 2000？
 :::

@@ -93,7 +93,7 @@ print(scores)
 
 ## スケーリング — 内積は次元で膨らむ
 
-::: {.callout-important title="クイズ"}
+::: {.callout-important title="質問"}
 ベクトルの次元 $d$ を 2 → 64 に増やすと、ランダムな2本の内積の典型的な大きさは何倍になる？
 :::
 
@@ -214,7 +214,7 @@ plt.show()
 
 ## PyTorch 部品にしておく
 
-- あとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が `nn.Module`：==`__init__` に持ち物（層）、`forward` に計算手順==を書けば、`sa(x)` と呼べる部品になる
+- あとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が `nn.Module`：[`__init__` に持ち物（層）、`forward` に計算手順]{.hl}を書けば、`sa(x)` と呼べる部品になる
 
 ```{python}
 #| echo: true
