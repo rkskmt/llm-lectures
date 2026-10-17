@@ -32,7 +32,7 @@ If changes to `_metadata.yaml`, the extension CSS/JS, or `.qmd` files don't
 appear, clear both `_site` and `.quarto` and restart preview:
 
 ```bash
-rm -rf _site .quarto && quarto preview --port 4321
+rm -rf _site .quarto && quarto preview --port 4322
 ```
 
 The browser may also cache `custom.css` — hard-reload (Ctrl+Shift+R) when a CSS

@@ -4,7 +4,7 @@ format:
 # Extension-external filters (separate Quarto extensions, kept local):
 filters:
   - d2
-  - lightbox
+# Quarto's built-in lightbox (1.4+, no extension needed): click any image to zoom
 lightbox: auto
 # d2 bakes a 100px margin into every SVG by default — far too much on a
 # 720px slide (shrinks the actual diagram). Keep just enough for sketch

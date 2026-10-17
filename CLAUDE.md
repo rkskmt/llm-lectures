@@ -8,7 +8,7 @@ Quarto-based lecture website ("LLM Lectures"). Sequel to the sibling `ai` course
 
 ## Tech Stack
 
-Identical to the sibling `ai` repo: Quarto website, vendored **cleanslidekit-revealjs** extension, Python 3 via Jupyter kernel, MathJax, **D2** diagrams, `lightbox`. Conda env is `llm` (`environment.yml`; same packages as `ai`).
+Identical to the sibling `ai` repo: Quarto website, vendored **cleanslidekit-revealjs** extension, Python 3 via Jupyter kernel, MathJax, **D2** diagrams, Quarto's built-in lightbox (no extension). Conda env is `llm` (`environment.yml`; same packages as `ai`).
 
 ## Conventions
 
@@ -34,7 +34,7 @@ The user owns preview/builds; Claude may render for verification (same grant as 
 
 ## Self-contained, reproducible builds
 
-Same rules as `ai`: fresh clone + `conda env create -f environment.yml` + `quarto render` must work. `_extensions/` is committed; every build tool is declared in `environment.yml`.
+Same rules as `ai`: fresh clone + `conda env create -f environment.yml` (on Windows: `python setup.py`, which installs `d2` from its release) + `quarto render` must work. `_extensions/` is committed; every build tool is declared in `environment.yml`.
 
 ## Deploy
 
