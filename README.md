@@ -48,7 +48,7 @@ tools/preview-style attention-qkv.qmd
 
 ```bash
 quarto render            # _site/ に出力
-quarto publish gh-pages  # GitHub Pages へデプロイ
+quarto publish gh-pages --id gh-pages --no-render  # 今ある _site/ を GitHub Pages へデプロイ
 ```
 
 ## データ
