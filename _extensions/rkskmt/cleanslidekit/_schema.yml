@@ -46,7 +46,7 @@ classes:
   prompt:
     description: "A neutral rounded frame marking a paragraph as the exercise statement."
   caption-note:
-    description: "An annotation caption for whatever sits directly above it (a table, a figure, a code block)."
+    description: "An annotation caption for whatever sits directly above it (a table, a figure, a code block). The chip shrinks to its content; the body may be a paragraph, several paragraphs, or a list. Add .center to center the chip under a centered element such as a display formula."
   table-compact:
     description: "Wraps a small markdown table so it keeps its natural width and sits centered instead of stretching across the slide."
   table-style:

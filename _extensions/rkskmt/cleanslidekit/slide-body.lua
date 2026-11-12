@@ -51,6 +51,17 @@ function Pandoc(doc)
               pandoc.Attr(body[1].identifier, {"slide-body-heading"}, body[1].attributes)
             )
           end
+          -- Pandoc's section building merges a Div that opens with a heading
+          -- (when every later heading in it is deeper) into that heading's
+          -- section, so a body led by `####` would be written as a
+          -- <section class="slide-body"> nested in the slide. reveal.js then
+          -- turns the slide into a vertical stack, and the layout rules for
+          -- `section:not(.stack) > h2 / > .slide-body` in custom.css no longer
+          -- reach its title or body. An empty raw block in front keeps the
+          -- heading from leading the Div; it writes nothing.
+          if body[1].t == "Header" then
+            table.insert(body, 1, pandoc.RawBlock("html", ""))
+          end
           table.insert(out, pandoc.Div(body, pandoc.Attr("", {"slide-body"})))
         end
       end
