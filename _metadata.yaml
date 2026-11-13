@@ -1,9 +1,19 @@
 author: "rkskmt"
 format:
   cleanslidekit-revealjs: default
+# Lets the qmd web editor follow the deck shown in its preview; does nothing
+# unless the deck is shown inside a frame (_extensions/rkskmt/qmd-web).
+revealjs-plugins:
+  - qmd-web
+# Editors (besides localhost) whose live preview may swap rebuilt slides into
+# these decks.
+qmdweb:
+  editors: ["https://editor.rkskmt.com"]
 # Extension-external filters (separate Quarto extensions, kept local):
 filters:
   - d2
+  # names the qmd each deck was rendered from, for the qmd web live preview
+  - qmd-web
 # Quarto's built-in lightbox (1.4+, no extension needed): click any image to zoom
 lightbox: auto
 # d2 bakes a 100px margin into every SVG by default — far too much on a

@@ -1,0 +1,18 @@
+title: qmd web preview bridge
+author: rkskmt
+version: 0.2.0
+quarto-required: ">=1.4.0"
+contributes:
+  # Names the qmd each deck was rendered from (its git blob SHA), so the
+  # editor's live preview knows what the published deck shows.
+  filters:
+    - source.lua
+  revealjs-plugins:
+    - name: QmdWebBridge
+      script: bridge.js
+      # Addresses of qmd web editors that may send rebuilt slides to the
+      # deck (http://127.0.0.1 and http://localhost are always allowed).
+      # A site sets its own with `qmdweb: editors: [https://editor.example]`.
+      config:
+        qmdweb:
+          editors: []
