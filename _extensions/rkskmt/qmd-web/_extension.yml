@@ -1,6 +1,6 @@
 title: qmd web preview bridge
 author: rkskmt
-version: 0.2.1
+version: 0.3.0
 quarto-required: ">=1.4.0"
 contributes:
   # Names the qmd each deck was rendered from (its git blob SHA), so the
