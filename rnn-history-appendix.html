@@ -6,11 +6,11 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – RNN小史 — 記憶を手渡す機械</title>
@@ -20,10 +20,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -98,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,6 +248,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="9de40b4a8da37214d7e7a19d9871a8d7220000ae">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -254,7 +261,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -301,31 +308,31 @@ rkskmt
 <li>新しい数学はゼロ：埋め込み・行列・tanh（シグモイドの親戚のS字カーブ）・softmax</li>
 <li>違いは<strong>ループが構造の中にある</strong>ことだけ — forward の中に「1文字ずつ」の for 文が入る</li>
 </ul>
-<div id="a571e93b" class="cell" data-execution_count="1">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-2"><a></a><span class="im">import</span> torch</span>
-<span id="cb1-3"><a></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
-<span id="cb1-4"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb1-5"><a></a></span>
-<span id="cb1-6"><a></a>torch.set_num_threads(<span class="dv">1</span>)</span>
-<span id="cb1-7"><a></a></span>
-<span id="cb1-8"><a></a><span class="kw">class</span> ElmanRNN(nn.Module):</span>
-<span id="cb1-9"><a></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, V, n_embd<span class="op">=</span><span class="dv">8</span>, hidden<span class="op">=</span><span class="dv">64</span>):</span>
-<span id="cb1-10"><a></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
-<span id="cb1-11"><a></a>        <span class="va">self</span>.emb <span class="op">=</span> nn.Embedding(V, n_embd)</span>
-<span id="cb1-12"><a></a>        <span class="va">self</span>.wx <span class="op">=</span> nn.Linear(n_embd, hidden)</span>
-<span id="cb1-13"><a></a>        <span class="va">self</span>.wh <span class="op">=</span> nn.Linear(hidden, hidden)</span>
-<span id="cb1-14"><a></a>        <span class="va">self</span>.out <span class="op">=</span> nn.Linear(hidden, V)</span>
-<span id="cb1-15"><a></a>        <span class="va">self</span>.hidden <span class="op">=</span> hidden</span>
-<span id="cb1-16"><a></a></span>
-<span id="cb1-17"><a></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):                       <span class="co"># x: (B, T)</span></span>
-<span id="cb1-18"><a></a>        e <span class="op">=</span> <span class="va">self</span>.emb(x)</span>
-<span id="cb1-19"><a></a>        h <span class="op">=</span> torch.zeros(x.shape[<span class="dv">0</span>], <span class="va">self</span>.hidden)</span>
-<span id="cb1-20"><a></a>        logits <span class="op">=</span> []</span>
-<span id="cb1-21"><a></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(x.shape[<span class="dv">1</span>]):             <span class="co"># 1文字ずつ h を更新</span></span>
-<span id="cb1-22"><a></a>            h <span class="op">=</span> torch.tanh(<span class="va">self</span>.wx(e[:, t]) <span class="op">+</span> <span class="va">self</span>.wh(h))</span>
-<span id="cb1-23"><a></a>            logits.append(<span class="va">self</span>.out(h))</span>
-<span id="cb1-24"><a></a>        <span class="cf">return</span> torch.stack(logits, dim<span class="op">=</span><span class="dv">1</span>)       <span class="co"># (B, T, V)</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="a081f836" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="im">import</span> torch</span>
+<span id="cb1-3"><a aria-label="3"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb1-4"><a aria-label="4"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb1-5"><a aria-label="5"></a></span>
+<span id="cb1-6"><a aria-label="6"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-7"><a aria-label="7"></a></span>
+<span id="cb1-8"><a aria-label="8"></a><span class="kw">class</span> ElmanRNN(nn.Module):</span>
+<span id="cb1-9"><a aria-label="9"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, V, n_embd<span class="op">=</span><span class="dv">8</span>, hidden<span class="op">=</span><span class="dv">64</span>):</span>
+<span id="cb1-10"><a aria-label="10"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb1-11"><a aria-label="11"></a>        <span class="va">self</span>.emb <span class="op">=</span> nn.Embedding(V, n_embd)</span>
+<span id="cb1-12"><a aria-label="12"></a>        <span class="va">self</span>.wx <span class="op">=</span> nn.Linear(n_embd, hidden)</span>
+<span id="cb1-13"><a aria-label="13"></a>        <span class="va">self</span>.wh <span class="op">=</span> nn.Linear(hidden, hidden)</span>
+<span id="cb1-14"><a aria-label="14"></a>        <span class="va">self</span>.out <span class="op">=</span> nn.Linear(hidden, V)</span>
+<span id="cb1-15"><a aria-label="15"></a>        <span class="va">self</span>.hidden <span class="op">=</span> hidden</span>
+<span id="cb1-16"><a aria-label="16"></a></span>
+<span id="cb1-17"><a aria-label="17"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, x):                       <span class="co"># x: (B, T)</span></span>
+<span id="cb1-18"><a aria-label="18"></a>        e <span class="op">=</span> <span class="va">self</span>.emb(x)</span>
+<span id="cb1-19"><a aria-label="19"></a>        h <span class="op">=</span> torch.zeros(x.shape[<span class="dv">0</span>], <span class="va">self</span>.hidden)</span>
+<span id="cb1-20"><a aria-label="20"></a>        logits <span class="op">=</span> []</span>
+<span id="cb1-21"><a aria-label="21"></a>        <span class="cf">for</span> t <span class="kw">in</span> <span class="bu">range</span>(x.shape[<span class="dv">1</span>]):             <span class="co"># 1文字ずつ h を更新</span></span>
+<span id="cb1-22"><a aria-label="22"></a>            h <span class="op">=</span> torch.tanh(<span class="va">self</span>.wx(e[:, t]) <span class="op">+</span> <span class="va">self</span>.wh(h))</span>
+<span id="cb1-23"><a aria-label="23"></a>            logits.append(<span class="va">self</span>.out(h))</span>
+<span id="cb1-24"><a aria-label="24"></a>        <span class="cf">return</span> torch.stack(logits, dim<span class="op">=</span><span class="dv">1</span>)       <span class="co"># (B, T, V)</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>これは最古参の型（<strong>Elman ネット</strong>、1990年）。部品数は約1万個 — 地名MLPと同じ階級</li>
@@ -336,29 +343,29 @@ rkskmt
 <h2>実験：地名メーカーを RNN で</h2>
 <div class="slide-body">
 <p><a href="data/chimei.csv">chimei.csv</a> を <code>data/</code> に置き、いつもの地名ストリームで訓練する（500歩・約30秒）。</p>
-<div id="07215486" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
-<span id="cb2-2"><a></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
-<span id="cb2-3"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb2-4"><a></a>ids <span class="op">=</span> []</span>
-<span id="cb2-5"><a></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
-<span id="cb2-6"><a></a>    ids <span class="op">+=</span> [<span class="dv">0</span>] <span class="op">+</span> [stoi[c] <span class="cf">for</span> c <span class="kw">in</span> name]</span>
-<span id="cb2-7"><a></a>ids.append(<span class="dv">0</span>)</span>
-<span id="cb2-8"><a></a>stream <span class="op">=</span> torch.tensor(ids)</span>
-<span id="cb2-9"><a></a></span>
-<span id="cb2-10"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
-<span id="cb2-11"><a></a>model <span class="op">=</span> ElmanRNN(<span class="bu">len</span>(chars))</span>
-<span id="cb2-12"><a></a>opt <span class="op">=</span> torch.optim.Adam(model.parameters(), lr<span class="op">=</span><span class="fl">3e-3</span>)</span>
-<span id="cb2-13"><a></a>g <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">0</span>)</span>
-<span id="cb2-14"><a></a><span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">501</span>):</span>
-<span id="cb2-15"><a></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(stream) <span class="op">-</span> <span class="dv">17</span>, (<span class="dv">256</span>,), generator<span class="op">=</span>g)</span>
-<span id="cb2-16"><a></a>    x <span class="op">=</span> torch.stack([stream[i:i <span class="op">+</span> <span class="dv">16</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
-<span id="cb2-17"><a></a>    y <span class="op">=</span> torch.stack([stream[i <span class="op">+</span> <span class="dv">1</span>:i <span class="op">+</span> <span class="dv">17</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
-<span id="cb2-18"><a></a>    opt.zero_grad()</span>
-<span id="cb2-19"><a></a>    loss <span class="op">=</span> F.cross_entropy(model(x).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), y.view(<span class="op">-</span><span class="dv">1</span>))</span>
-<span id="cb2-20"><a></a>    loss.backward()</span>
-<span id="cb2-21"><a></a>    opt.step()</span>
-<span id="cb2-22"><a></a><span class="bu">print</span>(<span class="ss">f"500歩後の損失: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="d90ce524" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
+<span id="cb2-2"><a aria-label="2"></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
+<span id="cb2-3"><a aria-label="3"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb2-4"><a aria-label="4"></a>ids <span class="op">=</span> []</span>
+<span id="cb2-5"><a aria-label="5"></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
+<span id="cb2-6"><a aria-label="6"></a>    ids <span class="op">+=</span> [<span class="dv">0</span>] <span class="op">+</span> [stoi[c] <span class="cf">for</span> c <span class="kw">in</span> name]</span>
+<span id="cb2-7"><a aria-label="7"></a>ids.append(<span class="dv">0</span>)</span>
+<span id="cb2-8"><a aria-label="8"></a>stream <span class="op">=</span> torch.tensor(ids)</span>
+<span id="cb2-9"><a aria-label="9"></a></span>
+<span id="cb2-10"><a aria-label="10"></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb2-11"><a aria-label="11"></a>model <span class="op">=</span> ElmanRNN(<span class="bu">len</span>(chars))</span>
+<span id="cb2-12"><a aria-label="12"></a>opt <span class="op">=</span> torch.optim.Adam(model.parameters(), lr<span class="op">=</span><span class="fl">3e-3</span>)</span>
+<span id="cb2-13"><a aria-label="13"></a>g <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">0</span>)</span>
+<span id="cb2-14"><a aria-label="14"></a><span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">501</span>):</span>
+<span id="cb2-15"><a aria-label="15"></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(stream) <span class="op">-</span> <span class="dv">17</span>, (<span class="dv">256</span>,), generator<span class="op">=</span>g)</span>
+<span id="cb2-16"><a aria-label="16"></a>    x <span class="op">=</span> torch.stack([stream[i:i <span class="op">+</span> <span class="dv">16</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
+<span id="cb2-17"><a aria-label="17"></a>    y <span class="op">=</span> torch.stack([stream[i <span class="op">+</span> <span class="dv">1</span>:i <span class="op">+</span> <span class="dv">17</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
+<span id="cb2-18"><a aria-label="18"></a>    opt.zero_grad()</span>
+<span id="cb2-19"><a aria-label="19"></a>    loss <span class="op">=</span> F.cross_entropy(model(x).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), y.view(<span class="op">-</span><span class="dv">1</span>))</span>
+<span id="cb2-20"><a aria-label="20"></a>    loss.backward()</span>
+<span id="cb2-21"><a aria-label="21"></a>    opt.step()</span>
+<span id="cb2-22"><a aria-label="22"></a><span class="bu">print</span>(<span class="ss">f"500歩後の損失: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>500歩後の損失: 2.077</code></pre>
 </div>
@@ -371,18 +378,18 @@ rkskmt
 <ul>
 <li>生成も1文字ずつ：<span class="math inline">\(h\)</span> を空にして始め、引いた文字を入れてはまた引く</li>
 </ul>
-<div id="0262cfe7" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a>g <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">1</span>)</span>
-<span id="cb4-2"><a></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
-<span id="cb4-3"><a></a>    h <span class="op">=</span> torch.zeros(<span class="dv">1</span>, <span class="dv">64</span>)</span>
-<span id="cb4-4"><a></a>    i, name <span class="op">=</span> <span class="dv">0</span>, <span class="st">""</span></span>
-<span id="cb4-5"><a></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb4-6"><a></a>        h <span class="op">=</span> torch.tanh(model.wx(model.emb(torch.tensor([i]))) <span class="op">+</span> model.wh(h))</span>
-<span id="cb4-7"><a></a>        i <span class="op">=</span> torch.multinomial(F.softmax(model.out(h), dim<span class="op">=-</span><span class="dv">1</span>)[<span class="dv">0</span>], <span class="dv">1</span>, generator<span class="op">=</span>g).item()</span>
-<span id="cb4-8"><a></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb4-9"><a></a>            <span class="cf">break</span></span>
-<span id="cb4-10"><a></a>        name <span class="op">+=</span> chars[i]</span>
-<span id="cb4-11"><a></a>    <span class="bu">print</span>(name)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="15e50e48" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a aria-label="1"></a>g <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">1</span>)</span>
+<span id="cb4-2"><a aria-label="2"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">10</span>):</span>
+<span id="cb4-3"><a aria-label="3"></a>    h <span class="op">=</span> torch.zeros(<span class="dv">1</span>, <span class="dv">64</span>)</span>
+<span id="cb4-4"><a aria-label="4"></a>    i, name <span class="op">=</span> <span class="dv">0</span>, <span class="st">""</span></span>
+<span id="cb4-5"><a aria-label="5"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb4-6"><a aria-label="6"></a>        h <span class="op">=</span> torch.tanh(model.wx(model.emb(torch.tensor([i]))) <span class="op">+</span> model.wh(h))</span>
+<span id="cb4-7"><a aria-label="7"></a>        i <span class="op">=</span> torch.multinomial(F.softmax(model.out(h), dim<span class="op">=-</span><span class="dv">1</span>)[<span class="dv">0</span>], <span class="dv">1</span>, generator<span class="op">=</span>g).item()</span>
+<span id="cb4-8"><a aria-label="8"></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb4-9"><a aria-label="9"></a>            <span class="cf">break</span></span>
+<span id="cb4-10"><a aria-label="10"></a>        name <span class="op">+=</span> chars[i]</span>
+<span id="cb4-11"><a aria-label="11"></a>    <span class="bu">print</span>(name)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>おおのつちょう
 みつしべつし
@@ -440,7 +447,7 @@ rkskmt
 <section id="つまずき①-過学習が速い" class="slide level2">
 <h2>つまずき① 過学習が速い</h2>
 <div class="slide-body">
-<div id="54fa1ec3" class="cell" data-execution_count="4">
+<div id="cb6659e1" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -462,7 +469,7 @@ rkskmt
 <li>記憶は毎歩、<span class="math inline">\(\tanh\)</span> と <span class="math inline">\(W_h\)</span> の<strong>同じ関所</strong>を通る。誤差が入口へ<strong>戻る</strong>ときも同じ関所を逆に通る</li>
 <li>64文字さかのぼるなら関所64回 — 1回ごとに少し痩せる勾配は、<span class="hl">指数関数的に消えていく</span></li>
 </ul>
-<div id="691b5d54" class="cell" data-execution_count="5">
+<div id="d57dcb7f" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -494,7 +501,7 @@ rkskmt
 <li><span class="math inline">\(h_t\)</span> は <span class="math inline">\(h_{t-1}\)</span> 待ち — <strong>今日の1歩は、昨日の1歩が終わるまで始まらない</strong></li>
 <li>並列計算機（GPU）は「同時にたくさん」が取り柄なのに、RNN の訓練はその取り柄を使えない</li>
 </ul>
-<div id="fd224296" class="cell" data-execution_count="6">
+<div id="47f3a475" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-stdout">
 <pre><code>forward 1回 (32文×64文字、1スレッドCPU):
   RNN（1層のループ64歩）   : 1692 ms
@@ -536,7 +543,7 @@ rkskmt
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -547,6 +554,7 @@ rkskmt
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -569,6 +577,7 @@ rkskmt
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -739,7 +748,7 @@ rkskmt
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -818,7 +827,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

@@ -1,6 +1,6 @@
 // toc-ui.js — lightweight slide list ("目次") for fast in-deck navigation.
 //
-// A list button (stacked above the Home button, bottom-right) opens a right
+// A list button (stacked above the search button, bottom-right) opens a right
 // side drawer listing every slide title, built straight from the DOM — no
 // rendering, no thumbnails, so a 40-slide deck opens instantly. Break slides
 // (.break-title) show as section dividers, badge-* slides get a colored dot,
@@ -35,7 +35,7 @@
 
     var STYLE = [
       // same translucent-circle style as the home/search buttons, stacked
-      // above the home button in the bottom-right corner cluster (offsets
+      // above the search button in the bottom-right corner cluster (offsets
       // listed in custom.css)
       '#toc-btn {',
       '  position: fixed; bottom: 138px; right: 14px; z-index: 100;',

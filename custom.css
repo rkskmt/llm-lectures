@@ -16,6 +16,24 @@
   padding-left: 80px;
   box-sizing: border-box;
 }
+/* Sharp text: take the slides reveal.js parks next to the current one out of
+   paint. reveal.js keeps up to viewDistance slides on each side laid out on
+   top of the current slide, hidden only by opacity:0. Chromium then puts the
+   current slide on its own compositing layer to keep it painted above them;
+   that layer has no opaque background, so all of its text loses subpixel
+   (ClearType) antialiasing and renders thin and gray — except a horizontally
+   scrolling code box, which gets an opaque layer of its own and stays sharp,
+   so it looked like a different font. visibility:hidden stops painting the
+   parked slides (already invisible) but keeps their layout, so iframes and
+   plots in them keep their size. Overview mode shows every slide, so it is
+   excluded; scroll view and PDF print wrap each slide in a page element, so
+   `.slides > section` does not match there. */
+.reveal:not(.overview) .slides > section.past,
+.reveal:not(.overview) .slides > section.future,
+.reveal:not(.overview) .slides > section > section.past,
+.reveal:not(.overview) .slides > section > section.future {
+  visibility: hidden;
+}
 /* Force scrollbar visibility on macOS/mobile */
 .reveal .slides section,
 .reveal .slides section.present {
@@ -204,26 +222,63 @@
   font-weight: lighter;
 }
 /* Caption that annotates whatever sits directly above it — a table, a figure,
-   or a code cell's output. A bordered serif "legend" chip, deliberately unlike
-   the sans-serif body bullets, so trailing explanation never reads as another
-   main point. System fonts only, NO web-font download: Latin → Georgia,
-   Japanese → an installed mincho if present else the generic serif fallback. */
+   or a code cell's output. A bordered gray "legend" chip: the frame, gray
+   color and smaller size set it apart from the body bullets, so trailing
+   explanation never reads as another main point. It keeps the body's font.
+   It used to be serif (Latin → Georgia, Japanese → a mincho), but a machine
+   with no Japanese mincho installed falls back to gothic for the Japanese
+   only, which left Latin letters and digits in serif inside a gothic line.
+   The frame sits on the div itself, shrink-wrapped with fit-content, so the
+   body may be one paragraph, several, or a list and still gets a single chip
+   (an earlier version framed the inner <p>, which left a list unframed). */
 .reveal .caption-note {
-  text-align: left;
-  margin-top: 0.3em;             /* small, element-agnostic gap (table OR code output above) */
-  margin-bottom: 0.6em;
-}
-.reveal .caption-note p {
-  display: inline-block;
-  margin: 0 !important;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: calc(0.3em / 0.82) 0 calc(0.6em / 0.82);   /* 0.3em / 0.6em of the body size: small, element-agnostic gap (table OR code output above) */
   padding: 0.45em 1em;
   border: 1px solid #c7ccd4;
   border-radius: 8px;
   background: #f7f8fa;
-  font-family: Georgia, Cambria, "Times New Roman", "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif CJK JP", serif !important;
+  text-align: left;
   font-size: 0.82em !important;
   color: #555 !important;
   font-weight: normal !important;
+}
+/* `::: {.caption-note .center}` — centers the chip, for a caption under a
+   centered element (a display formula, a centered figure). Left stays the
+   default: tables and code output are left-anchored, and so is their note. */
+.reveal .caption-note.center {
+  margin-inline: auto;
+}
+.reveal .caption-note p {
+  margin: 0 !important;
+}
+.reveal .caption-note p + p {
+  margin-top: 0.35em !important;
+}
+/* A list inside the chip: quiet gray markers instead of the deck's blue
+   bullets, and tighter rows — it is an annotation, not another main point. */
+.reveal .slide-body .caption-note ul,
+.reveal .slide-body .caption-note ol {
+  margin: 0 !important;
+  padding-left: 1.3em;
+}
+.reveal .slide-body .caption-note ul {
+  list-style: disc;
+}
+.reveal .slide-body .caption-note ul ul {
+  list-style: circle;
+}
+.reveal .slide-body .caption-note ul > li::before {
+  content: none;
+}
+.reveal .slide .caption-note li {
+  margin: 0.1em 0;
+}
+.reveal .slide-body .caption-note li::marker {
+  color: #8a8f98;
+  font-weight: normal;
 }
 .fig-small img {
   max-height: 300px !important;
@@ -271,7 +326,25 @@ table tr:last-child td {
 table th:first-child,
 table td:first-child {
   font-weight: bold;
-  border-right: 2px solid #aaa;
+  border-right: var(--csk-first-col-rule, 2px) solid var(--csk-rule-color, #aaa);
+}
+/* Per-table rules and header alignment: wrap the table in
+   ::: {.table-style ...} (table-style.lua). The filter turns the wrapper's
+   attributes into the custom properties read here (first-col-rule above,
+   head-rule, col-rule, row-rules, rule-color) and puts .csk-col-rule on the
+   cells that carry a vertical rule (col-rules); head-align lands on the
+   header cells as the writer's own inline text-align. Every default
+   reproduces the plain theme table, so a wrapper without attributes changes
+   nothing. */
+.reveal table thead th {
+  border-bottom-width: var(--csk-head-rule, 2px);
+  border-bottom-color: var(--csk-rule-color, #D3D3D3);
+}
+.reveal .csk-col-rule {
+  border-right: var(--csk-col-rule, 1px) solid var(--csk-rule-color, #aaa);
+}
+.table-style table tbody tr + tr td {
+  border-top: var(--csk-row-rule, 0) solid var(--csk-rule-color, #D3D3D3);
 }
 /* Tweak slides: hands-on "change one line & see" practice.
    Each action is its OWN numbered row-band:  [#] | intent → key.  The left number
@@ -321,6 +394,24 @@ table td:first-child {
 .reveal .takeaway p {
   margin: 0;
   line-height: 1.4;
+}
+/* Dark variant — `::: {.takeaway .dark}` fills the box with the frame's
+   near-black and flips the text to white, for a message that should weigh as
+   much as the `###` band. Opt-in: the plain frame stays the default so a
+   closing message normally reads apart from the solid heading. */
+.reveal .takeaway.dark {
+  background: #131516;
+  color: #fff;
+}
+/* Inline code and links bring their own blue/teal, which sinks into the
+   near-black: let them take the white. Code stays distinct by its bold
+   monospace face, links by an underline. */
+.reveal .takeaway.dark :not(pre) > code,
+.reveal .takeaway.dark a {
+  color: inherit;
+}
+.reveal .takeaway.dark a {
+  text-decoration: underline;
 }
 .tweak {
   width: fit-content;
@@ -470,13 +561,13 @@ table td:first-child {
 }
 /* Bottom-right corner cluster (top-right is badge-only). The slide nav
    (‹ n / N ›, 32px tall) takes the bottom row at bottom 14px; above it the
-   34px round buttons stack with 8px gaps: search 54px, Home 96px, slide
+   34px round buttons stack with 8px gaps: Home 54px, search 96px, slide
    list 138px (toc-ui.js). Change one offset and the rest must follow. */
 /* Home button: same translucent-circle style as the search button,
-   stacked directly above it. */
+   at the bottom of the stack, directly above the slide nav. */
 #home-btn {
   position: fixed;
-  bottom: 96px;
+  bottom: 54px;
   right: 14px;
   z-index: 100;
   width: 34px;
@@ -503,8 +594,8 @@ table td:first-child {
 }
 #home-btn svg { width: 18px; height: 18px; display: block; pointer-events: none; }
 /* Search button (created by search-ui.js at top:54px) moved to the bottom-right
-   cluster, directly above the slide nav. */
-#search-btn { top: auto !important; bottom: 54px !important; }
+   cluster, directly above the Home button. */
+#search-btn { top: auto !important; bottom: 96px !important; }
 /* Quarto's footer spans the viewport by default. Shrink-wrap the navigation so
    the invisible remainder cannot intercept controls on a scrolled slide.
    It sits in the bottom-right corner instead of bottom center: body text is
@@ -560,7 +651,8 @@ table td:first-child {
     background: rgba(19, 21, 22, 0.07);
   }
 }
-#slide-nav button:active {
+#slide-nav button:active,
+#slide-nav button.nav-pressed {
   background: rgba(19, 21, 22, 0.12);
 }
 #slide-nav button.nav-disabled {
@@ -1014,6 +1106,17 @@ a.lightbox[href]::after {
 .cell details.code-fold {
   margin-left: 1.6em;
   font-size: 1.2rem;
+}
+/* Code-fold whose output is a centered figure: center the button under the
+   figure instead of hugging the left edge. Text/code outputs keep the default
+   left placement. The summary must be block-level (flex) for auto margins to
+   center it; the opened code block below stays full-width and left-aligned. */
+.cell:has(details.code-fold):has(.quarto-figure-center) details.code-fold {
+  margin-left: 0;
+}
+.cell:has(details.code-fold):has(.quarto-figure-center) details.code-fold > summary {
+  display: flex;
+  margin-inline: auto;
 }
 /* Code-fold summary ("解答例を見る" / "コードを表示"): render as a light rounded
    button so the clickable area is visible. The native disclosure marker is

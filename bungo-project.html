@@ -6,8 +6,8 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – 最終プロジェクト：推し文豪ボット</title>
@@ -17,10 +17,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -95,7 +101,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -239,6 +245,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="dd3cdbc224db554657aa0b18e1d6fd23603eaae4">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -251,7 +258,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -393,22 +400,22 @@ rkskmt
 <ul>
 <li>青空文庫のテキストは Shift_JIS で、ルビ《…》や注記［＃…］が混ざっている。洗ってから使う</li>
 </ul>
-<div id="fce40f11" class="cell" data-execution_count="1">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> re</span>
-<span id="cb1-2"><a></a></span>
-<span id="cb1-3"><a></a>raw <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/ginga_tetsudo.txt"</span>, encoding<span class="op">=</span><span class="st">"cp932"</span>).read()   <span class="co"># DLした生テキスト</span></span>
-<span id="cb1-4"><a></a></span>
-<span id="cb1-5"><a></a>parts <span class="op">=</span> re.split(<span class="vs">r"-</span><span class="op">{10,}</span><span class="ch">\r</span><span class="op">?</span><span class="ch">\n</span><span class="vs">"</span>, raw)      <span class="co"># 冒頭の説明書きを外す</span></span>
-<span id="cb1-6"><a></a>body <span class="op">=</span> parts[<span class="dv">2</span>]</span>
-<span id="cb1-7"><a></a>body <span class="op">=</span> re.split(<span class="vs">r"</span><span class="ch">\r</span><span class="op">?</span><span class="ch">\n</span><span class="vs">底本："</span>, body)[<span class="dv">0</span>]    <span class="co"># 末尾の書誌情報を外す</span></span>
-<span id="cb1-8"><a></a>body <span class="op">=</span> body.replace(<span class="st">"｜"</span>, <span class="st">""</span>)</span>
-<span id="cb1-9"><a></a>body <span class="op">=</span> re.sub(<span class="vs">r"《</span><span class="pp">[^》]</span><span class="op">*</span><span class="vs">》"</span>, <span class="st">""</span>, body)      <span class="co"># ルビ</span></span>
-<span id="cb1-10"><a></a>body <span class="op">=</span> re.sub(<span class="vs">r"［＃</span><span class="pp">[^］]</span><span class="op">*</span><span class="vs">］"</span>, <span class="st">""</span>, body)    <span class="co"># 注記</span></span>
-<span id="cb1-11"><a></a>body <span class="op">=</span> body.replace(<span class="st">"</span><span class="ch">\r\n</span><span class="st">"</span>, <span class="st">"</span><span class="ch">\n</span><span class="st">"</span>).strip() <span class="op">+</span> <span class="st">"</span><span class="ch">\n</span><span class="st">"</span></span>
-<span id="cb1-12"><a></a></span>
-<span id="cb1-13"><a></a><span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, <span class="st">"w"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).write(body)</span>
-<span id="cb1-14"><a></a><span class="bu">print</span>(<span class="bu">len</span>(body), <span class="st">"字 / 語彙"</span>, <span class="bu">len</span>(<span class="bu">set</span>(body)))</span>
-<span id="cb1-15"><a></a><span class="bu">print</span>(body[:<span class="dv">200</span>])</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="f539030f" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> re</span>
+<span id="cb1-2"><a aria-label="2"></a></span>
+<span id="cb1-3"><a aria-label="3"></a>raw <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/ginga_tetsudo.txt"</span>, encoding<span class="op">=</span><span class="st">"cp932"</span>).read()   <span class="co"># DLした生テキスト</span></span>
+<span id="cb1-4"><a aria-label="4"></a></span>
+<span id="cb1-5"><a aria-label="5"></a>parts <span class="op">=</span> re.split(<span class="vs">r"-</span><span class="op">{10,}</span><span class="ch">\r</span><span class="op">?</span><span class="ch">\n</span><span class="vs">"</span>, raw)      <span class="co"># 冒頭の説明書きを外す</span></span>
+<span id="cb1-6"><a aria-label="6"></a>body <span class="op">=</span> parts[<span class="dv">2</span>]</span>
+<span id="cb1-7"><a aria-label="7"></a>body <span class="op">=</span> re.split(<span class="vs">r"</span><span class="ch">\r</span><span class="op">?</span><span class="ch">\n</span><span class="vs">底本："</span>, body)[<span class="dv">0</span>]    <span class="co"># 末尾の書誌情報を外す</span></span>
+<span id="cb1-8"><a aria-label="8"></a>body <span class="op">=</span> body.replace(<span class="st">"｜"</span>, <span class="st">""</span>)</span>
+<span id="cb1-9"><a aria-label="9"></a>body <span class="op">=</span> re.sub(<span class="vs">r"《</span><span class="pp">[^》]</span><span class="op">*</span><span class="vs">》"</span>, <span class="st">""</span>, body)      <span class="co"># ルビ</span></span>
+<span id="cb1-10"><a aria-label="10"></a>body <span class="op">=</span> re.sub(<span class="vs">r"［＃</span><span class="pp">[^］]</span><span class="op">*</span><span class="vs">］"</span>, <span class="st">""</span>, body)    <span class="co"># 注記</span></span>
+<span id="cb1-11"><a aria-label="11"></a>body <span class="op">=</span> body.replace(<span class="st">"</span><span class="ch">\r\n</span><span class="st">"</span>, <span class="st">"</span><span class="ch">\n</span><span class="st">"</span>).strip() <span class="op">+</span> <span class="st">"</span><span class="ch">\n</span><span class="st">"</span></span>
+<span id="cb1-12"><a aria-label="12"></a></span>
+<span id="cb1-13"><a aria-label="13"></a><span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, <span class="st">"w"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).write(body)</span>
+<span id="cb1-14"><a aria-label="14"></a><span class="bu">print</span>(<span class="bu">len</span>(body), <span class="st">"字 / 語彙"</span>, <span class="bu">len</span>(<span class="bu">set</span>(body)))</span>
+<span id="cb1-15"><a aria-label="15"></a><span class="bu">print</span>(body[:<span class="dv">200</span>])</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>複数作品を使う場合は、この処理を作品ごとに行って <code>body</code> を足し合わせる</li>
@@ -423,52 +430,52 @@ rkskmt
 <li>訓練コードは<strong>小さなGPTの回のものを1行だけ差し替える</strong>：読み込むファイル名だけ</li>
 <li><a href="tools/refimpl/gpt.py">gpt.py</a> を自分のスクリプトと同じフォルダに置く（小さなGPTの回と同じ配置）</li>
 </ul>
-<div id="8f77a26a" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="im">import</span> time</span>
-<span id="cb2-2"><a></a></span>
-<span id="cb2-3"><a></a><span class="im">import</span> torch</span>
-<span id="cb2-4"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb2-5"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
-<span id="cb2-6"><a></a></span>
-<span id="cb2-7"><a></a>torch.set_num_threads(<span class="dv">1</span>)</span>
-<span id="cb2-8"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()   <span class="co"># ← ここだけ差し替え</span></span>
-<span id="cb2-9"><a></a>chars <span class="op">=</span> <span class="bu">sorted</span>(<span class="bu">set</span>(text))</span>
-<span id="cb2-10"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb2-11"><a></a>data <span class="op">=</span> torch.tensor([stoi[c] <span class="cf">for</span> c <span class="kw">in</span> text])</span>
-<span id="cb2-12"><a></a>n <span class="op">=</span> <span class="bu">int</span>(<span class="bu">len</span>(data) <span class="op">*</span> <span class="fl">0.9</span>)</span>
-<span id="cb2-13"><a></a>train_data, val_data <span class="op">=</span> data[:n], data[n:]</span>
-<span id="cb2-14"><a></a></span>
-<span id="cb2-15"><a></a><span class="kw">def</span> get_batch(d):</span>
-<span id="cb2-16"><a></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(d) <span class="op">-</span> <span class="dv">65</span>, (<span class="dv">32</span>,))</span>
-<span id="cb2-17"><a></a>    x <span class="op">=</span> torch.stack([d[i:i <span class="op">+</span> <span class="dv">64</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
-<span id="cb2-18"><a></a>    y <span class="op">=</span> torch.stack([d[i <span class="op">+</span> <span class="dv">1</span>:i <span class="op">+</span> <span class="dv">65</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
-<span id="cb2-19"><a></a>    <span class="cf">return</span> x, y</span>
-<span id="cb2-20"><a></a></span>
-<span id="cb2-21"><a></a>torch.manual_seed(<span class="dv">42</span>)</span>
-<span id="cb2-22"><a></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(chars), n_embd<span class="op">=</span><span class="dv">96</span>, n_head<span class="op">=</span><span class="dv">4</span>, n_layer<span class="op">=</span><span class="dv">2</span>, block_size<span class="op">=</span><span class="dv">64</span>)</span>
-<span id="cb2-23"><a></a>opt <span class="op">=</span> torch.optim.AdamW(model.parameters(), lr<span class="op">=</span><span class="fl">1e-3</span>)</span>
-<span id="cb2-24"><a></a></span>
-<span id="cb2-25"><a></a>MAX_ITERS <span class="op">=</span> <span class="dv">1000</span></span>
-<span id="cb2-26"><a></a>started <span class="op">=</span> time.perf_counter()</span>
-<span id="cb2-27"><a></a></span>
-<span id="cb2-28"><a></a><span class="cf">for</span> it <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, MAX_ITERS <span class="op">+</span> <span class="dv">1</span>):</span>
-<span id="cb2-29"><a></a>    xb, yb <span class="op">=</span> get_batch(train_data)</span>
-<span id="cb2-30"><a></a>    opt.zero_grad()</span>
-<span id="cb2-31"><a></a>    loss <span class="op">=</span> F.cross_entropy(model(xb).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), yb.view(<span class="op">-</span><span class="dv">1</span>))</span>
-<span id="cb2-32"><a></a>    loss.backward()</span>
-<span id="cb2-33"><a></a>    opt.step()</span>
-<span id="cb2-34"><a></a>    <span class="cf">if</span> it <span class="op">==</span> <span class="dv">100</span>:</span>
-<span id="cb2-35"><a></a>        sec_per_iter <span class="op">=</span> (time.perf_counter() <span class="op">-</span> started) <span class="op">/</span> <span class="dv">100</span></span>
-<span id="cb2-36"><a></a>        <span class="bu">print</span>(<span class="ss">f"このPCの見込み: 500回 </span><span class="sc">{</span>sec_per_iter <span class="op">*</span> <span class="dv">500</span> <span class="op">/</span> <span class="dv">60</span><span class="sc">:.1f}</span><span class="ss">分 / "</span></span>
-<span id="cb2-37"><a></a>              <span class="ss">f"1000回 </span><span class="sc">{</span>sec_per_iter <span class="op">*</span> <span class="dv">1000</span> <span class="op">/</span> <span class="dv">60</span><span class="sc">:.1f}</span><span class="ss">分"</span>)</span>
-<span id="cb2-38"><a></a>    <span class="cf">if</span> it <span class="op">%</span> <span class="dv">250</span> <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb2-39"><a></a>        <span class="cf">with</span> torch.no_grad():</span>
-<span id="cb2-40"><a></a>            xv, yv <span class="op">=</span> get_batch(val_data)</span>
-<span id="cb2-41"><a></a>            vl <span class="op">=</span> F.cross_entropy(model(xv).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), yv.view(<span class="op">-</span><span class="dv">1</span>))</span>
-<span id="cb2-42"><a></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>it<span class="sc">:5d}</span><span class="ss">回 | train </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss"> | val </span><span class="sc">{</span>vl<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb2-43"><a></a>        torch.save({<span class="st">"cfg"</span>: <span class="bu">dict</span>(n_embd<span class="op">=</span><span class="dv">96</span>, n_head<span class="op">=</span><span class="dv">4</span>, n_layer<span class="op">=</span><span class="dv">2</span>, block_size<span class="op">=</span><span class="dv">64</span>),</span>
-<span id="cb2-44"><a></a>                    <span class="st">"vocab"</span>: <span class="st">""</span>.join(chars),</span>
-<span id="cb2-45"><a></a>                    <span class="st">"state_dict"</span>: model.state_dict()}, <span class="ss">f"data/my_ckpt_</span><span class="sc">{</span>it<span class="sc">}</span><span class="ss">.pt"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="8c047a14" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a><span class="im">import</span> time</span>
+<span id="cb2-2"><a aria-label="2"></a></span>
+<span id="cb2-3"><a aria-label="3"></a><span class="im">import</span> torch</span>
+<span id="cb2-4"><a aria-label="4"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb2-5"><a aria-label="5"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
+<span id="cb2-6"><a aria-label="6"></a></span>
+<span id="cb2-7"><a aria-label="7"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb2-8"><a aria-label="8"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()   <span class="co"># ← ここだけ差し替え</span></span>
+<span id="cb2-9"><a aria-label="9"></a>chars <span class="op">=</span> <span class="bu">sorted</span>(<span class="bu">set</span>(text))</span>
+<span id="cb2-10"><a aria-label="10"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb2-11"><a aria-label="11"></a>data <span class="op">=</span> torch.tensor([stoi[c] <span class="cf">for</span> c <span class="kw">in</span> text])</span>
+<span id="cb2-12"><a aria-label="12"></a>n <span class="op">=</span> <span class="bu">int</span>(<span class="bu">len</span>(data) <span class="op">*</span> <span class="fl">0.9</span>)</span>
+<span id="cb2-13"><a aria-label="13"></a>train_data, val_data <span class="op">=</span> data[:n], data[n:]</span>
+<span id="cb2-14"><a aria-label="14"></a></span>
+<span id="cb2-15"><a aria-label="15"></a><span class="kw">def</span> get_batch(d):</span>
+<span id="cb2-16"><a aria-label="16"></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(d) <span class="op">-</span> <span class="dv">65</span>, (<span class="dv">32</span>,))</span>
+<span id="cb2-17"><a aria-label="17"></a>    x <span class="op">=</span> torch.stack([d[i:i <span class="op">+</span> <span class="dv">64</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
+<span id="cb2-18"><a aria-label="18"></a>    y <span class="op">=</span> torch.stack([d[i <span class="op">+</span> <span class="dv">1</span>:i <span class="op">+</span> <span class="dv">65</span>] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
+<span id="cb2-19"><a aria-label="19"></a>    <span class="cf">return</span> x, y</span>
+<span id="cb2-20"><a aria-label="20"></a></span>
+<span id="cb2-21"><a aria-label="21"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb2-22"><a aria-label="22"></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(chars), n_embd<span class="op">=</span><span class="dv">96</span>, n_head<span class="op">=</span><span class="dv">4</span>, n_layer<span class="op">=</span><span class="dv">2</span>, block_size<span class="op">=</span><span class="dv">64</span>)</span>
+<span id="cb2-23"><a aria-label="23"></a>opt <span class="op">=</span> torch.optim.AdamW(model.parameters(), lr<span class="op">=</span><span class="fl">1e-3</span>)</span>
+<span id="cb2-24"><a aria-label="24"></a></span>
+<span id="cb2-25"><a aria-label="25"></a>MAX_ITERS <span class="op">=</span> <span class="dv">1000</span></span>
+<span id="cb2-26"><a aria-label="26"></a>started <span class="op">=</span> time.perf_counter()</span>
+<span id="cb2-27"><a aria-label="27"></a></span>
+<span id="cb2-28"><a aria-label="28"></a><span class="cf">for</span> it <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, MAX_ITERS <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb2-29"><a aria-label="29"></a>    xb, yb <span class="op">=</span> get_batch(train_data)</span>
+<span id="cb2-30"><a aria-label="30"></a>    opt.zero_grad()</span>
+<span id="cb2-31"><a aria-label="31"></a>    loss <span class="op">=</span> F.cross_entropy(model(xb).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), yb.view(<span class="op">-</span><span class="dv">1</span>))</span>
+<span id="cb2-32"><a aria-label="32"></a>    loss.backward()</span>
+<span id="cb2-33"><a aria-label="33"></a>    opt.step()</span>
+<span id="cb2-34"><a aria-label="34"></a>    <span class="cf">if</span> it <span class="op">==</span> <span class="dv">100</span>:</span>
+<span id="cb2-35"><a aria-label="35"></a>        sec_per_iter <span class="op">=</span> (time.perf_counter() <span class="op">-</span> started) <span class="op">/</span> <span class="dv">100</span></span>
+<span id="cb2-36"><a aria-label="36"></a>        <span class="bu">print</span>(<span class="ss">f"このPCの見込み: 500回 </span><span class="sc">{</span>sec_per_iter <span class="op">*</span> <span class="dv">500</span> <span class="op">/</span> <span class="dv">60</span><span class="sc">:.1f}</span><span class="ss">分 / "</span></span>
+<span id="cb2-37"><a aria-label="37"></a>              <span class="ss">f"1000回 </span><span class="sc">{</span>sec_per_iter <span class="op">*</span> <span class="dv">1000</span> <span class="op">/</span> <span class="dv">60</span><span class="sc">:.1f}</span><span class="ss">分"</span>)</span>
+<span id="cb2-38"><a aria-label="38"></a>    <span class="cf">if</span> it <span class="op">%</span> <span class="dv">250</span> <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb2-39"><a aria-label="39"></a>        <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb2-40"><a aria-label="40"></a>            xv, yv <span class="op">=</span> get_batch(val_data)</span>
+<span id="cb2-41"><a aria-label="41"></a>            vl <span class="op">=</span> F.cross_entropy(model(xv).view(<span class="op">-</span><span class="dv">1</span>, <span class="bu">len</span>(chars)), yv.view(<span class="op">-</span><span class="dv">1</span>))</span>
+<span id="cb2-42"><a aria-label="42"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>it<span class="sc">:5d}</span><span class="ss">回 | train </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss"> | val </span><span class="sc">{</span>vl<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
+<span id="cb2-43"><a aria-label="43"></a>        torch.save({<span class="st">"cfg"</span>: <span class="bu">dict</span>(n_embd<span class="op">=</span><span class="dv">96</span>, n_head<span class="op">=</span><span class="dv">4</span>, n_layer<span class="op">=</span><span class="dv">2</span>, block_size<span class="op">=</span><span class="dv">64</span>),</span>
+<span id="cb2-44"><a aria-label="44"></a>                    <span class="st">"vocab"</span>: <span class="st">""</span>.join(chars),</span>
+<span id="cb2-45"><a aria-label="45"></a>                    <span class="st">"state_dict"</span>: model.state_dict()}, <span class="ss">f"data/my_ckpt_</span><span class="sc">{</span>it<span class="sc">}</span><span class="ss">.pt"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>250回ごとに val を表示し、<strong>重みを保存</strong>していく — 早期終了は「あとから底を選ぶ」で実現できる</li>
@@ -542,23 +549,23 @@ rkskmt
 <section id="偽物を提出する" class="slide level2 scrollable">
 <h2>偽物を提出する</h2>
 <div class="slide-body">
-<div id="198a4610" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb3-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb3-3"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
-<span id="cb3-4"><a></a></span>
-<span id="cb3-5"><a></a>BEST_ITER <span class="op">=</span> <span class="dv">500</span>   <span class="co"># 自分のログで val が最小だった回へ変更</span></span>
-<span id="cb3-6"><a></a>blob <span class="op">=</span> torch.load(<span class="ss">f"data/my_ckpt_</span><span class="sc">{</span>BEST_ITER<span class="sc">}</span><span class="ss">.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-7"><a></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
-<span id="cb3-8"><a></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
-<span id="cb3-9"><a></a>model.<span class="bu">eval</span>()</span>
-<span id="cb3-10"><a></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
-<span id="cb3-11"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb3-12"><a></a></span>
-<span id="cb3-13"><a></a>torch.manual_seed(<span class="dv">7</span>)</span>
-<span id="cb3-14"><a></a>idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> <span class="st">"その夜"</span>]])</span>
-<span id="cb3-15"><a></a>out <span class="op">=</span> model.generate(idx, <span class="dv">120</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, top_k<span class="op">=</span><span class="dv">40</span>)</span>
-<span id="cb3-16"><a></a><span class="bu">print</span>(<span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist()))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="cdd9e839" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb3-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb3-3"><a aria-label="3"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
+<span id="cb3-4"><a aria-label="4"></a></span>
+<span id="cb3-5"><a aria-label="5"></a>BEST_ITER <span class="op">=</span> <span class="dv">500</span>   <span class="co"># 自分のログで val が最小だった回へ変更</span></span>
+<span id="cb3-6"><a aria-label="6"></a>blob <span class="op">=</span> torch.load(<span class="ss">f"data/my_ckpt_</span><span class="sc">{</span>BEST_ITER<span class="sc">}</span><span class="ss">.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-7"><a aria-label="7"></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
+<span id="cb3-8"><a aria-label="8"></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
+<span id="cb3-9"><a aria-label="9"></a>model.<span class="bu">eval</span>()</span>
+<span id="cb3-10"><a aria-label="10"></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
+<span id="cb3-11"><a aria-label="11"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb3-12"><a aria-label="12"></a></span>
+<span id="cb3-13"><a aria-label="13"></a>torch.manual_seed(<span class="dv">7</span>)</span>
+<span id="cb3-14"><a aria-label="14"></a>idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> <span class="st">"その夜"</span>]])</span>
+<span id="cb3-15"><a aria-label="15"></a>out <span class="op">=</span> model.generate(idx, <span class="dv">120</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, top_k<span class="op">=</span><span class="dv">40</span>)</span>
+<span id="cb3-16"><a aria-label="16"></a><span class="bu">print</span>(<span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist()))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>本番提出（文豪テスト大会のエントリーシート）：</p>
 <ol start="0" type="1">
@@ -576,20 +583,20 @@ rkskmt
 <li>過学習ぎみの重みや低い temperature では、<span class="hl">本文の丸写しに近い文</span>が出ることがある。偽物は文体の<strong>創作</strong>であって暗記の吐き出しではないこと — 大会のフェアプレー</li>
 <li>コーパスとのひと続きの<strong>最長一致</strong>を測ってから提出する：</li>
 </ul>
-<div id="91250c06" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a><span class="kw">def</span> longest_match(fake, text):</span>
-<span id="cb4-2"><a></a>    best <span class="op">=</span> <span class="st">""</span></span>
-<span id="cb4-3"><a></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(fake)):</span>
-<span id="cb4-4"><a></a>        j <span class="op">=</span> i <span class="op">+</span> <span class="bu">len</span>(best) <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb4-5"><a></a>        <span class="cf">while</span> j <span class="op">&lt;=</span> <span class="bu">len</span>(fake) <span class="kw">and</span> fake[i:j] <span class="kw">in</span> text:</span>
-<span id="cb4-6"><a></a>            best <span class="op">=</span> fake[i:j]</span>
-<span id="cb4-7"><a></a>            j <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb4-8"><a></a>    <span class="cf">return</span> best</span>
-<span id="cb4-9"><a></a></span>
-<span id="cb4-10"><a></a>fake <span class="op">=</span> <span class="st">"……"</span>   <span class="co"># 提出する偽物をここに</span></span>
-<span id="cb4-11"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb4-12"><a></a>m <span class="op">=</span> longest_match(fake, text)</span>
-<span id="cb4-13"><a></a><span class="bu">print</span>(<span class="bu">len</span>(m), <span class="st">"字:"</span>, m)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="4f0d3690" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a aria-label="1"></a><span class="kw">def</span> longest_match(fake, text):</span>
+<span id="cb4-2"><a aria-label="2"></a>    best <span class="op">=</span> <span class="st">""</span></span>
+<span id="cb4-3"><a aria-label="3"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(fake)):</span>
+<span id="cb4-4"><a aria-label="4"></a>        j <span class="op">=</span> i <span class="op">+</span> <span class="bu">len</span>(best) <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb4-5"><a aria-label="5"></a>        <span class="cf">while</span> j <span class="op">&lt;=</span> <span class="bu">len</span>(fake) <span class="kw">and</span> fake[i:j] <span class="kw">in</span> text:</span>
+<span id="cb4-6"><a aria-label="6"></a>            best <span class="op">=</span> fake[i:j]</span>
+<span id="cb4-7"><a aria-label="7"></a>            j <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb4-8"><a aria-label="8"></a>    <span class="cf">return</span> best</span>
+<span id="cb4-9"><a aria-label="9"></a></span>
+<span id="cb4-10"><a aria-label="10"></a>fake <span class="op">=</span> <span class="st">"……"</span>   <span class="co"># 提出する偽物をここに</span></span>
+<span id="cb4-11"><a aria-label="11"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/mybungo.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb4-12"><a aria-label="12"></a>m <span class="op">=</span> longest_match(fake, text)</span>
+<span id="cb4-13"><a aria-label="13"></a><span class="bu">print</span>(<span class="bu">len</span>(m), <span class="st">"字:"</span>, m)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li>参考値：文豪テストの機械文 B・D は最長一致 <strong>8字・9字</strong>（決まり文句レベル）</li>
@@ -764,7 +771,7 @@ rkskmt
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -775,6 +782,7 @@ rkskmt
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -797,6 +805,7 @@ rkskmt
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -967,7 +976,7 @@ rkskmt
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -1046,7 +1055,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

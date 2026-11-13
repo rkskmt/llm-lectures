@@ -6,11 +6,11 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – 学習で当てる</title>
@@ -20,10 +20,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -98,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,6 +248,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="9d83a65f2670fc0e5e826d7715f6fc7372c1cf11">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -254,7 +261,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -341,13 +348,13 @@ rkskmt
 <ul>
 <li>今日から <strong>PyTorch</strong> を使う。基本の箱は <strong>tensor</strong> — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚</li>
 </ul>
-<div id="92e85b20" class="cell" data-execution_count="1">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb1-2"><a></a></span>
-<span id="cb1-3"><a></a>a <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">2.0</span>], [<span class="fl">3.0</span>, <span class="fl">4.0</span>]])</span>
-<span id="cb1-4"><a></a>b <span class="op">=</span> torch.tensor([<span class="fl">10.0</span>, <span class="fl">100.0</span>])</span>
-<span id="cb1-5"><a></a><span class="bu">print</span>(a.shape)          <span class="co"># 形の確認も同じ</span></span>
-<span id="cb1-6"><a></a><span class="bu">print</span>(a <span class="op">@</span> b)            <span class="co"># 行列×ベクトルも @ 一発</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="408f5957" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a aria-label="2"></a></span>
+<span id="cb1-3"><a aria-label="3"></a>a <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">2.0</span>], [<span class="fl">3.0</span>, <span class="fl">4.0</span>]])</span>
+<span id="cb1-4"><a aria-label="4"></a>b <span class="op">=</span> torch.tensor([<span class="fl">10.0</span>, <span class="fl">100.0</span>])</span>
+<span id="cb1-5"><a aria-label="5"></a><span class="bu">print</span>(a.shape)          <span class="co"># 形の確認も同じ</span></span>
+<span id="cb1-6"><a aria-label="6"></a><span class="bu">print</span>(a <span class="op">@</span> b)            <span class="co"># 行列×ベクトルも @ 一発</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>torch.Size([2, 2])
 tensor([210., 430.])</code></pre>
@@ -364,13 +371,13 @@ tensor([210., 430.])</code></pre>
 <ul>
 <li>tensor は<span class="hl">自分がどう計算されたかを覚えている</span>。だから「結果を入力で微分した傾き」を自動で出せる</li>
 </ul>
-<div id="49d627a1" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb3-2"><a></a></span>
-<span id="cb3-3"><a></a>x <span class="op">=</span> torch.tensor(<span class="fl">3.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)   <span class="co"># 「微分を追跡せよ」の印</span></span>
-<span id="cb3-4"><a></a>y <span class="op">=</span> x <span class="op">**</span> <span class="dv">2</span>                                   <span class="co"># y = x²</span></span>
-<span id="cb3-5"><a></a>y.backward()                                 <span class="co"># y を x で微分すると……</span></span>
-<span id="cb3-6"><a></a><span class="bu">print</span>(x.grad)                                <span class="co"># dy/dx = 2x = 6 が出てくる</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="bd71a0e3" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb3-2"><a aria-label="2"></a></span>
+<span id="cb3-3"><a aria-label="3"></a>x <span class="op">=</span> torch.tensor(<span class="fl">3.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)   <span class="co"># 「微分を追跡せよ」の印</span></span>
+<span id="cb3-4"><a aria-label="4"></a>y <span class="op">=</span> x <span class="op">**</span> <span class="dv">2</span>                                   <span class="co"># y = x²</span></span>
+<span id="cb3-5"><a aria-label="5"></a>y.backward()                                 <span class="co"># y を x で微分すると……</span></span>
+<span id="cb3-6"><a aria-label="6"></a><span class="bu">print</span>(x.grad)                                <span class="co"># dy/dx = 2x = 6 が出てくる</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor(6.)</code></pre>
 </div>
@@ -390,15 +397,15 @@ tensor([210., 430.])</code></pre>
 <li>モデルに入れるために、文字番号を75次元のベクトルにする</li>
 <li><strong>one-hot ベクトル</strong>：その文字の位置だけ 1、あとは全部 0</li>
 </ul>
-<div id="57ace2e1" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb5-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb5-3"><a></a></span>
-<span id="cb5-4"><a></a>x <span class="op">=</span> torch.tensor([<span class="dv">2</span>, <span class="dv">0</span>])                      <span class="co"># 文字番号 2 と 0</span></span>
-<span id="cb5-5"><a></a>X <span class="op">=</span> F.one_hot(x, num_classes<span class="op">=</span><span class="dv">75</span>).<span class="bu">float</span>()</span>
-<span id="cb5-6"><a></a><span class="bu">print</span>(X.shape)</span>
-<span id="cb5-7"><a></a><span class="bu">print</span>(X[<span class="dv">0</span>, :<span class="dv">6</span>], <span class="st">"..."</span>)                        <span class="co"># 2番の位置だけ 1</span></span>
-<span id="cb5-8"><a></a><span class="bu">print</span>(X[<span class="dv">1</span>, :<span class="dv">6</span>], <span class="st">"..."</span>)                        <span class="co"># 0番の位置だけ 1</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="3e976d72" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb5-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb5-3"><a aria-label="3"></a></span>
+<span id="cb5-4"><a aria-label="4"></a>x <span class="op">=</span> torch.tensor([<span class="dv">2</span>, <span class="dv">0</span>])                      <span class="co"># 文字番号 2 と 0</span></span>
+<span id="cb5-5"><a aria-label="5"></a>X <span class="op">=</span> F.one_hot(x, num_classes<span class="op">=</span><span class="dv">75</span>).<span class="bu">float</span>()</span>
+<span id="cb5-6"><a aria-label="6"></a><span class="bu">print</span>(X.shape)</span>
+<span id="cb5-7"><a aria-label="7"></a><span class="bu">print</span>(X[<span class="dv">0</span>, :<span class="dv">6</span>], <span class="st">"..."</span>)                        <span class="co"># 2番の位置だけ 1</span></span>
+<span id="cb5-8"><a aria-label="8"></a><span class="bu">print</span>(X[<span class="dv">1</span>, :<span class="dv">6</span>], <span class="st">"..."</span>)                        <span class="co"># 0番の位置だけ 1</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>torch.Size([2, 75])
 tensor([0., 0., 1., 0., 0., 0.]) ...
@@ -436,14 +443,14 @@ tensor([1., 0., 0., 0., 0., 0.]) ...</code></pre>
 <p><span class="math display">\[
 \mathrm{softmax}(s_k) = \frac{e^{s_k}}{\sum_j e^{s_j}}
 \]</span></p>
-<div id="31523f02" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb7-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb7-3"><a></a></span>
-<span id="cb7-4"><a></a>s <span class="op">=</span> torch.tensor([<span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>])     <span class="co"># スコア（負もある）</span></span>
-<span id="cb7-5"><a></a>p <span class="op">=</span> F.softmax(s, dim<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb7-6"><a></a><span class="bu">print</span>(p)                                <span class="co"># 全部正・順位はそのまま</span></span>
-<span id="cb7-7"><a></a><span class="bu">print</span>(p.<span class="bu">sum</span>())                          <span class="co"># 合計はきっかり1</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="c2706b50" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb7-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb7-3"><a aria-label="3"></a></span>
+<span id="cb7-4"><a aria-label="4"></a>s <span class="op">=</span> torch.tensor([<span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>])     <span class="co"># スコア（負もある）</span></span>
+<span id="cb7-5"><a aria-label="5"></a>p <span class="op">=</span> F.softmax(s, dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb7-6"><a aria-label="6"></a><span class="bu">print</span>(p)                                <span class="co"># 全部正・順位はそのまま</span></span>
+<span id="cb7-7"><a aria-label="7"></a><span class="bu">print</span>(p.<span class="bu">sum</span>())                          <span class="co"># 合計はきっかり1</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([0.7054, 0.2595, 0.0351])
 tensor(1.0000)</code></pre>
@@ -458,7 +465,7 @@ tensor(1.0000)</code></pre>
 <section id="softmax-の形-es-は差の増幅器" class="slide level2">
 <h2>softmax の形 — <span class="math inline">\(e^s\)</span> は差の増幅器</h2>
 <div class="slide-body">
-<div id="d6b79741" class="cell" data-execution_count="5">
+<div id="74ee3146" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -489,7 +496,7 @@ tensor(1.0000)</code></pre>
 <p><span class="math display">\[
 \text{損失} = -\log\big(\text{正解に付けた確率}\big)
 \]</span></p>
-<div id="c9a87cf7" class="cell" data-execution_count="6">
+<div id="a55bb798" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -527,7 +534,7 @@ tensor(1.0000)</code></pre>
 <li>損失は <span class="math inline">\(W\)</span>（5,625個の数）しだいで変わる。<span class="math inline">\(W\)</span> をどっちに動かせば損失が減る？</li>
 <li><code>backward()</code> が出す<strong>勾配</strong>（<span class="en">gradient</span>）＝「どちらへ動かすと損失が増えるか」の矢印。<span class="hl">その逆へ少しずつ動かし続ける</span>のが<strong>勾配降下法</strong>（<span class="en">gradient descent</span>）。1歩の幅が<strong>学習率</strong>（<code>lr</code>）</li>
 </ul>
-<div id="a4bfdc3d" class="cell" data-execution_count="7">
+<div id="47f863f3" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -589,33 +596,33 @@ tensor(1.0000)</code></pre>
 <section id="peek-neural-bigram" class="slide level2">
 <h2>学習ループを回す</h2>
 <div class="slide-body">
-<div id="849a2f4a" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb9-2"><a></a><span class="im">import</span> torch</span>
-<span id="cb9-3"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb9-4"><a></a></span>
-<span id="cb9-5"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
-<span id="cb9-6"><a></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
-<span id="cb9-7"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb9-8"><a></a></span>
-<span id="cb9-9"><a></a>xs, ys <span class="op">=</span> [], []</span>
-<span id="cb9-10"><a></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
-<span id="cb9-11"><a></a>    seq <span class="op">=</span> <span class="st">"・"</span> <span class="op">+</span> name <span class="op">+</span> <span class="st">"・"</span></span>
-<span id="cb9-12"><a></a>    <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(seq, seq[<span class="dv">1</span>:]):</span>
-<span id="cb9-13"><a></a>        xs.append(stoi[a])</span>
-<span id="cb9-14"><a></a>        ys.append(stoi[b])</span>
-<span id="cb9-15"><a></a>X <span class="op">=</span> F.one_hot(torch.tensor(xs), num_classes<span class="op">=</span><span class="dv">75</span>).<span class="bu">float</span>()</span>
-<span id="cb9-16"><a></a>y <span class="op">=</span> torch.tensor(ys)</span>
-<span id="cb9-17"><a></a></span>
-<span id="cb9-18"><a></a>W <span class="op">=</span> torch.zeros((<span class="dv">75</span>, <span class="dv">75</span>), requires_grad<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb9-19"><a></a>opt <span class="op">=</span> torch.optim.AdamW([W], lr<span class="op">=</span><span class="fl">0.5</span>)</span>
-<span id="cb9-20"><a></a><span class="cf">for</span> it <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">101</span>):</span>
-<span id="cb9-21"><a></a>    opt.zero_grad()                        <span class="co"># ① リセット</span></span>
-<span id="cb9-22"><a></a>    loss <span class="op">=</span> F.cross_entropy(X <span class="op">@</span> W, y)       <span class="co"># forward と損失</span></span>
-<span id="cb9-23"><a></a>    loss.backward()                        <span class="co"># ② backprop（自動）</span></span>
-<span id="cb9-24"><a></a>    opt.step()                             <span class="co"># ③ 勾配降下で1歩</span></span>
-<span id="cb9-25"><a></a>    <span class="cf">if</span> it <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">100</span>):</span>
-<span id="cb9-26"><a></a>        <span class="bu">print</span>(<span class="ss">f"更新 </span><span class="sc">{</span>it<span class="sc">:3d}</span><span class="ss">回 | Loss: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="7abbc7f5" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb9-2"><a aria-label="2"></a><span class="im">import</span> torch</span>
+<span id="cb9-3"><a aria-label="3"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb9-4"><a aria-label="4"></a></span>
+<span id="cb9-5"><a aria-label="5"></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
+<span id="cb9-6"><a aria-label="6"></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
+<span id="cb9-7"><a aria-label="7"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb9-8"><a aria-label="8"></a></span>
+<span id="cb9-9"><a aria-label="9"></a>xs, ys <span class="op">=</span> [], []</span>
+<span id="cb9-10"><a aria-label="10"></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
+<span id="cb9-11"><a aria-label="11"></a>    seq <span class="op">=</span> <span class="st">"・"</span> <span class="op">+</span> name <span class="op">+</span> <span class="st">"・"</span></span>
+<span id="cb9-12"><a aria-label="12"></a>    <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(seq, seq[<span class="dv">1</span>:]):</span>
+<span id="cb9-13"><a aria-label="13"></a>        xs.append(stoi[a])</span>
+<span id="cb9-14"><a aria-label="14"></a>        ys.append(stoi[b])</span>
+<span id="cb9-15"><a aria-label="15"></a>X <span class="op">=</span> F.one_hot(torch.tensor(xs), num_classes<span class="op">=</span><span class="dv">75</span>).<span class="bu">float</span>()</span>
+<span id="cb9-16"><a aria-label="16"></a>y <span class="op">=</span> torch.tensor(ys)</span>
+<span id="cb9-17"><a aria-label="17"></a></span>
+<span id="cb9-18"><a aria-label="18"></a>W <span class="op">=</span> torch.zeros((<span class="dv">75</span>, <span class="dv">75</span>), requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb9-19"><a aria-label="19"></a>opt <span class="op">=</span> torch.optim.AdamW([W], lr<span class="op">=</span><span class="fl">0.5</span>)</span>
+<span id="cb9-20"><a aria-label="20"></a><span class="cf">for</span> it <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, <span class="dv">101</span>):</span>
+<span id="cb9-21"><a aria-label="21"></a>    opt.zero_grad()                        <span class="co"># ① リセット</span></span>
+<span id="cb9-22"><a aria-label="22"></a>    loss <span class="op">=</span> F.cross_entropy(X <span class="op">@</span> W, y)       <span class="co"># forward と損失</span></span>
+<span id="cb9-23"><a aria-label="23"></a>    loss.backward()                        <span class="co"># ② backprop（自動）</span></span>
+<span id="cb9-24"><a aria-label="24"></a>    opt.step()                             <span class="co"># ③ 勾配降下で1歩</span></span>
+<span id="cb9-25"><a aria-label="25"></a>    <span class="cf">if</span> it <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">100</span>):</span>
+<span id="cb9-26"><a aria-label="26"></a>        <span class="bu">print</span>(<span class="ss">f"更新 </span><span class="sc">{</span>it<span class="sc">:3d}</span><span class="ss">回 | Loss: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>更新   1回 | Loss: 4.3175
 更新  10回 | Loss: 2.4495
@@ -634,7 +641,7 @@ tensor(1.0000)</code></pre>
 <ul>
 <li>学習した <span class="math inline">\(W\)</span> を softmax で確率にして、前回の「数えた表」と比べる</li>
 </ul>
-<div id="86e02179" class="cell" data-execution_count="9">
+<div id="ec253809" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -643,10 +650,10 @@ tensor(1.0000)</code></pre>
 </div>
 </div>
 </div>
-<div id="c06fc842" class="cell" data-execution_count="10">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a><span class="bu">print</span>(<span class="st">"確率の差の最大:"</span>, np.<span class="bu">abs</span>(P_learn <span class="op">-</span> P_count).<span class="bu">max</span>().<span class="bu">round</span>(<span class="dv">4</span>))</span>
-<span id="cb11-2"><a></a><span class="bu">print</span>(<span class="st">"P(う|ょ)  数え:"</span>, P_count[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>),</span>
-<span id="cb11-3"><a></a>      <span class="st">" 学習:"</span>, P_learn[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="9fb9794a" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a><span class="bu">print</span>(<span class="st">"確率の差の最大:"</span>, np.<span class="bu">abs</span>(P_learn <span class="op">-</span> P_count).<span class="bu">max</span>().<span class="bu">round</span>(<span class="dv">4</span>))</span>
+<span id="cb11-2"><a aria-label="2"></a><span class="bu">print</span>(<span class="st">"P(う|ょ)  数え:"</span>, P_count[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>),</span>
+<span id="cb11-3"><a aria-label="3"></a>      <span class="st">" 学習:"</span>, P_learn[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="cell fragment" data-execution_count="10">
 <div class="cell-output cell-output-stdout">
@@ -697,18 +704,18 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <ul>
 <li>前回の生成コードの <code>P</code> を <code>P_learn</code> に差し替えるだけ</li>
 </ul>
-<div id="3f7e6b98" class="cell" data-execution_count="11">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb13-2"><a></a></span>
-<span id="cb13-3"><a></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
-<span id="cb13-4"><a></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
-<span id="cb13-5"><a></a>    i, s <span class="op">=</span> <span class="dv">0</span>, <span class="st">""</span></span>
-<span id="cb13-6"><a></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
-<span id="cb13-7"><a></a>        i <span class="op">=</span> rng.choice(<span class="dv">75</span>, p<span class="op">=</span>P_learn[i] <span class="op">/</span> P_learn[i].<span class="bu">sum</span>())   <span class="co"># 丸め誤差の補正</span></span>
-<span id="cb13-8"><a></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb13-9"><a></a>            <span class="cf">break</span></span>
-<span id="cb13-10"><a></a>        s <span class="op">+=</span> chars[i]</span>
-<span id="cb13-11"><a></a>    <span class="bu">print</span>(s)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="3fcf3ac7" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb13-2"><a aria-label="2"></a></span>
+<span id="cb13-3"><a aria-label="3"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
+<span id="cb13-4"><a aria-label="4"></a><span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">5</span>):</span>
+<span id="cb13-5"><a aria-label="5"></a>    i, s <span class="op">=</span> <span class="dv">0</span>, <span class="st">""</span></span>
+<span id="cb13-6"><a aria-label="6"></a>    <span class="cf">while</span> <span class="va">True</span>:</span>
+<span id="cb13-7"><a aria-label="7"></a>        i <span class="op">=</span> rng.choice(<span class="dv">75</span>, p<span class="op">=</span>P_learn[i] <span class="op">/</span> P_learn[i].<span class="bu">sum</span>())   <span class="co"># 丸め誤差の補正</span></span>
+<span id="cb13-8"><a aria-label="8"></a>        <span class="cf">if</span> i <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb13-9"><a aria-label="9"></a>            <span class="cf">break</span></span>
+<span id="cb13-10"><a aria-label="10"></a>        s <span class="op">+=</span> chars[i]</span>
+<span id="cb13-11"><a aria-label="11"></a>    <span class="bu">print</span>(s)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>とさいいままちょうむら
 みいなかわち
@@ -756,6 +763,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 </tbody>
 </table>
 </div>
+<div title="ここで観察">
 <div class="callout callout-tip callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
@@ -768,6 +776,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <ul>
 <li>どう頑張っても損失は<strong>約2.34で頭打ち</strong>になる。これはコードのバグでも学習不足でもない — 次の練習問題で正体を暴く</li>
 </ul>
+</div>
 </div>
 </div>
 </div>
@@ -832,48 +841,48 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="396c17e5" class="cell" data-execution_count="12">
+<div id="b3186c88" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb15-2"><a></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb15-3"><a></a><span class="im">import</span> torch</span>
-<span id="cb15-4"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb15-5"><a></a></span>
-<span id="cb15-6"><a></a><span class="co"># 問題0</span></span>
-<span id="cb15-7"><a></a><span class="bu">print</span>(F.softmax(torch.tensor([<span class="fl">5.0</span>, <span class="fl">5.0</span>, <span class="fl">5.0</span>]), dim<span class="op">=</span><span class="dv">0</span>))       <span class="co"># 全員同点 → 均等割り</span></span>
-<span id="cb15-8"><a></a><span class="bu">print</span>(<span class="op">-</span>torch.log(torch.tensor(<span class="fl">1.0</span>)))                          <span class="co"># 罰点0（「-0.」は 0 の浮動小数表示）</span></span>
-<span id="cb15-9"><a></a><span class="bu">print</span>(F.softmax(torch.tensor([<span class="fl">102.0</span>, <span class="fl">101.0</span>, <span class="fl">99.0</span>]), dim<span class="op">=</span><span class="dv">0</span>))   <span class="co"># (2, 1, -1) と同じ</span></span>
-<span id="cb15-10"><a></a></span>
-<span id="cb15-11"><a></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
-<span id="cb15-12"><a></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
-<span id="cb15-13"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb15-14"><a></a>xs, ys <span class="op">=</span> [], []</span>
-<span id="cb15-15"><a></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
-<span id="cb15-16"><a></a>    seq <span class="op">=</span> <span class="st">"・"</span> <span class="op">+</span> name <span class="op">+</span> <span class="st">"・"</span></span>
-<span id="cb15-17"><a></a>    <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(seq, seq[<span class="dv">1</span>:]):</span>
-<span id="cb15-18"><a></a>        xs.append(stoi[a])</span>
-<span id="cb15-19"><a></a>        ys.append(stoi[b])</span>
-<span id="cb15-20"><a></a>N <span class="op">=</span> np.zeros((<span class="dv">75</span>, <span class="dv">75</span>))</span>
-<span id="cb15-21"><a></a><span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(xs, ys):</span>
-<span id="cb15-22"><a></a>    N[a, b] <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb15-23"><a></a>P_count <span class="op">=</span> N <span class="op">/</span> N.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb15-24"><a></a></span>
-<span id="cb15-25"><a></a><span class="co"># 問題1</span></span>
-<span id="cb15-26"><a></a>xs_a, ys_a <span class="op">=</span> np.array(xs), np.array(ys)</span>
-<span id="cb15-27"><a></a>loss_count <span class="op">=</span> <span class="op">-</span>np.log(P_count[xs_a, ys_a]).mean()</span>
-<span id="cb15-28"><a></a><span class="bu">print</span>(<span class="st">"数えた表の損失:"</span>, loss_count.<span class="bu">round</span>(<span class="dv">4</span>))   <span class="co"># 学習の到達点とほぼ同じ</span></span>
-<span id="cb15-29"><a></a></span>
-<span id="cb15-30"><a></a><span class="co"># 問題2</span></span>
-<span id="cb15-31"><a></a>per_char <span class="op">=</span> {}</span>
-<span id="cb15-32"><a></a><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">75</span>):</span>
-<span id="cb15-33"><a></a>    mask <span class="op">=</span> xs_a <span class="op">==</span> c</span>
-<span id="cb15-34"><a></a>    <span class="cf">if</span> mask.<span class="bu">sum</span>() <span class="op">&gt;=</span> <span class="dv">10</span>:</span>
-<span id="cb15-35"><a></a>        per_char[chars[c]] <span class="op">=</span> <span class="op">-</span>np.log(P_count[xs_a[mask], ys_a[mask]]).mean()</span>
-<span id="cb15-36"><a></a>hardest <span class="op">=</span> <span class="bu">max</span>(per_char, key<span class="op">=</span>per_char.get)</span>
-<span id="cb15-37"><a></a>easiest <span class="op">=</span> <span class="bu">min</span>(per_char, key<span class="op">=</span>per_char.get)</span>
-<span id="cb15-38"><a></a><span class="bu">print</span>(<span class="ss">f"予想しにくい: </span><span class="sc">{</span>hardest<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>per_char[hardest]<span class="sc">:.3f}</span><span class="ss">)"</span>)</span>
-<span id="cb15-39"><a></a><span class="bu">print</span>(<span class="ss">f"予想しやすい: </span><span class="sc">{</span>easiest<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>per_char[easiest]<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb15-2"><a aria-label="2"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb15-3"><a aria-label="3"></a><span class="im">import</span> torch</span>
+<span id="cb15-4"><a aria-label="4"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb15-5"><a aria-label="5"></a></span>
+<span id="cb15-6"><a aria-label="6"></a><span class="co"># 問題0</span></span>
+<span id="cb15-7"><a aria-label="7"></a><span class="bu">print</span>(F.softmax(torch.tensor([<span class="fl">5.0</span>, <span class="fl">5.0</span>, <span class="fl">5.0</span>]), dim<span class="op">=</span><span class="dv">0</span>))       <span class="co"># 全員同点 → 均等割り</span></span>
+<span id="cb15-8"><a aria-label="8"></a><span class="bu">print</span>(<span class="op">-</span>torch.log(torch.tensor(<span class="fl">1.0</span>)))                          <span class="co"># 罰点0（「-0.」は 0 の浮動小数表示）</span></span>
+<span id="cb15-9"><a aria-label="9"></a><span class="bu">print</span>(F.softmax(torch.tensor([<span class="fl">102.0</span>, <span class="fl">101.0</span>, <span class="fl">99.0</span>]), dim<span class="op">=</span><span class="dv">0</span>))   <span class="co"># (2, 1, -1) と同じ</span></span>
+<span id="cb15-10"><a aria-label="10"></a></span>
+<span id="cb15-11"><a aria-label="11"></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
+<span id="cb15-12"><a aria-label="12"></a>chars <span class="op">=</span> [<span class="st">"・"</span>] <span class="op">+</span> <span class="bu">sorted</span>(<span class="bu">set</span>(<span class="st">""</span>.join(names)))</span>
+<span id="cb15-13"><a aria-label="13"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb15-14"><a aria-label="14"></a>xs, ys <span class="op">=</span> [], []</span>
+<span id="cb15-15"><a aria-label="15"></a><span class="cf">for</span> name <span class="kw">in</span> names:</span>
+<span id="cb15-16"><a aria-label="16"></a>    seq <span class="op">=</span> <span class="st">"・"</span> <span class="op">+</span> name <span class="op">+</span> <span class="st">"・"</span></span>
+<span id="cb15-17"><a aria-label="17"></a>    <span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(seq, seq[<span class="dv">1</span>:]):</span>
+<span id="cb15-18"><a aria-label="18"></a>        xs.append(stoi[a])</span>
+<span id="cb15-19"><a aria-label="19"></a>        ys.append(stoi[b])</span>
+<span id="cb15-20"><a aria-label="20"></a>N <span class="op">=</span> np.zeros((<span class="dv">75</span>, <span class="dv">75</span>))</span>
+<span id="cb15-21"><a aria-label="21"></a><span class="cf">for</span> a, b <span class="kw">in</span> <span class="bu">zip</span>(xs, ys):</span>
+<span id="cb15-22"><a aria-label="22"></a>    N[a, b] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb15-23"><a aria-label="23"></a>P_count <span class="op">=</span> N <span class="op">/</span> N.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-24"><a aria-label="24"></a></span>
+<span id="cb15-25"><a aria-label="25"></a><span class="co"># 問題1</span></span>
+<span id="cb15-26"><a aria-label="26"></a>xs_a, ys_a <span class="op">=</span> np.array(xs), np.array(ys)</span>
+<span id="cb15-27"><a aria-label="27"></a>loss_count <span class="op">=</span> <span class="op">-</span>np.log(P_count[xs_a, ys_a]).mean()</span>
+<span id="cb15-28"><a aria-label="28"></a><span class="bu">print</span>(<span class="st">"数えた表の損失:"</span>, loss_count.<span class="bu">round</span>(<span class="dv">4</span>))   <span class="co"># 学習の到達点とほぼ同じ</span></span>
+<span id="cb15-29"><a aria-label="29"></a></span>
+<span id="cb15-30"><a aria-label="30"></a><span class="co"># 問題2</span></span>
+<span id="cb15-31"><a aria-label="31"></a>per_char <span class="op">=</span> {}</span>
+<span id="cb15-32"><a aria-label="32"></a><span class="cf">for</span> c <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">75</span>):</span>
+<span id="cb15-33"><a aria-label="33"></a>    mask <span class="op">=</span> xs_a <span class="op">==</span> c</span>
+<span id="cb15-34"><a aria-label="34"></a>    <span class="cf">if</span> mask.<span class="bu">sum</span>() <span class="op">&gt;=</span> <span class="dv">10</span>:</span>
+<span id="cb15-35"><a aria-label="35"></a>        per_char[chars[c]] <span class="op">=</span> <span class="op">-</span>np.log(P_count[xs_a[mask], ys_a[mask]]).mean()</span>
+<span id="cb15-36"><a aria-label="36"></a>hardest <span class="op">=</span> <span class="bu">max</span>(per_char, key<span class="op">=</span>per_char.get)</span>
+<span id="cb15-37"><a aria-label="37"></a>easiest <span class="op">=</span> <span class="bu">min</span>(per_char, key<span class="op">=</span>per_char.get)</span>
+<span id="cb15-38"><a aria-label="38"></a><span class="bu">print</span>(<span class="ss">f"予想しにくい: </span><span class="sc">{</span>hardest<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>per_char[hardest]<span class="sc">:.3f}</span><span class="ss">)"</span>)</span>
+<span id="cb15-39"><a aria-label="39"></a><span class="bu">print</span>(<span class="ss">f"予想しやすい: </span><span class="sc">{</span>easiest<span class="sc">}</span><span class="ss"> (</span><span class="sc">{</span>per_char[easiest]<span class="sc">:.3f}</span><span class="ss">)"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([0.3333, 0.3333, 0.3333])
@@ -899,7 +908,7 @@ tensor([0.7054, 0.2595, 0.0351])
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -910,6 +919,7 @@ tensor([0.7054, 0.2595, 0.0351])
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -932,6 +942,7 @@ tensor([0.7054, 0.2595, 0.0351])
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -1102,7 +1113,7 @@ tensor([0.7054, 0.2595, 0.0351])
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -1181,7 +1192,7 @@ tensor([0.7054, 0.2595, 0.0351])
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

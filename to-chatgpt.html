@@ -6,11 +6,11 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – ChatGPT までの距離</title>
@@ -20,10 +20,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -98,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,6 +248,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="8e4db517a9bcfee897ac9cf53de4900c00b5ef44">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -254,7 +261,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -347,7 +354,7 @@ rkskmt
 <section id="距離1スケール" class="slide level2">
 <h2>距離1：スケール</h2>
 <div class="slide-body">
-<div id="d3f99f02" class="cell" data-execution_count="1">
+<div id="824c44ea" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -368,9 +375,9 @@ rkskmt
 <ul>
 <li>パラメータは float32 の数 — <span class="hl">1個が4バイト</span>。個数を掛ければ「モデルの重さ」が出る</li>
 </ul>
-<div id="331882dd" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"自作GPT"</span>, <span class="dv">817_125</span>), (<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
-<span id="cb1-2"><a></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>p <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="fl">1e9</span><span class="sc">:,.4f}</span><span class="ss"> GB"</span>)   <span class="co"># 数1個 = 4バイト</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="57e6238f" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"自作GPT"</span>, <span class="dv">817_125</span>), (<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
+<span id="cb1-2"><a aria-label="2"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>p <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="fl">1e9</span><span class="sc">:,.4f}</span><span class="ss"> GB"</span>)   <span class="co"># 数1個 = 4バイト</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>自作GPT   0.0033 GB
 GPT-2   6.0000 GB
@@ -496,25 +503,25 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに質問してみる" class="slide level2">
 <h2>実験：自作GPTに質問してみる</h2>
 <div class="slide-body">
-<div id="1a6c3eb6" class="cell" data-execution_count="4">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb3-2"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
-<span id="cb3-3"><a></a></span>
-<span id="cb3-4"><a></a>torch.set_num_threads(<span class="dv">1</span>)</span>
-<span id="cb3-5"><a></a>blob <span class="op">=</span> torch.load(<span class="st">"data/runs/neko/ckpt_best.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb3-6"><a></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
-<span id="cb3-7"><a></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
-<span id="cb3-8"><a></a>model.<span class="bu">eval</span>()</span>
-<span id="cb3-9"><a></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
-<span id="cb3-10"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
-<span id="cb3-11"><a></a></span>
-<span id="cb3-12"><a></a><span class="kw">def</span> gen(prompt, n, seed<span class="op">=</span><span class="dv">0</span>):</span>
-<span id="cb3-13"><a></a>    torch.manual_seed(seed)</span>
-<span id="cb3-14"><a></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
-<span id="cb3-15"><a></a>    out <span class="op">=</span> model.generate(idx, n, temperature<span class="op">=</span><span class="fl">0.8</span>, top_k<span class="op">=</span><span class="dv">40</span>)</span>
-<span id="cb3-16"><a></a>    <span class="cf">return</span> <span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist())</span>
-<span id="cb3-17"><a></a></span>
-<span id="cb3-18"><a></a><span class="bu">print</span>(gen(<span class="st">"「君の名前は何かね」"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="15328ea6" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb3-2"><a aria-label="2"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
+<span id="cb3-3"><a aria-label="3"></a></span>
+<span id="cb3-4"><a aria-label="4"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb3-5"><a aria-label="5"></a>blob <span class="op">=</span> torch.load(<span class="st">"data/runs/neko/ckpt_best.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-6"><a aria-label="6"></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
+<span id="cb3-7"><a aria-label="7"></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
+<span id="cb3-8"><a aria-label="8"></a>model.<span class="bu">eval</span>()</span>
+<span id="cb3-9"><a aria-label="9"></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
+<span id="cb3-10"><a aria-label="10"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span>
+<span id="cb3-11"><a aria-label="11"></a></span>
+<span id="cb3-12"><a aria-label="12"></a><span class="kw">def</span> gen(prompt, n, seed<span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb3-13"><a aria-label="13"></a>    torch.manual_seed(seed)</span>
+<span id="cb3-14"><a aria-label="14"></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
+<span id="cb3-15"><a aria-label="15"></a>    out <span class="op">=</span> model.generate(idx, n, temperature<span class="op">=</span><span class="fl">0.8</span>, top_k<span class="op">=</span><span class="dv">40</span>)</span>
+<span id="cb3-16"><a aria-label="16"></a>    <span class="cf">return</span> <span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist())</span>
+<span id="cb3-17"><a aria-label="17"></a></span>
+<span id="cb3-18"><a aria-label="18"></a><span class="bu">print</span>(gen(<span class="st">"「君の名前は何かね」"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>「君の名前は何かね」
 「それでね、どうですかも知れないのは、どうです、どうだってもしない」
@@ -591,8 +598,8 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに事実を聞く" class="slide level2">
 <h2>実験：自作GPTに事実を聞く</h2>
 <div class="slide-body">
-<div id="731aca13" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a></a><span class="bu">print</span>(gen(<span class="st">"主人の名前は"</span>, <span class="dv">50</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="309cc82b" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"主人の名前は"</span>, <span class="dv">50</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」</code></pre>
 </div>
@@ -635,8 +642,8 @@ GPT-3   700.0000 GB</code></pre>
 <section id="ハルシネーションの解剖" class="slide level2">
 <h2>ハルシネーションの解剖</h2>
 <div class="slide-body">
-<div id="e7e82d03" class="cell" data-execution_count="6">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="bu">print</span>(gen(<span class="st">"吾輩の主人は"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">0</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="8a22ba13" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"吾輩の主人は"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">0</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も</code></pre>
 </div>
@@ -644,11 +651,11 @@ GPT-3   700.0000 GB</code></pre>
 <ul>
 <li>途中に「<strong>寒月君は猫</strong>としてはならんのだから」— それらしい主張。本文と照合する：</li>
 </ul>
-<div id="6eb0cc96" class="cell" data-execution_count="7">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb9-2"><a></a><span class="bu">print</span>(<span class="st">"寒月君は:"</span>, text.count(<span class="st">"寒月君は"</span>), <span class="st">"回"</span>)</span>
-<span id="cb9-3"><a></a><span class="bu">print</span>(<span class="st">"猫として:"</span>, text.count(<span class="st">"猫として"</span>), <span class="st">"回"</span>)</span>
-<span id="cb9-4"><a></a><span class="bu">print</span>(<span class="st">"寒月君は猫:"</span>, <span class="st">"寒月君は猫"</span> <span class="kw">in</span> text)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="86dab033" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb9-2"><a aria-label="2"></a><span class="bu">print</span>(<span class="st">"寒月君は:"</span>, text.count(<span class="st">"寒月君は"</span>), <span class="st">"回"</span>)</span>
+<span id="cb9-3"><a aria-label="3"></a><span class="bu">print</span>(<span class="st">"猫として:"</span>, text.count(<span class="st">"猫として"</span>), <span class="st">"回"</span>)</span>
+<span id="cb9-4"><a aria-label="4"></a><span class="bu">print</span>(<span class="st">"寒月君は猫:"</span>, <span class="st">"寒月君は猫"</span> <span class="kw">in</span> text)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>寒月君は: 59 回
 猫として: 4 回
@@ -672,12 +679,12 @@ GPT-3   700.0000 GB</code></pre>
 <li>出力に含まれる「事実らしい主張」に下線を引く（紙でよい）</li>
 <li>その主張が本文にあるか、<code>in</code> 演算子や <code>count</code> で検索して判定（<code>"○○" in text</code> など）</li>
 </ol>
-<div id="eac2d0e6" class="cell" data-execution_count="8">
+<div id="d0dfad0b" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答の型を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb11-2"><a></a>claim <span class="op">=</span> <span class="st">"本堤分署"</span>                      <span class="co"># 出力から拾った「事実らしい」語</span></span>
-<span id="cb11-3"><a></a><span class="bu">print</span>(claim <span class="kw">in</span> text, text.count(claim))  <span class="co"># 本文にあるか・何回か</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb11-2"><a aria-label="2"></a>claim <span class="op">=</span> <span class="st">"本堤分署"</span>                      <span class="co"># 出力から拾った「事実らしい」語</span></span>
+<span id="cb11-3"><a aria-label="3"></a><span class="bu">print</span>(claim <span class="kw">in</span> text, text.count(claim))  <span class="co"># 本文にあるか・何回か</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </div>
@@ -767,18 +774,18 @@ GPT-3   700.0000 GB</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="3b4a1074" class="cell" data-execution_count="9">
+<div id="d7f44f53" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a></a><span class="co"># 問題1</span></span>
-<span id="cb12-2"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb12-3"><a></a><span class="bu">print</span>(<span class="st">"苦沙弥:"</span>, text.count(<span class="st">"苦沙弥"</span>), <span class="st">"回"</span>)   <span class="co"># 呼び名はこちら（99回）</span></span>
-<span id="cb12-4"><a></a><span class="bu">print</span>(<span class="st">"珍野:"</span>, text.count(<span class="st">"珍野"</span>), <span class="st">"回"</span>)       <span class="co"># 姓はたった2回 — 検索しないと出会えない</span></span>
-<span id="cb12-5"><a></a></span>
-<span id="cb12-6"><a></a><span class="co"># 問題2</span></span>
-<span id="cb12-7"><a></a>mine <span class="op">=</span> <span class="dv">817_125</span></span>
-<span id="cb12-8"><a></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
-<span id="cb12-9"><a></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: 自作GPT </span><span class="sc">{</span>p <span class="op">/</span> mine<span class="sc">:,.0f}</span><span class="ss"> 台ぶん"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a><span class="co"># 問題1</span></span>
+<span id="cb12-2"><a aria-label="2"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb12-3"><a aria-label="3"></a><span class="bu">print</span>(<span class="st">"苦沙弥:"</span>, text.count(<span class="st">"苦沙弥"</span>), <span class="st">"回"</span>)   <span class="co"># 呼び名はこちら（99回）</span></span>
+<span id="cb12-4"><a aria-label="4"></a><span class="bu">print</span>(<span class="st">"珍野:"</span>, text.count(<span class="st">"珍野"</span>), <span class="st">"回"</span>)       <span class="co"># 姓はたった2回 — 検索しないと出会えない</span></span>
+<span id="cb12-5"><a aria-label="5"></a></span>
+<span id="cb12-6"><a aria-label="6"></a><span class="co"># 問題2</span></span>
+<span id="cb12-7"><a aria-label="7"></a>mine <span class="op">=</span> <span class="dv">817_125</span></span>
+<span id="cb12-8"><a aria-label="8"></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
+<span id="cb12-9"><a aria-label="9"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">: 自作GPT </span><span class="sc">{</span>p <span class="op">/</span> mine<span class="sc">:,.0f}</span><span class="ss"> 台ぶん"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>苦沙弥: 99 回
@@ -797,7 +804,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -808,6 +815,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -830,6 +838,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -1000,7 +1009,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -1079,7 +1088,7 @@ GPT-3: 自作GPT 214,166 台ぶん</code></pre>
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

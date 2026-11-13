@@ -6,11 +6,11 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – 生成を操る</title>
@@ -20,10 +20,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -98,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,6 +248,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="8a971611145c8c12d69fee9ee99e655a62e62ab5">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -254,7 +261,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -268,17 +275,17 @@ rkskmt
 <li>モデルの出力は<strong>確率分布</strong> — 生成の自由度は「その分布から<span class="hl">どう引くか</span>」に集約される</li>
 <li>今日は引き方のツマミを2つ握る。まずは準備：</li>
 </ul>
-<div id="77362a6b" class="cell" data-execution_count="2">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb1-2"><a></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
-<span id="cb1-3"><a></a></span>
-<span id="cb1-4"><a></a>torch.set_num_threads(<span class="dv">1</span>)</span>
-<span id="cb1-5"><a></a>blob <span class="op">=</span> torch.load(<span class="st">"data/runs/neko/ckpt_best.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb1-6"><a></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
-<span id="cb1-7"><a></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
-<span id="cb1-8"><a></a>model.<span class="bu">eval</span>()</span>
-<span id="cb1-9"><a></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
-<span id="cb1-10"><a></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="8742624b" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a aria-label="2"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
+<span id="cb1-3"><a aria-label="3"></a></span>
+<span id="cb1-4"><a aria-label="4"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-5"><a aria-label="5"></a>blob <span class="op">=</span> torch.load(<span class="st">"data/runs/neko/ckpt_best.pt"</span>, weights_only<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-6"><a aria-label="6"></a>model <span class="op">=</span> GPT(vocab_size<span class="op">=</span><span class="bu">len</span>(blob[<span class="st">"vocab"</span>]), <span class="op">**</span>blob[<span class="st">"cfg"</span>])</span>
+<span id="cb1-7"><a aria-label="7"></a>model.load_state_dict(blob[<span class="st">"state_dict"</span>])</span>
+<span id="cb1-8"><a aria-label="8"></a>model.<span class="bu">eval</span>()</span>
+<span id="cb1-9"><a aria-label="9"></a>chars <span class="op">=</span> blob[<span class="st">"vocab"</span>]</span>
+<span id="cb1-10"><a aria-label="10"></a>stoi <span class="op">=</span> {c: i <span class="cf">for</span> i, c <span class="kw">in</span> <span class="bu">enumerate</span>(chars)}</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <ul>
 <li><a href="tools/refimpl/gpt.py">gpt.py</a> と <a href="data/runs/neko/ckpt_best.pt">ckpt_best.pt</a> は前回と同じ配置で</li>
@@ -291,14 +298,14 @@ rkskmt
 <ul>
 <li>「一番ありそうな文字を選び続ける」のが最強に思える。バイグラムの Tweak で見た <strong>argmax 作戦</strong></li>
 </ul>
-<div id="c8e51d75" class="cell" data-execution_count="3">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="kw">def</span> gen(prompt, n, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="va">None</span>, seed<span class="op">=</span><span class="dv">0</span>):</span>
-<span id="cb2-2"><a></a>    torch.manual_seed(seed)</span>
-<span id="cb2-3"><a></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
-<span id="cb2-4"><a></a>    out <span class="op">=</span> model.generate(idx, n, temperature<span class="op">=</span>temperature, top_k<span class="op">=</span>top_k)</span>
-<span id="cb2-5"><a></a>    <span class="cf">return</span> <span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist())</span>
-<span id="cb2-6"><a></a></span>
-<span id="cb2-7"><a></a><span class="bu">print</span>(gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>))     <span class="co"># top_k=1 ＝ 常に1位だけ</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="45a56b7d" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a><span class="kw">def</span> gen(prompt, n, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="va">None</span>, seed<span class="op">=</span><span class="dv">0</span>):</span>
+<span id="cb2-2"><a aria-label="2"></a>    torch.manual_seed(seed)</span>
+<span id="cb2-3"><a aria-label="3"></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
+<span id="cb2-4"><a aria-label="4"></a>    out <span class="op">=</span> model.generate(idx, n, temperature<span class="op">=</span>temperature, top_k<span class="op">=</span>top_k)</span>
+<span id="cb2-5"><a aria-label="5"></a>    <span class="cf">return</span> <span class="st">""</span>.join(chars[i] <span class="cf">for</span> i <span class="kw">in</span> out[<span class="dv">0</span>].tolist())</span>
+<span id="cb2-6"><a aria-label="6"></a></span>
+<span id="cb2-7"><a aria-label="7"></a><span class="bu">print</span>(gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>))     <span class="co"># top_k=1 ＝ 常に1位だけ</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩はこの猫のごとく、主人の頭をあらわしている。
 「それでも構わんやい」と主人は少々ぷんぷんぷんぷんぷんしている。
@@ -336,7 +343,7 @@ rkskmt
 <li><span class="math inline">\(T &gt; 1\)</span>：スコア差が縮小 → 分布が<strong>平らになる</strong>（番狂わせが増える、危険）</li>
 <li><span class="math inline">\(T \to 0\)</span>：ほぼ argmax。<span class="math inline">\(T = 1\)</span>：モデルの分布そのまま</li>
 </ul>
-<div id="f6929d68" class="cell" data-execution_count="4">
+<div id="bd899c5d" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -356,13 +363,13 @@ rkskmt
 <ul>
 <li>softmax の回のスコア (2, 1, −1) を、<span class="math inline">\(T\)</span> で割ってから通すと：</li>
 </ul>
-<div id="b0cf3e39" class="cell" data-execution_count="5">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a></a><span class="im">import</span> torch</span>
-<span id="cb4-2"><a></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
-<span id="cb4-3"><a></a></span>
-<span id="cb4-4"><a></a>s <span class="op">=</span> torch.tensor([<span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>])</span>
-<span id="cb4-5"><a></a><span class="cf">for</span> T <span class="kw">in</span> [<span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">2.0</span>]:</span>
-<span id="cb4-6"><a></a>    <span class="bu">print</span>(<span class="ss">f"T=</span><span class="sc">{</span>T<span class="sc">}</span><span class="ss">:"</span>, F.softmax(s <span class="op">/</span> T, dim<span class="op">=</span><span class="dv">0</span>).<span class="bu">round</span>(decimals<span class="op">=</span><span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="61c00f2d" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
+<span id="cb4-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb4-3"><a aria-label="3"></a></span>
+<span id="cb4-4"><a aria-label="4"></a>s <span class="op">=</span> torch.tensor([<span class="fl">2.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>])</span>
+<span id="cb4-5"><a aria-label="5"></a><span class="cf">for</span> T <span class="kw">in</span> [<span class="fl">0.5</span>, <span class="fl">1.0</span>, <span class="fl">2.0</span>]:</span>
+<span id="cb4-6"><a aria-label="6"></a>    <span class="bu">print</span>(<span class="ss">f"T=</span><span class="sc">{</span>T<span class="sc">}</span><span class="ss">:"</span>, F.softmax(s <span class="op">/</span> T, dim<span class="op">=</span><span class="dv">0</span>).<span class="bu">round</span>(decimals<span class="op">=</span><span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>T=0.5: tensor([0.8790, 0.1190, 0.0020])
 T=1.0: tensor([0.7050, 0.2590, 0.0350])
@@ -394,7 +401,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 </div>
 </div>
 </div>
-<div id="4d1e6aad" class="cell" data-execution_count="6">
+<div id="13c7b95b" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-stdout">
 <pre><code>--- A ---
 吾輩は登ぱり何音野株か知るシ囃通り数が奇秘をも刑い台み掻…死絽を溜ごし嘔算吾私製霞如世一来出で』裁めて爆面引る前将見田置し日武捐虞だ、飴ん悟り激纏珍騒振る所以早顔心で 
@@ -425,7 +432,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li><span class="math inline">\(T\)</span> を上げたいが暴走は困る → <strong>上位 <span class="math inline">\(k\)</span> 文字だけ残して</strong>、あとは <span class="math inline">\(-\infty\)</span> にしてから抽選</li>
 </ul>
-<div id="bd6db9f0" class="cell" data-execution_count="7">
+<div id="b7135e8f" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -437,8 +444,8 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li>票を <span class="math inline">\(-\infty\)</span> で消す — <span class="hl">因果マスクと同じ手口</span>（softmax の前に消すのが作法）</li>
 </ul>
-<div id="74853974" class="cell" data-execution_count="8">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a></a><span class="bu">print</span>(gen(<span class="st">"吾輩は"</span>, <span class="dv">80</span>, temperature<span class="op">=</span><span class="fl">2.0</span>, top_k<span class="op">=</span><span class="dv">40</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="71b726d3" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"吾輩は"</span>, <span class="dv">80</span>, temperature<span class="op">=</span><span class="fl">2.0</span>, top_k<span class="op">=</span><span class="dv">40</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩はあるま品分に、かいるはずよりほといものも近い猫とし得るのを忘れしきりを捉まってあたかなかって見ましまか」
 「ハハハハヴ」と念だ、細君もま時はよこはどっち構ってさ</code></pre>
@@ -448,12 +455,12 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <li>同じ T=2.0 でも、尻尾の3,005文字が消えるだけで「日本語の音」に戻ってくる</li>
 <li><code>gpt.py</code> の <code>generate</code> はこの2ツマミ込みで書いてある：</li>
 </ul>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a></a>logits <span class="op">=</span> logits <span class="op">/</span> temperature                      <span class="co"># ツマミ1</span></span>
-<span id="cb9-2"><a></a><span class="cf">if</span> top_k <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
-<span id="cb9-3"><a></a>    v, _ <span class="op">=</span> torch.topk(logits, top_k)</span>
-<span id="cb9-4"><a></a>    logits[logits <span class="op">&lt;</span> v[:, [<span class="op">-</span><span class="dv">1</span>]]] <span class="op">=</span> <span class="bu">float</span>(<span class="st">"-inf"</span>)    <span class="co"># ツマミ2（尻尾を消す）</span></span>
-<span id="cb9-5"><a></a>probs <span class="op">=</span> F.softmax(logits, dim<span class="op">=-</span><span class="dv">1</span>)</span>
-<span id="cb9-6"><a></a>nxt <span class="op">=</span> torch.multinomial(probs, num_samples<span class="op">=</span><span class="dv">1</span>)      <span class="co"># サイコロ</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a>logits <span class="op">=</span> logits <span class="op">/</span> temperature                      <span class="co"># ツマミ1</span></span>
+<span id="cb9-2"><a aria-label="2"></a><span class="cf">if</span> top_k <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb9-3"><a aria-label="3"></a>    v, _ <span class="op">=</span> torch.topk(logits, top_k)</span>
+<span id="cb9-4"><a aria-label="4"></a>    logits[logits <span class="op">&lt;</span> v[:, [<span class="op">-</span><span class="dv">1</span>]]] <span class="op">=</span> <span class="bu">float</span>(<span class="st">"-inf"</span>)    <span class="co"># ツマミ2（尻尾を消す）</span></span>
+<span id="cb9-5"><a aria-label="5"></a>probs <span class="op">=</span> F.softmax(logits, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb9-6"><a aria-label="6"></a>nxt <span class="op">=</span> torch.multinomial(probs, num_samples<span class="op">=</span><span class="dv">1</span>)      <span class="co"># サイコロ</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="top-p-尻尾を合計で切る" class="slide level2">
@@ -463,7 +470,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <li>top-k の弱点：<strong>常に k 席</strong>の固定枠 — 自信満々の場面では広すぎ、大混戦では狭すぎる</li>
 <li><strong>top-p</strong>（<span class="en">nucleus sampling</span>）は席数でなく<span class="hl">得票の合計</span>で切る：確率の高い順に足していき、合計が <span class="math inline">\(p\)</span> に達したら打ち止め</li>
 </ul>
-<div id="c08054f0" class="cell" data-execution_count="9">
+<div id="7dc7d7db" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -501,23 +508,23 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li>「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は<strong>疑似</strong>乱数で、<span class="hl">種（シード）が同じなら出目の列も同じ</span></li>
 </ul>
-<div id="18f5afc1" class="cell" data-execution_count="10">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
-<span id="cb10-2"><a></a><span class="bu">print</span>(torch.multinomial(torch.tensor([<span class="fl">0.7</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>]), <span class="dv">8</span>, replacement<span class="op">=</span><span class="va">True</span>))</span>
-<span id="cb10-3"><a></a>torch.manual_seed(<span class="dv">0</span>)</span>
-<span id="cb10-4"><a></a><span class="bu">print</span>(torch.multinomial(torch.tensor([<span class="fl">0.7</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>]), <span class="dv">8</span>, replacement<span class="op">=</span><span class="va">True</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="86004409" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a aria-label="1"></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb10-2"><a aria-label="2"></a><span class="bu">print</span>(torch.multinomial(torch.tensor([<span class="fl">0.7</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>]), <span class="dv">8</span>, replacement<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb10-3"><a aria-label="3"></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb10-4"><a aria-label="4"></a><span class="bu">print</span>(torch.multinomial(torch.tensor([<span class="fl">0.7</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>]), <span class="dv">8</span>, replacement<span class="op">=</span><span class="va">True</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>tensor([2, 1, 0, 2, 0, 1, 0, 0])
 tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 </div>
 </div>
-<div id="459ff394" class="cell" data-execution_count="11">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)</span>
-<span id="cb12-2"><a></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)   <span class="co"># 同じ種でもう一度</span></span>
-<span id="cb12-3"><a></a>c <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">8</span>)   <span class="co"># 種を変える</span></span>
-<span id="cb12-4"><a></a><span class="bu">print</span>(a)</span>
-<span id="cb12-5"><a></a><span class="bu">print</span>(<span class="st">"同じ種:"</span>, a <span class="op">==</span> b, <span class="st">"／ 違う種:"</span>, a <span class="op">==</span> c)</span>
-<span id="cb12-6"><a></a><span class="bu">print</span>(c)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="8015e406" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb12-2"><a aria-label="2"></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)   <span class="co"># 同じ種でもう一度</span></span>
+<span id="cb12-3"><a aria-label="3"></a>c <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">8</span>)   <span class="co"># 種を変える</span></span>
+<span id="cb12-4"><a aria-label="4"></a><span class="bu">print</span>(a)</span>
+<span id="cb12-5"><a aria-label="5"></a><span class="bu">print</span>(<span class="st">"同じ種:"</span>, a <span class="op">==</span> b, <span class="st">"／ 違う種:"</span>, a <span class="op">==</span> c)</span>
+<span id="cb12-6"><a aria-label="6"></a><span class="bu">print</span>(c)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩はようやくのは、融通の人のごときは違っている。主人は甚然として御互に願いて、まずし
 同じ種: True ／ 違う種: False
@@ -595,6 +602,7 @@ tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 </tbody>
 </table>
 </div>
+<div title="ここで観察">
 <div class="callout callout-tip callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
@@ -607,6 +615,7 @@ tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 <ul>
 <li><code>top_k</code> を小さくしすぎると argmax の「堂々巡り」に近づく — <strong>2つのツマミは同じ「無難⇄暴走」軸</strong>を別の方法で動かしている</li>
 </ul>
+</div>
 </div>
 </div>
 </div>
@@ -654,21 +663,21 @@ tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="57eaf37a" class="cell" data-execution_count="12">
+<div id="f9ae2d6c" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a></a><span class="co"># 問題1</span></span>
-<span id="cb14-2"><a></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb14-3"><a></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">123</span>)</span>
-<span id="cb14-4"><a></a><span class="bu">print</span>(<span class="st">"一致:"</span>, a <span class="op">==</span> b)</span>
-<span id="cb14-5"><a></a><span class="co"># 上位1文字しか残らないので、サイコロの目が何であれ当選者は同じ</span></span>
-<span id="cb14-6"><a></a></span>
-<span id="cb14-7"><a></a><span class="co"># 問題2</span></span>
-<span id="cb14-8"><a></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">200</span>, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="dv">5</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb14-9"><a></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">200</span>, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="va">None</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb14-10"><a></a><span class="bu">print</span>(<span class="st">"top_k=5   :"</span>, <span class="bu">len</span>(<span class="bu">set</span>(a)), <span class="st">"種類"</span>)</span>
-<span id="cb14-11"><a></a><span class="bu">print</span>(<span class="st">"top_k=None:"</span>, <span class="bu">len</span>(<span class="bu">set</span>(b)), <span class="st">"種類"</span>)</span>
-<span id="cb14-12"><a></a><span class="co"># 守るもの：レア文字の事故（暴走）を防ぐ／奪うもの：語彙の多様性</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a aria-label="1"></a><span class="co"># 問題1</span></span>
+<span id="cb14-2"><a aria-label="2"></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb14-3"><a aria-label="3"></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">60</span>, top_k<span class="op">=</span><span class="dv">1</span>, seed<span class="op">=</span><span class="dv">123</span>)</span>
+<span id="cb14-4"><a aria-label="4"></a><span class="bu">print</span>(<span class="st">"一致:"</span>, a <span class="op">==</span> b)</span>
+<span id="cb14-5"><a aria-label="5"></a><span class="co"># 上位1文字しか残らないので、サイコロの目が何であれ当選者は同じ</span></span>
+<span id="cb14-6"><a aria-label="6"></a></span>
+<span id="cb14-7"><a aria-label="7"></a><span class="co"># 問題2</span></span>
+<span id="cb14-8"><a aria-label="8"></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">200</span>, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="dv">5</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb14-9"><a aria-label="9"></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">200</span>, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="va">None</span>, seed<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb14-10"><a aria-label="10"></a><span class="bu">print</span>(<span class="st">"top_k=5   :"</span>, <span class="bu">len</span>(<span class="bu">set</span>(a)), <span class="st">"種類"</span>)</span>
+<span id="cb14-11"><a aria-label="11"></a><span class="bu">print</span>(<span class="st">"top_k=None:"</span>, <span class="bu">len</span>(<span class="bu">set</span>(b)), <span class="st">"種類"</span>)</span>
+<span id="cb14-12"><a aria-label="12"></a><span class="co"># 守るもの：レア文字の事故（暴走）を防ぐ／奪うもの：語彙の多様性</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>一致: True
@@ -686,7 +695,7 @@ top_k=None: 110 種類</code></pre>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -697,6 +706,7 @@ top_k=None: 110 種類</code></pre>
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -719,6 +729,7 @@ top_k=None: 110 種類</code></pre>
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -889,7 +900,7 @@ top_k=None: 110 種類</code></pre>
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -968,7 +979,7 @@ top_k=None: 110 種類</code></pre>
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }

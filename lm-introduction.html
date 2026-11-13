@@ -6,11 +6,11 @@
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="site_libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-8b4baf804e461d9b72633f0de59a0cac.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-5c1318cf63eba56dbef7ba16bc7d56f5.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
 <link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
 <link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.8.27">
+  <meta name="generator" content="quarto-1.10.19">
 
   <meta name="author" content="rkskmt">
   <title>LLM Lectures – ことばを当てる機械</title>
@@ -20,10 +20,16 @@
   <link rel="stylesheet" href="site_libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="site_libs/revealjs/dist/reveal.css">
   <style>
-    code{white-space: pre-wrap;}
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     span.smallcaps{font-variant: small-caps;}
-    div.columns{display: flex; gap: min(4vw, 1.5em);}
-    div.column{flex: auto; overflow-x: auto;}
+    div.columns{display: flex; gap: 1.5em;}
+    div.column{flex: auto;}
+    @media screen {
+    div.columns{gap: min(4vw, 1.5em);}
+    div.column{overflow-x: auto;}
+    }
     div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
     ul.task-list{list-style: none;}
     ul.task-list li input[type="checkbox"] {
@@ -98,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-d3a26a7442888a116b43ccec6150e9c5.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -242,6 +248,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="5ffaba6ddb9bd1b0068613456878bb74c60166f4">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -254,7 +261,7 @@
 <div class="quarto-title-authors">
 <div class="quarto-title-author">
 <div class="quarto-title-author-name">
-rkskmt 
+rkskmt
 </div>
 </div>
 </div>
@@ -534,7 +541,7 @@ rkskmt
 </div>
 </div>
 <div class="fragment">
-<div id="4d6b13d9" class="cell" data-execution_count="1">
+<div id="5f110af1" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -556,7 +563,7 @@ rkskmt
 <ul>
 <li>体験ゲームの「確信」と「お手上げ」も、数えれば形になる。「であ」の次と「、」の次：</li>
 </ul>
-<div id="c1f20228" class="cell" data-execution_count="2">
+<div id="20051552" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -661,21 +668,21 @@ rkskmt
 <li><code>find</code> で「猫」の位置を順に探し、その次の1文字を辞書で数える（<code>collections.Counter</code> 可）</li>
 <li>回数の多い順に5件、「文字：回数」で表示</li>
 </ol>
-<div id="c739ee1f" class="cell" data-execution_count="3">
+<div id="f3793e9c" class="cell" data-execution_count="3">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
-<span id="cb1-2"><a></a></span>
-<span id="cb1-3"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb1-4"><a></a>nxt <span class="op">=</span> Counter()</span>
-<span id="cb1-5"><a></a>i <span class="op">=</span> text.find(<span class="st">"猫"</span>)</span>
-<span id="cb1-6"><a></a><span class="cf">while</span> i <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span>:</span>
-<span id="cb1-7"><a></a>    <span class="cf">if</span> i <span class="op">+</span> <span class="dv">1</span> <span class="op">&lt;</span> <span class="bu">len</span>(text):</span>
-<span id="cb1-8"><a></a>        nxt[text[i <span class="op">+</span> <span class="dv">1</span>]] <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb1-9"><a></a>    i <span class="op">=</span> text.find(<span class="st">"猫"</span>, i <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb1-10"><a></a></span>
-<span id="cb1-11"><a></a><span class="cf">for</span> c, n <span class="kw">in</span> nxt.most_common(<span class="dv">5</span>):</span>
-<span id="cb1-12"><a></a>    <span class="bu">print</span>(c, n)   <span class="co"># 「の」「で」「と」…… — 「猫の」「猫である」が見えてくる</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb1-2"><a aria-label="2"></a></span>
+<span id="cb1-3"><a aria-label="3"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb1-4"><a aria-label="4"></a>nxt <span class="op">=</span> Counter()</span>
+<span id="cb1-5"><a aria-label="5"></a>i <span class="op">=</span> text.find(<span class="st">"猫"</span>)</span>
+<span id="cb1-6"><a aria-label="6"></a><span class="cf">while</span> i <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span>:</span>
+<span id="cb1-7"><a aria-label="7"></a>    <span class="cf">if</span> i <span class="op">+</span> <span class="dv">1</span> <span class="op">&lt;</span> <span class="bu">len</span>(text):</span>
+<span id="cb1-8"><a aria-label="8"></a>        nxt[text[i <span class="op">+</span> <span class="dv">1</span>]] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb1-9"><a aria-label="9"></a>    i <span class="op">=</span> text.find(<span class="st">"猫"</span>, i <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb1-10"><a aria-label="10"></a></span>
+<span id="cb1-11"><a aria-label="11"></a><span class="cf">for</span> c, n <span class="kw">in</span> nxt.most_common(<span class="dv">5</span>):</span>
+<span id="cb1-12"><a aria-label="12"></a>    <span class="bu">print</span>(c, n)   <span class="co"># 「の」「で」「と」…… — 「猫の」「猫である」が見えてくる</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </div>
@@ -726,24 +733,24 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="f45ffc4d" class="cell" data-execution_count="4">
+<div id="fb67e77c" class="cell" data-execution_count="4">
 <details class="code-fold">
 <summary>解答例を見る</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
-<span id="cb2-2"><a></a></span>
-<span id="cb2-3"><a></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
-<span id="cb2-4"><a></a></span>
-<span id="cb2-5"><a></a><span class="cf">for</span> ctx <span class="kw">in</span> [<span class="st">"であ"</span>, <span class="st">"、"</span>]:</span>
-<span id="cb2-6"><a></a>    nxt <span class="op">=</span> Counter()</span>
-<span id="cb2-7"><a></a>    i <span class="op">=</span> text.find(ctx)</span>
-<span id="cb2-8"><a></a>    <span class="cf">while</span> i <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span>:</span>
-<span id="cb2-9"><a></a>        j <span class="op">=</span> i <span class="op">+</span> <span class="bu">len</span>(ctx)</span>
-<span id="cb2-10"><a></a>        <span class="cf">if</span> j <span class="op">&lt;</span> <span class="bu">len</span>(text):</span>
-<span id="cb2-11"><a></a>            nxt[text[j]] <span class="op">+=</span> <span class="dv">1</span></span>
-<span id="cb2-12"><a></a>        i <span class="op">=</span> text.find(ctx, i <span class="op">+</span> <span class="dv">1</span>)</span>
-<span id="cb2-13"><a></a>    total <span class="op">=</span> <span class="bu">sum</span>(nxt.values())</span>
-<span id="cb2-14"><a></a>    c, n <span class="op">=</span> nxt.most_common(<span class="dv">1</span>)[<span class="dv">0</span>]</span>
-<span id="cb2-15"><a></a>    <span class="bu">print</span>(<span class="ss">f"「</span><span class="sc">{</span>ctx<span class="sc">}</span><span class="ss">」の次: </span><span class="sc">{</span><span class="bu">len</span>(nxt)<span class="sc">}</span><span class="ss">種類 | 1位「</span><span class="sc">{</span>c<span class="sc">}</span><span class="ss">」 </span><span class="sc">{</span>n <span class="op">/</span> total<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
+<span id="cb2-2"><a aria-label="2"></a></span>
+<span id="cb2-3"><a aria-label="3"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
+<span id="cb2-4"><a aria-label="4"></a></span>
+<span id="cb2-5"><a aria-label="5"></a><span class="cf">for</span> ctx <span class="kw">in</span> [<span class="st">"であ"</span>, <span class="st">"、"</span>]:</span>
+<span id="cb2-6"><a aria-label="6"></a>    nxt <span class="op">=</span> Counter()</span>
+<span id="cb2-7"><a aria-label="7"></a>    i <span class="op">=</span> text.find(ctx)</span>
+<span id="cb2-8"><a aria-label="8"></a>    <span class="cf">while</span> i <span class="op">!=</span> <span class="op">-</span><span class="dv">1</span>:</span>
+<span id="cb2-9"><a aria-label="9"></a>        j <span class="op">=</span> i <span class="op">+</span> <span class="bu">len</span>(ctx)</span>
+<span id="cb2-10"><a aria-label="10"></a>        <span class="cf">if</span> j <span class="op">&lt;</span> <span class="bu">len</span>(text):</span>
+<span id="cb2-11"><a aria-label="11"></a>            nxt[text[j]] <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb2-12"><a aria-label="12"></a>        i <span class="op">=</span> text.find(ctx, i <span class="op">+</span> <span class="dv">1</span>)</span>
+<span id="cb2-13"><a aria-label="13"></a>    total <span class="op">=</span> <span class="bu">sum</span>(nxt.values())</span>
+<span id="cb2-14"><a aria-label="14"></a>    c, n <span class="op">=</span> nxt.most_common(<span class="dv">1</span>)[<span class="dv">0</span>]</span>
+<span id="cb2-15"><a aria-label="15"></a>    <span class="bu">print</span>(<span class="ss">f"「</span><span class="sc">{</span>ctx<span class="sc">}</span><span class="ss">」の次: </span><span class="sc">{</span><span class="bu">len</span>(nxt)<span class="sc">}</span><span class="ss">種類 | 1位「</span><span class="sc">{</span>c<span class="sc">}</span><span class="ss">」 </span><span class="sc">{</span>n <span class="op">/</span> total<span class="sc">:.1%}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 <div class="cell-output cell-output-stdout">
 <pre><code>「であ」の次: 12種類 | 1位「る」 84.5%
@@ -760,7 +767,7 @@ rkskmt
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
-
+<!-- -->
 </div>
 </div></div>
 
@@ -771,6 +778,7 @@ rkskmt
   <script src="site_libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/menu.js"></script>
   <script src="site_libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="site_libs/revealjs/plugin/qmd-web-bridge/bridge.js"></script>
   <script src="site_libs/revealjs/plugin/quarto-support/support.js"></script>
   
 
@@ -793,6 +801,7 @@ rkskmt
 'autoAnimateUnmatched': true,
 'jumpToSlide': true,
 'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":false},
+'qmdweb': {"editors":["https://editor.rkskmt.com"]},
 'smaller': false,
  
         // Display controls in the bottom right corner
@@ -963,7 +972,7 @@ rkskmt
         },
 
         // reveal.js plugins
-        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QmdWebBridge, QuartoSupport,
 
           RevealMath,
           RevealNotes,
@@ -1042,7 +1051,7 @@ rkskmt
         }
           var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
           var mailtoRegex = new RegExp(/^mailto:/);
-            var filterRegex = new RegExp("https:\/\/rkskmt\.github\.io\/llm-lectures\/");
+            var filterRegex = new RegExp('/' + window.location.host + '/');
           var isInternal = (href) => {
               return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
           }
