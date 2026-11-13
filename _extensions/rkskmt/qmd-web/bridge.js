@@ -8,7 +8,8 @@
    - It does nothing unless the deck is shown inside a frame, so readers who
      open the site normally run nothing of it.
    - It sends only the deck's path, slide index and source (the git blob SHA
-     of the qmd it was rendered from, written by source.lua), and takes "go
+     of the qmd it was rendered from, or two separated by a space, written by
+     source.lua), and takes "go
      to slide n" and "go back" from any page that frames the deck.
    - The live preview replaces slides with HTML the editor sends, so that is
      taken only from the editor's own address: http://127.0.0.1 and
