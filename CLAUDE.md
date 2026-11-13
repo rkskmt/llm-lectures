@@ -23,7 +23,7 @@ Course-specific additions:
 - **Every numeric or behavioral claim in an observation callout must come from a measured run** of the reference implementation (`tools/refimpl/`). Measured facts live in [doc/course-arc.md](doc/course-arc.md) §実測ログ. Re-measure before changing model sizes in a deck.
 - **Committed data**: `data/chimei.csv` (municipality-name readings) and `data/neko.txt` (cleaned 吾輩は猫である) are the two course corpora. Regeneration scripts are in `tools/`; do not edit the CSVs by hand.
 - Heavier artifacts (training logs, checkpoints, generated samples) used by decks are committed under `data/runs/` as small CSV/TXT — decks load them in hidden cells and show the real training code in `code-fold` blocks (mnist-project pattern).
-- Seeds: any cell whose output text is discussed on the slide must set an explicit seed (`torch.manual_seed`, `np.random.seed`, or `random.seed`).
+- Seeds: any cell whose output text is discussed on the slide must set an explicit seed (`torch.manual_seed`, `np.random.seed`, or `random.seed`) in that cell, never once at the top of the deck. This replaces ai-lectures' fixed-display rule (a hidden twin with fixed values) here: the training and sampling a student copies are the lesson, the seed in the cell lets the student's run reproduce the slide, and random calls added in other cells cannot shift it. Seeds are taught content too (a Tweak changes one to show what moves).
 
 ## Build
 
