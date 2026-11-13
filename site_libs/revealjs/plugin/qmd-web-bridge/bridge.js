@@ -7,9 +7,13 @@
 
    - It does nothing unless the deck is shown inside a frame, so readers who
      open the site normally run nothing of it.
-   - It sends only the deck's path, slide index and source (the git blob SHA
-     of the qmd it was rendered from, written by source.lua), and takes "go
-     to slide n" and "go back" from any page that frames the deck.
+   - It sends the deck's path, slide index and source (the git blob SHA of
+     the qmd it was rendered from, or two separated by a space, written by
+     source.lua), and takes "go to slide n" and "go back" from any page that
+     frames the deck.
+   - A double click on text sends that slide's text runs, which the published
+     deck shows anyway. The run becomes editable only when the editor answers,
+     and what is typed into it goes back to the editor as plain text.
    - The live preview replaces slides with HTML the editor sends, so that is
      taken only from the editor's own address: http://127.0.0.1 and
      http://localhost (any port), plus the addresses a site lists in
@@ -18,9 +22,9 @@
      this one then stands aside. So does a deck inside a peek window.
 
    Same messages as qmd_editor's static/js/preview-bridge.js (channel
-   qmd-preview-v1), its navigation and live-preview parts. Enable it in a
-   project with `revealjs-plugins: [qmd-web]` and `filters: [qmd-web]` in
-   _quarto.yml or _metadata.yml. */
+   qmd-preview-v1): its navigation, text-edit and live-preview parts. Enable
+   it in a project with `revealjs-plugins: [qmd-web]` and `filters: [qmd-web]`
+   in _quarto.yml or _metadata.yml. */
 window.QmdWebBridge = function(){
   'use strict';
   const CHANNEL = 'qmd-preview-v1';
@@ -54,7 +58,9 @@ window.QmdWebBridge = function(){
     ['keydown', 'pointerdown', 'click', 'touchstart', 'touchend', 'wheel'].forEach(type => {
       window.addEventListener(type, arm, {capture: true, passive: true});
     });
+    let slideChangedAt = 0;
     function reportSlide(){
+      slideChangedAt = Date.now();
       const user = Date.now() <= armedUntil;
       armedUntil = 0;
       send('slide', {index: current(), user});
@@ -77,8 +83,128 @@ window.QmdWebBridge = function(){
       }else if(event.data.type === 'live-sync' && Array.isArray(event.data.slides)){
         if(trusted(event.origin)) liveSync(event.data);
         else send('live-synced', {id: event.data.id, ok: false, error: 'this deck does not take slides from ' + event.origin});
+      }else if(event.data.type === 'edit-accept'){
+        if(asked?.id === event.data.id) beginEdit();
+      }else if(event.data.type === 'edit-reject'){
+        if(asked?.id === event.data.id) asked = null;
+        if(offered?.id === event.data.id){
+          if(offered.node.isConnected) offered.node.data = offered.data;
+          offered = null;
+        }
       }
     });
+
+    /* ---------- editing rendered text in place ----------
+       A double click on a text run asks the editor whether exactly that run
+       can be traced back to the slide's source; the request carries the
+       slide's text runs and nothing else. Only on the editor's go-ahead does
+       the run become editable here, and what the user leaves in it is offered
+       back as one line of plain text. */
+    const NOT_PROSE = 'pre, script, style, svg, math, .math, mjx-container, .MathJax, .katex, '
+      + 'textarea, button, select, iframe';
+    const EDIT_STYLE = 'outline:2px solid #2f6feb;outline-offset:2px;border-radius:2px;'
+      + 'background:rgba(47,111,235,.12);white-space:pre-wrap;cursor:text;'
+      + '-webkit-user-select:text;user-select:text';
+    const tidy = text => text.replace(/[ \t\n\r\f]+/g, ' ').replace(/^ | $/g, '');
+    let editSeq = 0;
+    let asked = null;     // {id, node, data, caret}: waiting for the editor's answer
+    let editing = null;   // {id, node, span, leadNode, trailNode, lead, trail, before}
+    let offered = null;   // {id, node, data}: sent to the editor; put back if it refuses
+
+    function textRuns(section){
+      const walker = document.createTreeWalker(section, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      for(let node = walker.nextNode(); node; node = walker.nextNode()){
+        if(tidy(node.data) && !node.parentElement.closest(NOT_PROSE)) nodes.push(node);
+      }
+      return nodes;
+    }
+    function textAt(x, y){
+      if(document.caretPositionFromPoint){
+        const at = document.caretPositionFromPoint(x, y);
+        return at && {node: at.offsetNode, offset: at.offset};
+      }
+      const range = document.caretRangeFromPoint?.(x, y);
+      return range && {node: range.startContainer, offset: range.startOffset};
+    }
+    /* The caret lookup snaps to the nearest text even from empty space; only
+       a click on the text itself counts. */
+    function covers(node, x, y){
+      const range = document.createRange();
+      range.selectNodeContents(node);
+      return [...range.getClientRects()].some(box =>
+        x >= box.left - 2 && x <= box.right + 2 && y >= box.top - 2 && y <= box.bottom + 2);
+    }
+    window.addEventListener('dblclick', event => {
+      // While a run is open, a double click inside it just selects a word (one
+      // outside has already closed it: the first click moved the focus away).
+      // Right after a slide change the click that caused it is still landing.
+      if(editing || event.button !== 0 || Date.now() - slideChangedAt < 600) return;
+      if(event.target.closest?.('a[href], summary, label')) return;   // these act on the click itself
+      const hit = textAt(event.clientX, event.clientY);
+      const node = hit?.node;
+      if(node?.nodeType !== Node.TEXT_NODE || !covers(node, event.clientX, event.clientY)) return;
+      const sections = slideSections();
+      const slide = sections.findIndex(section => section.contains(node));
+      if(slide < 0) return;
+      const nodes = textRuns(sections[slide]);
+      const index = nodes.indexOf(node);
+      if(index < 0) return;
+      asked = {id: ++editSeq, node, data: node.data, caret: hit.offset};
+      send('edit-request', {id: asked.id, slide, index, runs: nodes.map(run => tidy(run.data))});
+    }, true);
+
+    function beginEdit(){
+      const {id, node, data, caret} = asked;
+      asked = null;
+      if(!node.isConnected || node.data !== data){ send('edit-cancel', {id}); return; }
+      const lead = data.match(/^[ \t\n\r\f]*/)[0];
+      const trail = data.slice(lead.length).match(/[ \t\n\r\f]*$/)[0];
+      const before = tidy(data);
+      // Keep what the double click selected (a word), or at least its caret
+      let from = caret, to = caret;
+      const selection = getSelection();
+      if(selection.rangeCount){
+        const range = selection.getRangeAt(0);
+        if(range.startContainer === node && range.endContainer === node){
+          from = range.startOffset; to = range.endOffset;
+        }
+      }
+      const within = offset => Math.max(0, Math.min(before.length, offset - lead.length));
+      // The edge whitespace stays outside the editable span: it separates this
+      // run from its neighbours and is not the run's to change.
+      const span = document.createElement('span');
+      span.setAttribute('contenteditable', 'plaintext-only');
+      if(span.contentEditable !== 'plaintext-only') span.setAttribute('contenteditable', 'true');
+      span.spellcheck = false;
+      span.style.cssText = EDIT_STYLE;
+      const leadNode = document.createTextNode(lead), trailNode = document.createTextNode(trail);
+      node.before(leadNode, span, trailNode);
+      node.data = before;
+      span.appendChild(node);
+      editing = {id, node, span, leadNode, trailNode, lead, trail, before};
+      span.addEventListener('blur', () => finishEdit(true));
+      span.focus({preventScroll: true});
+      selection.setBaseAndExtent(node, within(from), node, within(to));
+    }
+    function finishEdit(keep){
+      const edit = editing;
+      if(!edit) return;
+      editing = null;     // taking the span out blurs it; do not come back in here
+      const typed = tidy(edit.span.textContent);
+      // A run emptied out has nothing left to map to the source: it stays as it was
+      const after = keep && typed ? typed : edit.before;
+      edit.node.data = edit.lead + after + edit.trail;
+      edit.span.replaceWith(edit.node);
+      edit.leadNode.remove();
+      edit.trailNode.remove();
+      if(after !== edit.before){
+        offered = {id: edit.id, node: edit.node, data: edit.lead + edit.before + edit.trail};
+        send('edit-commit', {id: edit.id, text: after});
+      }else{
+        send('edit-cancel', {id: edit.id, emptied: keep && !typed});
+      }
+    }
 
     /* ---------- live preview ----------
        The editor rebuilds the slides the user saved (livepreview.js) and
@@ -165,6 +291,7 @@ window.QmdWebBridge = function(){
       window.lightboxQuarto?.reload?.();
     }
     function liveSync({id, slides, index}){
+      if(asked || editing){ send('live-synced', {id, ok: false, busy: true}); return; }
       try{
         if(!deck.isReady()) throw new Error('the deck is still loading');
         if(deck.isScrollView && deck.isScrollView()) throw new Error('not in scroll view');
@@ -197,6 +324,16 @@ window.QmdWebBridge = function(){
     }
     // The editor's focus-mode keys work while the preview has the focus
     window.addEventListener('keydown', event => {
+      if(editing){
+        // Typing belongs to the run being edited: keep it away from the
+        // deck's shortcuts. Enter keeps the edit and Escape drops it, unless
+        // the key belongs to an IME conversion still in progress.
+        event.stopPropagation();
+        if(event.isComposing || event.keyCode === 229) return;
+        if(event.key === 'Enter'){ event.preventDefault(); finishEdit(true); }
+        else if(event.key === 'Escape'){ event.preventDefault(); finishEdit(false); }
+        return;
+      }
       if(event.key === 'Enter' && event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey){
         event.preventDefault();
         event.stopPropagation();
@@ -205,6 +342,9 @@ window.QmdWebBridge = function(){
         send('shortcut', {action: 'show-chrome'});
       }
     }, true);
+    ['keyup', 'keypress'].forEach(type => {
+      window.addEventListener(type, event => { if(editing) event.stopPropagation(); }, true);
+    });
 
     const announce = () => {
       send('document', {path: location.pathname, slide: current(), slides: slideSections().length, source});
