@@ -11,9 +11,13 @@
      the qmd it was rendered from, or two separated by a space, written by
      source.lua), and takes "go to slide n" and "go back" from any page that
      frames the deck.
-   - A double click on text sends that slide's text runs, which the published
-     deck shows anyway. The run becomes editable only when the editor answers,
-     and what is typed into it goes back to the editor as plain text.
+   - A double click on text (a long press on a touch screen) sends that
+     slide's text runs, which the published deck shows anyway. The run
+     becomes editable only when the editor answers, and what is typed into it
+     goes back to the editor as plain text.
+   - Ctrl+S (Cmd+S) pressed in the deck is passed on to the editor as a save,
+     after the run being edited is kept; the editor takes it only during a
+     user gesture.
    - The live preview replaces slides with HTML the editor sends, so that is
      taken only from the editor's own address: http://127.0.0.1 and
      http://localhost (any port), plus the addresses a site lists in
@@ -22,7 +26,7 @@
      this one then stands aside. So does a deck inside a peek window.
 
    Same messages as qmd_editor's static/js/preview-bridge.js (channel
-   qmd-preview-v1): its navigation, text-edit and live-preview parts. Enable
+   qmd-preview-v1): its navigation, text-edit, save and live-preview parts. Enable
    it in a project with `revealjs-plugins: [qmd-web]` and `filters: [qmd-web]`
    in _quarto.yml or _metadata.yml. */
 window.QmdWebBridge = function(){
@@ -135,15 +139,15 @@ window.QmdWebBridge = function(){
       return [...range.getClientRects()].some(box =>
         x >= box.left - 2 && x <= box.right + 2 && y >= box.top - 2 && y <= box.bottom + 2);
     }
-    window.addEventListener('dblclick', event => {
+    function requestEdit(x, y, target){
       // While a run is open, a double click inside it just selects a word (one
       // outside has already closed it: the first click moved the focus away).
       // Right after a slide change the click that caused it is still landing.
-      if(editing || event.button !== 0 || Date.now() - slideChangedAt < 600) return;
-      if(event.target.closest?.('a[href], summary, label')) return;   // these act on the click itself
-      const hit = textAt(event.clientX, event.clientY);
+      if(editing || Date.now() - slideChangedAt < 600) return;
+      if(target?.closest?.('a[href], summary, label')) return;   // these act on the click itself
+      const hit = textAt(x, y);
       const node = hit?.node;
-      if(node?.nodeType !== Node.TEXT_NODE || !covers(node, event.clientX, event.clientY)) return;
+      if(node?.nodeType !== Node.TEXT_NODE || !covers(node, x, y)) return;
       const sections = slideSections();
       const slide = sections.findIndex(section => section.contains(node));
       if(slide < 0) return;
@@ -152,6 +156,37 @@ window.QmdWebBridge = function(){
       if(index < 0) return;
       asked = {id: ++editSeq, node, data: node.data, caret: hit.offset};
       send('edit-request', {id: asked.id, slide, index, runs: nodes.map(run => tidy(run.data))});
+    }
+    window.addEventListener('dblclick', event => {
+      if(event.button === 0) requestEdit(event.clientX, event.clientY, event.target);
+    }, true);
+
+    /* Touch screens send no dblclick for a double tap (iPad), so there a
+       long press asks for the edit. It is taken when the finger lifts: the
+       editor takes the request only during a user gesture, and a touch
+       counts as one from its pointerup. The system's own long press (word
+       selection, callout menu) is off in the framed deck, so the press is
+       ours; the run being edited keeps its text selectable. */
+    const PRESS_MS = 450, PRESS_SLOP = 10;
+    let press = null;
+    const touchStyle = document.createElement('style');
+    touchStyle.textContent = '@media (pointer: coarse){.reveal .slides{-webkit-touch-callout:none;'
+      + '-webkit-user-select:none;user-select:none}}';
+    document.head.appendChild(touchStyle);
+    window.addEventListener('pointerdown', event => {
+      press = event.pointerType === 'touch' && event.isPrimary
+        ? {id: event.pointerId, x: event.clientX, y: event.clientY, at: Date.now(), target: event.target}
+        : null;
+    }, true);
+    window.addEventListener('pointermove', event => {
+      if(press?.id === event.pointerId
+         && Math.hypot(event.clientX - press.x, event.clientY - press.y) > PRESS_SLOP) press = null;
+    }, true);
+    window.addEventListener('pointercancel', () => { press = null; }, true);
+    window.addEventListener('pointerup', event => {
+      const held = press?.id === event.pointerId && Date.now() - press.at >= PRESS_MS ? press : null;
+      press = null;
+      if(held) requestEdit(held.x, held.y, held.target);
     }, true);
 
     function beginEdit(){
@@ -322,8 +357,46 @@ window.QmdWebBridge = function(){
         send('live-synced', {id, ok: false, error: String(e && e.message || e)});
       }
     }
-    // The editor's focus-mode keys work while the preview has the focus
+    /* A short note under (or above) the run being edited, gone in two seconds */
+    const HINT_STYLE = 'position:fixed;z-index:2147483647;padding:2px 8px;border-radius:4px;'
+      + 'background:#24292f;color:#fff;font:12px/1.6 system-ui,sans-serif;white-space:nowrap;'
+      + 'pointer-events:none';
+    const HINT_MS = 2000;
+    let hint = null;
+    function showHint(text, near){
+      hint?.remove();
+      const el = document.createElement('div');
+      el.style.cssText = HINT_STYLE;
+      el.textContent = text;
+      document.body.appendChild(el);
+      const box = near.getBoundingClientRect();
+      const below = box.bottom + 6;
+      el.style.top = (below + el.offsetHeight <= innerHeight ? below : Math.max(0, box.top - 6 - el.offsetHeight)) + 'px';
+      el.style.left = Math.max(0, Math.min(box.left, innerWidth - el.offsetWidth)) + 'px';
+      hint = el;
+      setTimeout(() => { if(hint === el){ el.remove(); hint = null; } }, HINT_MS);
+    }
+
+    // The editor's save and focus-mode keys work while the preview has the focus
     window.addEventListener('keydown', event => {
+      // The deck is a window of its own: the editor never sees keys typed
+      // while it has the focus, so Ctrl+S is passed on, after keeping the run
+      // being edited, so that the save includes it.
+      if((event.ctrlKey || event.metaKey) && !event.altKey && event.key === 's'){
+        event.preventDefault();
+        event.stopPropagation();
+        if(editing){
+          // The run cannot be kept halfway through an IME conversion; say so
+          // where the user is looking, since nothing else would happen.
+          if(event.isComposing || event.keyCode === 229){
+            showHint('Not saved: finish the conversion first', editing.span);
+            return;
+          }
+          finishEdit(true);
+        }
+        send('shortcut', {action: 'save'});
+        return;
+      }
       if(editing){
         // Typing belongs to the run being edited: keep it away from the
         // deck's shortcuts. Enter keeps the edit and Escape drops it, unless
