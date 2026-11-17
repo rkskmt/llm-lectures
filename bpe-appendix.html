@@ -245,7 +245,7 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
-  <meta name="qmd-web-source" content="ae31961c74a7568b74fc7ea478ac595c8ab2554d">
+  <meta name="qmd-web-source" content="e9a4a776fc1587e5f37c7e2d827d4a75b7bc5ff3 a36026ba8ec8a13c20f78214edd09c3a937a2179">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -270,7 +270,7 @@ rkskmt
 <ul>
 <li>本編の勘定（深く積む／ChatGPTまでの距離）を思い出す：
 <ul>
-<li>文字レベル日本語は語彙3,045 — <strong>パラメータの7割</strong>が語彙の出入口に取られた</li>
+<li>文字レベル日本語は語彙3,045 — <strong>パラメータの大半</strong>が語彙の出入口に取られた</li>
 <li>窓（block_size=64）に<strong>64文字</strong>しか入らない — 長い話が読めない</li>
 </ul></li>
 <li>語彙を「文字」より大きい単位にできれば、両方が一度に楽になる</li>
@@ -306,7 +306,7 @@ rkskmt
 <section id="peek-bpe" class="slide level2">
 <h2>実装 — 20回合体させる</h2>
 <div class="slide-body">
-<div id="874ec119" class="cell" data-execution_count="1">
+<div id="7284c86b" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()[:<span class="dv">100000</span>]   <span class="co"># 前半10万字で実験</span></span>
@@ -340,32 +340,13 @@ rkskmt
 <h2>機械が発見した「単語」</h2>
 <div class="slide-body">
 <ul>
-<li>20回の合体で生まれたトークンを眺める：</li>
-</ul>
-<table class="caption-top">
-<thead>
-<tr class="header">
-<th>種類</th>
-<th>生まれたトークン</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td>活用語尾・助詞のかたまり</td>
-<td>って／した／ない／から／です／ます</td>
-</tr>
-<tr class="even">
-<td>会話文の型</td>
-<td>」と／」「（かぎ括弧の作法まで学んだ）</td>
-</tr>
-<tr class="odd">
-<td><span class="hl">単語そのもの</span></td>
-<td><strong>主人／吾輩／云う</strong></td>
-</tr>
-</tbody>
-</table>
+<li>20回の合体で生まれたトークン（前のスライドの出力）を、種類で仕分けると：
 <ul>
-<li>単語の区切りを誰も教えていないのに、<strong>頻度だけで「吾輩」が1トークンになった</strong></li>
+<li>活用語尾・助詞のかたまり</li>
+<li>会話文の型（かぎ括弧の作法まで学んだ）</li>
+<li><span class="hl">単語そのもの</span></li>
+</ul></li>
+<li>単語の区切りを誰も教えていないのに、<strong>頻度だけで単語そのものが1トークンになった</strong></li>
 <li>ことばの地図の回と同じ結論 — 統計は構造を勝手に見つける</li>
 </ul>
 <div class="callout callout-note callout-titled callout-style-default">
@@ -406,7 +387,7 @@ rkskmt
 <tr class="even">
 <td>20</td>
 <td>+20</td>
-<td>91,366</td>
+<td>少し減る（実行結果）</td>
 </tr>
 <tr class="odd">
 <td>数万（GPT-2 相当）</td>
@@ -439,11 +420,11 @@ rkskmt
 <p><a href="#/peek-bpe" class="peek">本編のコード</a> の合体回数を増やして、語彙の育ち方を観察せよ。</p>
 <ol start="0" type="1">
 <li><a href="data/neko.txt">neko.txt</a> を <code>data/</code> に配置し、本編のコードを実行</li>
-<li><code>range(20)</code> を <code>range(100)</code> にして再実行（数秒〜数十秒）</li>
+<li><code>range(20)</code> を <code>range(100)</code> にして再実行</li>
 <li><code>merges</code> の中で<strong>一番長いトークン</strong>を表示（<code>max(merges, key=len)</code>）</li>
 <li>トークン数の減り方（100,000 → ?）も表示</li>
 </ol>
-<div id="e24af2e1" class="cell" data-execution_count="2">
+<div id="21c21622" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">from</span> collections <span class="im">import</span> Counter</span>
