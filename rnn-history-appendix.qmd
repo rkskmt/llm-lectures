@@ -82,7 +82,7 @@ class ElmanRNN(nn.Module):
 
 ## 実験：地名メーカーを RNN で
 
-[chimei.csv](data/chimei.csv) を `data/` に置き、いつもの地名ストリームで訓練する（500歩・約30秒）。
+[chimei.csv](data/chimei.csv) を `data/` に置き、いつもの地名ストリームで500歩訓練する。
 
 ```{python}
 #| echo: true

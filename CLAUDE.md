@@ -20,6 +20,7 @@ Theme classes and their attributes (`.table-style`, `.table-compact`, `.fig`, `.
 
 Course-specific additions:
 
+- **Do not copy the output into the prose, and never state running times** (same rule as ai-lectures). The printed output and the figure already show the numbers and samples; prose that repeats them only creates text to re-check whenever the output changes. Write only what the output cannot say: the property it shows, or a prediction made before running. Running times (「約20分」「このPCで」「数秒」) depend on the machine: never write them.
 - **Every numeric or behavioral claim in an observation callout must come from a measured run** of the reference implementation (`tools/refimpl/`). Measured facts live in [doc/course-arc.md](doc/course-arc.md) §実測ログ. Re-measure before changing model sizes in a deck.
 - **Committed data**: `data/chimei.csv` (municipality-name readings) and `data/neko.txt` (cleaned 吾輩は猫である) are the two course corpora. Regeneration scripts are in `tools/`; do not edit the CSVs by hand.
 - Heavier artifacts (training logs, checkpoints, generated samples) used by decks are committed under `data/runs/` as small CSV/TXT — decks load them in hidden cells and show the real training code in `code-fold` blocks (mnist-project pattern).
