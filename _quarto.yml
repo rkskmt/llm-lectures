@@ -16,3 +16,11 @@ project:
 
 website:
   title: "LLM Lectures"
+
+# Keep each deck's Jupyter kernel alive between renders (300 s): starting a
+# kernel costs several seconds per render, and a deck is rendered after every
+# edit. Quarto turns the daemon off by default on Windows, hence `true`.
+# Each render still runs in a fresh namespace (a variable from the previous
+# render is gone), so the daemon cannot hide a missing definition.
+execute:
+  daemon: true

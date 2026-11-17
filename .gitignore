@@ -10,9 +10,6 @@ imgs/decision_boundary.png
 # Deployed via gh-pages from the local working dir; not committed.
 pdf/
 
-# Local dependencies (installed by setup.py)
-libs/
-
 # Extensions (optional - 通常はコミットする)
 # _extensions/
 

@@ -3,8 +3,13 @@
 Setup script for LLM lectures development environment.
 
 Usage:
-    python setup.py          # Full setup (conda env + MathJax)
-    python setup.py --mathjax-only   # Only download MathJax
+    python setup.py          # conda env + VS Code settings
+
+MathJax is not installed locally: the decks load it from Quarto's revealjs
+CDN default. Do not put large downloads inside the project folder either:
+Quarto walks every folder of the project (except `_`- and `.`-prefixed ones)
+on each render, so tens of thousands of files there add seconds to every
+render.
 
 Runs on Linux and Windows. On Windows, d2 comes from its official release
 instead of conda-forge: the conda-forge package carries a symlink in its
@@ -23,8 +28,6 @@ import urllib.request
 from pathlib import Path
 
 ENV_NAME = "llm"
-MATHJAX_VERSION = "2.7.9"
-MATHJAX_URL = f"https://github.com/mathjax/MathJax/archive/refs/tags/{MATHJAX_VERSION}.tar.gz"
 
 # Windows only (see module docstring)
 D2_VERSION = "0.7.1"
@@ -35,8 +38,6 @@ WINDOWS = sys.platform == "win32"
 
 ROOT = Path(__file__).parent
 ENV_FILE = ROOT / "environment.yml"
-LIBS_DIR = ROOT / "libs"
-MATHJAX_DIR = LIBS_DIR / "mathjax"
 VSCODE_DIR = ROOT / ".vscode"
 
 
@@ -151,47 +152,17 @@ def setup_vscode():
     print(f"  Created {settings_file}")
 
 
-def setup_mathjax():
-    print("\n=== MathJax (self-hosted) ===")
-
-    if MATHJAX_DIR.exists():
-        print(f"  {MATHJAX_DIR} already exists, skipping.")
-        return
-
-    LIBS_DIR.mkdir(exist_ok=True)
-    tarball = LIBS_DIR / "mathjax.tar.gz"
-
-    print(f"  Downloading MathJax {MATHJAX_VERSION}...")
-    urllib.request.urlretrieve(MATHJAX_URL, tarball)
-
-    print("  Extracting...")
-    with tarfile.open(tarball, "r:gz") as tar:
-        tar.extractall(LIBS_DIR)
-
-    extracted = LIBS_DIR / f"MathJax-{MATHJAX_VERSION}"
-    extracted.rename(MATHJAX_DIR)
-    tarball.unlink()
-
-    print(f"  Installed to {MATHJAX_DIR}")
-
-
 def main():
     print("LLM Lectures Setup")
     print("=" * 40)
 
-    mathjax_only = "--mathjax-only" in sys.argv
-
-    if not mathjax_only:
-        setup_conda_env()
-        setup_vscode()
-
-    setup_mathjax()
+    setup_conda_env()
+    setup_vscode()
 
     print("\n" + "=" * 40)
     print("Done!")
-    if not mathjax_only:
-        print(f"\nActivate the environment with:")
-        print(f"  conda activate {ENV_NAME}")
+    print(f"\nActivate the environment with:")
+    print(f"  conda activate {ENV_NAME}")
     print(f"\nStart the dev server with:")
     print(f"  quarto preview --port 4322")
 

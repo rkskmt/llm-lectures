@@ -22,7 +22,6 @@ conda activate llm
 `setup.py` が以下をまとめて行う：
 - `environment.yml` に基づく conda 環境 `llm` の作成・更新
 - `QUARTO_PYTHON` 自動設定の activate フック
-- MathJax 2 のダウンロード（`libs/mathjax/`）
 
 Windows でも同じコマンドで動く（`conda` が使えるシェル — Miniforge Prompt、または `conda init powershell` 後の PowerShell — で実行）。Linux との違い：
 - `d2` は conda-forge ではなく公式リリースから環境内（`Library\bin`）に入れる。conda-forge のパッケージはライセンスファイルにシンボリックリンクを含み、開発者モードか管理者権限がないと conda が展開に失敗するため
