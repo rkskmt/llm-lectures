@@ -1,6 +1,10 @@
 ---
 title: "最終プロジェクト：推し文豪ボット"
 subtitle: "自分のGPTを育てる — そして文豪テストの答え合わせ"
+# Every Python cell is eval: false: without this, Quarto still starts a kernel (several seconds).
+# Remove it before adding a cell that must run.
+execute:
+  enabled: false
 ---
 
 ## 文豪テスト、開封
