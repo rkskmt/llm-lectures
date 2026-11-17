@@ -279,6 +279,8 @@ plt.show()
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-train
 import pandas as pd
 import torch
 import torch.nn.functional as F
@@ -307,6 +309,14 @@ for it in range(1, 101):
         print(f"更新 {it:3d}回 | Loss: {loss.item():.4f}")
 ```
 
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+import json
+frozen = json.load(open("data/runs/frozen/bigram-neural.json", encoding="utf-8"))
+print(frozen["frz-train"], end="")
+```
+
 - 1回目の損失は**予言どおり 4.3175**。そこから勾配降下で転がり落ちる
 
 
@@ -316,6 +326,8 @@ for it in range(1, 101):
 
 ```{python}
 #| echo: false
+#| eval: false
+#| label: frz-tables
 # reuse the kernel state from the training cell above (W, xs, ys, chars, stoi)
 import japanize_matplotlib
 import matplotlib.pyplot as plt
@@ -337,12 +349,22 @@ plt.tight_layout()
 plt.show()
 ```
 
+![](data/runs/frozen/bigram-neural-frz-tables-1.png){fig-align="center"}
+
 ```{python}
 #| echo: true
-#| output-location: fragment
+#| eval: false
+#| label: frz-compare
 print("確率の差の最大:", np.abs(P_learn - P_count).max().round(4))
 print("P(う|ょ)  数え:", P_count[stoi['ょ'], stoi['う']].round(3),
       " 学習:", P_learn[stoi['ょ'], stoi['う']].round(3))
+```
+
+```{python}
+#| echo: false
+#| output-location: fragment
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-compare"], end="")
 ```
 
 ::: {.fragment}
@@ -371,6 +393,8 @@ print("P(う|ょ)  数え:", P_count[stoi['ょ'], stoi['う']].round(3),
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-sample
 import numpy as np
 
 rng = np.random.default_rng(0)
@@ -382,6 +406,12 @@ for _ in range(5):
             break
         s += chars[i]
     print(s)
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-sample"], end="")
 ```
 
 - 出来ばえも前回と同レベル — 中身が同じ表なのだから当然

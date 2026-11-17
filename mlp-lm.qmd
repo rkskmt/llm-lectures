@@ -208,6 +208,8 @@ print(len(train_names), len(val_names))
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-train
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -237,6 +239,14 @@ with torch.no_grad():
     print(f"val   loss: {F.cross_entropy(model(Xv), yv).item():.4f}")
 ```
 
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+import json
+frozen = json.load(open("data/runs/frozen/mlp-lm.json", encoding="utf-8"))
+print(frozen["frz-train"], end="")
+```
+
 - バイグラムの2.34を（訓練側では）大きく割った。学習ループは今日も3拍子のまま
 
 
@@ -246,6 +256,8 @@ with torch.no_grad():
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-sample
 torch.manual_seed(1)
 for _ in range(10):
     window, s = [0] * ctx, ""
@@ -257,6 +269,12 @@ for _ in range(10):
         s += chars[i]
         window = window[1:] + [i]     # 窓を1文字ぶんスライド
     print(s)
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-sample"], end="")
 ```
 
 | 数えるバイグラム（前々回） | MLP（今日） |
@@ -291,6 +309,8 @@ for s in made:
 
 ```{python}
 #| echo: false
+#| eval: false
+#| label: frz-ctx-sweep
 import japanize_matplotlib
 import matplotlib.pyplot as plt
 
@@ -325,6 +345,8 @@ ax.legend()
 plt.tight_layout()
 plt.show()
 ```
+
+![](data/runs/frozen/mlp-lm-frz-ctx-sweep-1.png){fig-align="center"}
 
 ::: {.fragment}
 - train は下がり続けるのに、**val は窓2で底を打って悪化に転じる**（前コースで多項式の次数を上げすぎたときと同じ形）
@@ -432,6 +454,8 @@ plt.show()
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-answer
 #| code-fold: true
 #| code-summary: "解答例を見る"
 # 問題1（本編の model, stoi, chars が残っている前提）
@@ -449,4 +473,10 @@ for c in [1, 3, 5]:
     Xc, _ = windows(names, c)
     print(f"窓{c}: {len(Xc)}組")
 # 1つの名前から「文字数+1」個の窓が取れる。敷いた「・」の数が窓幅と一緒に増えるので、組数は窓幅によらない
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-answer"], end="")
 ```

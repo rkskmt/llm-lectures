@@ -69,6 +69,8 @@ print(xb.shape, yb.shape)     # (32文, 64文字) が2組
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-train
 import torch.nn.functional as F
 from gpt import GPT
 
@@ -89,6 +91,14 @@ for it in range(1, 301):
         print(f"更新 {it:3d}回 | Loss: {loss.item():.4f}")
 ```
 
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+import json
+frozen = json.load(open("data/runs/frozen/gpt-training.json", encoding="utf-8"))
+print(frozen["frz-train"], end="")
+```
+
 - [3拍子](bigram-neural.qmd#peek-3beat){.peek}の学習ループは**一字一句このまま** — モデルが GPT になっただけ
 - `view(-1, V)` は並べ直しだけ：(32, 64, 3045) の答案の束を「2,048行の答案リスト」にして交差エントロピーへ
 - 初期損失は約8.2（$=\ln 3045$、何も知らない状態の罰点）。そこから一気に転がり落ちる
@@ -98,6 +108,8 @@ for it in range(1, 301):
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-generate
 @torch.no_grad()
 def generate(model, prompt, n):
     idx = torch.tensor([[stoi[c] for c in prompt]])
@@ -109,6 +121,12 @@ def generate(model, prompt, n):
 
 torch.manual_seed(0)
 print(generate(model, "吾輩は", 80))
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-generate"], end="")
 ```
 
 - 自己回帰の生成ループは**バイグラムの回と同じ考え方**：出た文字を入力の尻に足して繰り返す
@@ -196,6 +214,8 @@ plt.show()
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-ckpt-generate
 import torch
 from gpt import GPT
 
@@ -208,6 +228,21 @@ chars = blob["vocab"]
 stoi = {c: i for i, c in enumerate(chars)}
 torch.manual_seed(1)
 print(generate(model, "吾輩は", 100))
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py.
+# The attention figures below read the same checkpoint, loaded here.
+print(frozen["frz-ckpt-generate"], end="")
+import torch
+from gpt import GPT
+blob = torch.load("data/runs/neko/ckpt_best.pt", weights_only=True)
+model = GPT(vocab_size=len(blob["vocab"]), **blob["cfg"])
+model.load_state_dict(blob["state_dict"])
+model.eval()
+chars = blob["vocab"]
+stoi = {c: i for i, c in enumerate(chars)}
 ```
 
 - 同じ `train_neko.py` を3,500回（このPCで約20分）回しただけの重み。**魔法の材料はゼロ**

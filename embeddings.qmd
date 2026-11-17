@@ -103,6 +103,8 @@ A -> E -> V2 -> L -> S
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-train
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -130,6 +132,13 @@ for it in range(1, 1001):
     opt.step()
     if it in (1, 100, 500, 1000):
         print(f"更新 {it:4d}回 | Loss: {loss.item():.4f}")
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+import json
+print(json.load(open("data/runs/frozen/embeddings.json", encoding="utf-8"))["frz-train"], end="")
 ```
 
 - `nn.Embedding(V, 2)` が「表引き」の正式な部品。中身はただの V×2 行列
@@ -168,13 +177,15 @@ print("フル表の損失:", round(float(-np.log(P[ids[:-1], ids[1:]]).mean()), 
 ```{python}
 #| echo: false
 #| output: false
-# reuse kernel state (model, chars, stoi, text) from the training cell
+# frozen display: the embedding table learnt by the training cell, saved by
+# tools/freeze_cells.py; chars and text come from the counting cell above.
 import os
 from collections import Counter
 
+import numpy as np
 import plotly.graph_objects as go
 
-E = model[0].weight.detach().numpy()
+E = np.load("data/runs/frozen/embeddings.npz")["emb_weight"]
 cnt = Counter(text)
 
 

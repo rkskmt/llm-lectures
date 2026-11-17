@@ -86,6 +86,8 @@ class ElmanRNN(nn.Module):
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-train
 names = pd.read_csv("data/chimei.csv")["yomi"].tolist()
 chars = ["・"] + sorted(set("".join(names)))
 stoi = {c: i for i, c in enumerate(chars)}
@@ -110,6 +112,14 @@ for step in range(1, 501):
 print(f"500歩後の損失: {loss.item():.3f}")
 ```
 
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+import json
+frozen = json.load(open("data/runs/frozen/rnn-history-appendix.json", encoding="utf-8"))
+print(frozen["frz-train"], end="")
+```
+
 
 ## 聞いてみる — 架空地名、RNN 版
 
@@ -117,6 +127,8 @@ print(f"500歩後の損失: {loss.item():.3f}")
 
 ```{python}
 #| echo: true
+#| eval: false
+#| label: frz-sample
 g = torch.Generator().manual_seed(1)
 for _ in range(10):
     h = torch.zeros(1, 64)
@@ -128,6 +140,12 @@ for _ in range(10):
             break
         name += chars[i]
     print(name)
+```
+
+```{python}
+#| echo: false
+# frozen display: output of the cell above, saved by tools/freeze_cells.py
+print(frozen["frz-sample"], end="")
 ```
 
 - 「おおのつちょう」「ぬまじし」…… 10件とも実在しない新作 — ==耳で聞くかぎり MLP に負けていない==
