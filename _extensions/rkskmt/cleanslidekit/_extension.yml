@@ -1,6 +1,6 @@
 title: CleanSlideKit RevealJS
 author: rkskmt
-version: 1.10.4
+version: 1.10.5
 quarto-required: ">=1.4.0"
 contributes:
   formats:
@@ -103,4 +103,6 @@ contributes:
         - cite-image.lua
         - plotly-iframe.lua
         - figscale.lua
-        - table-style.lua
+        # After Quarto's own filters: see the note at the top of table-style.lua.
+        - path: table-style.lua
+          at: post-quarto

@@ -34,6 +34,12 @@
 --                   its content; a comma list such as "auto,auto,45%,auto"
 --                   fixes the listed columns to a share of the table width
 --                   and leaves the rest to the browser.
+--
+-- The filter runs at `post-quarto` (see _extension.yml). Quarto's
+-- `tbl-colwidths: auto` rebuilds every table that contains a link through
+-- pandoc.utils.to_simple_table / from_simple_table, and that round trip drops
+-- all cell attributes. Run before it, this filter's widths, rule classes and
+-- header alignment vanished from any table with a link in it.
 
 local ALIGN = {
   left = pandoc.AlignLeft,
