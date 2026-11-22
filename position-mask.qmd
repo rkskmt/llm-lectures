@@ -173,7 +173,8 @@ print(F.softmax(masked, dim=-1).round(decimals=3))
 
 ## 注意ヘッド、完成
 
-- 位置は入口で足すので、注意側の変更はマスクの2行だけ。この形を**ヘッド**（[head]{.en}）と呼ぶ
+- 位置は入口で足すので、注意側の変更はマスクの2行だけ
+- **ヘッド**（[head]{.en}）：マスクまで入れた自己注意のひとまとまり
 
 ```{.d2 sketch="true" width="92%"}
 direction: right

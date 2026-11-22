@@ -144,7 +144,7 @@ plt.show()
 
 ## ブロック — Transformer の1段
 
-- 4部品を決まった順に組む。この1段を**ブロック**（[Transformer block]{.en}）と呼ぶ
+- **ブロック**（[Transformer block]{.en}）：4部品を決まった順に組んだ1段
 
 :::: {.columns}
 ::: {.column width="55%"}

@@ -21,6 +21,11 @@ Theme classes and their attributes (`.table-style`, `.table-compact`, `.fig`, `.
 Course-specific additions:
 
 - **Do not copy the output into the prose, and never state running times** (same rule as ai-lectures). The printed output and the figure already show the numbers and samples; prose that repeats them only creates text to re-check whenever the output changes. Write only what the output cannot say: the property it shows, or a prediction made before running. Running times (「約20分」「このPCで」「数秒」) depend on the machine: never write them.
+- **Do not introduce an established term with 「〜を X と呼ぶ」** (same rule as ai-lectures' `doc/slide-tone-rules.md`). It reads as if the author were naming the thing on the spot. Put the term first and write what it is as a definition (`X：定義`).
+   - Write out what 「この」「これ」 points to: 「隣り合う2文字の組を**バイグラム**と呼ぶ」→「**バイグラム**（[bigram]{.en}）：隣り合う2文字の組」. Swapping only the verb and keeping the pronoun (「これが X」) is not a fix.
+   - The title of a slide that defines a term is the term itself (`## 過学習（[Overfitting]{.en}）`).
+   - 「と呼ぶ」 stays when the question "who calls it that?" has an answer: the subject is written (「scikit-learn は SSE を `inertia_` と呼ぶ」), the sentence states common usage (「と呼ばれる」「と呼ぶことが多い」), the deck picks one of several existing names, or the author declares a way of seeing something (「この距離を、その点の**誤差**と呼ぼう」).
+   - Finding candidates by search is fine; decide whether and how to rewrite each sentence from its context. No bulk replacement.
 - **Every numeric or behavioral claim in an observation callout must come from a measured run** of the reference implementation (`tools/refimpl/`). Measured facts live in [doc/course-arc.md](doc/course-arc.md) §実測ログ. Re-measure before changing model sizes in a deck.
 - **Committed data**: `data/chimei.csv` (municipality-name readings) and `data/neko.txt` (cleaned 吾輩は猫である) are the two course corpora. Regeneration scripts are in `tools/`; do not edit the CSVs by hand.
 - Heavier artifacts (training logs, checkpoints, generated samples) used by decks are committed under `data/runs/` as small CSV/TXT — decks load them in hidden cells and show the real training code in `code-fold` blocks (mnist-project pattern).
