@@ -248,7 +248,12 @@
 /* `::: {.caption-note .center}` — centers the chip, for a caption under a
    centered element (a display formula, a centered figure). Left stays the
    default: tables and code output are left-anchored, and so is their note. */
-.reveal .caption-note.center {
+.reveal .caption-note.center,
+.reveal .columns > .column > .caption-note.center {
+  /* The second selector is for a chip placed directly in a column: Quarto's
+     column gutter rule (`.reveal .columns > .column > :not(ul, ol)`, which
+     sets margin-left/right) is more specific than the first selector, so
+     without it the chip stays at the left edge of the column. */
   margin-inline: auto;
 }
 .reveal .caption-note p {
