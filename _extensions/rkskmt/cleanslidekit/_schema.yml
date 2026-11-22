@@ -58,7 +58,13 @@ classes:
 
   # --- Lecture index card grid (card-grid.lua + custom.css) ---
   lectures:
-    description: "Wrapper for the auto-numbered lecture-index card grid on a course index page."
+    description: "Wrapper for the auto-numbered lecture-index card grid on a course index page. The metadata key `lecture-index: cards | ruled | network` (once per course, in _metadata.yaml) selects the layout of every `.lectures`, on the index and the handouts page alike."
+  ruled:
+    description: "The ruled layout of `.lectures` (select it with `lecture-index: ruled`): heavy black rules and one accent colour (yellow; set another with the metadata key `ruled-accent: \"#rrggbb\"`), the title / search / PDF gate (or .idx-lead / backlink) as one framed bar, each category a framed box of numbered rows in two columns. Category colours are ignored. The page opens in reveal.js's scroll view and is laid out at the window's width (two columns, one below 800px) instead of scaling the 1280×720 slide."
+  network:
+    description: "The network layout of `.lectures` (select it with `lecture-index: network`): each numbered category is a column of round nodes, fully connected to the next column by lines that network-ui.js draws; `.app` items sit under a dashed rule. Hovering or keyboard-focusing a node fires it: the node, its edges and the nodes of the two neighbouring layers light up. Metadata keys tune the look: `network-accent` (node colour), `network-active` (hover colour), `network-line` (line colour), all `\"#rrggbb\"`; `network-line-width` (px, 0.25 to 6) and `network-node-size` (px, 24 to 72). Category colours are ignored. The page opens in reveal.js's scroll view and puts each label under its node below 1120px and stacks the layers in one column below 720px."
+  output:
+    description: "On a `.sec` under the network layout, draws that category as the output layer: a larger node with its label underneath. Other layouts ignore it."
   sec:
     description: "A category header inside `.lectures`; pair it with the same `.catN` colour as its grid."
   grid:

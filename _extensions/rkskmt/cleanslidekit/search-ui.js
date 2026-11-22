@@ -166,6 +166,24 @@
       });
     }
 
+    // The ruled and network indexes lay the search box out at the window's
+    // width, and a native placeholder never wraps, so a long one is cut off
+    // on a phone. Show the same text in a span that wraps, stacked over the
+    // field (custom.css), and hide it while the field holds text.
+    // `pageshow` covers a value the browser restores on Back.
+    function wrapHint(input) {
+      if (!document.querySelector('.lectures.ruled, .lectures.network') || !input.placeholder) return;
+      var hint = document.createElement('span');
+      hint.className = 'search-hint';
+      hint.setAttribute('aria-hidden', 'true');
+      hint.textContent = input.placeholder;
+      input.insertAdjacentElement('afterend', hint);
+      var sync = function () { hint.hidden = input.value !== ''; };
+      input.addEventListener('input', sync);
+      window.addEventListener('pageshow', sync);
+      sync();
+    }
+
     function attach(input, resultsEl) {
       var timer = null;
       input.addEventListener('input', function () {
@@ -299,6 +317,7 @@
         if (inlineInput && inlineResults && inlineInput.dataset.searchWired !== 'true') {
           inlineInput.dataset.searchWired = 'true';
           attach(inlineInput, inlineResults);
+          wrapHint(inlineInput);
         }
       } catch (e) {}
     }
