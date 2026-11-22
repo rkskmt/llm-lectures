@@ -41,6 +41,12 @@
 -- all cell attributes. Run before it, this filter's widths, rule classes and
 -- header alignment vanished from any table with a link in it.
 
+-- Quarto replaces the global error() inside filters with a logger that lets
+-- the render continue, so an invalid attribute is stopped with assert().
+local function stop(message)
+  assert(false, "[cleanslidekit] table-style: " .. message)
+end
+
 local ALIGN = {
   left = pandoc.AlignLeft,
   center = pandoc.AlignCenter,
@@ -79,7 +85,7 @@ local function rule_columns(spec, ncols)
     if c > 1 and c < ncols then cols[c] = true end
   end
   if not found then
-    error("table-style: col-rules must be \"all\" or a comma list of column numbers (got \"" .. spec .. "\")")
+    stop("col-rules must be \"all\" or a comma list of column numbers (got \"" .. spec .. "\")")
   end
   return cols
 end
@@ -96,11 +102,11 @@ local function fixed_widths(spec, ncols)
     if item:match("^%d+%%$") then
       widths[n] = item
     elseif item ~= "auto" then
-      error("table-style: widths entries must be \"auto\" or a percentage (got \"" .. item .. "\")")
+      stop("widths entries must be \"auto\" or a percentage (got \"" .. item .. "\")")
     end
   end
   if n ~= ncols then
-    error("table-style: widths lists " .. n .. " columns but the table has " .. ncols)
+    stop("widths lists " .. n .. " columns but the table has " .. ncols)
   end
   return widths
 end
@@ -164,7 +170,7 @@ function Div(el)
   if head_align ~= nil then
     align = ALIGN[head_align]
     if align == nil then
-      error("table-style: head-align must be left, center or right (got \"" .. head_align .. "\")")
+      stop("head-align must be left, center or right (got \"" .. head_align .. "\")")
     end
   end
 
