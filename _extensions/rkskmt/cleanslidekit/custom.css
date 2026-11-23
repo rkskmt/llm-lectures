@@ -62,20 +62,18 @@
 .reveal .slides section.present::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.4) !important;
 }
-.callout.callout-note {
-    font-size: 1.5rem;
+/* Callouts sit a step below the slide text, not at Quarto's 0.7em, which is
+   hard to read when projected. The selector must match Quarto's own
+   `.reveal .slides section div.callout` rule to win over it; the title bar
+   inherits this size (Quarto sets it to `inherit`). Headings inside a callout
+   keep their slide size, as Quarto's calc(…/0.7) rules intend. */
+.reveal .slides section div.callout {
+    font-size: 0.85em;
     line-height: 1.4;
 }
-.callout.callout-note .callout-title {
-    font-size: 2.3rem;
-}
-.reveal .callout.callout-tip {
-    font-size: 1.5rem;
-    line-height: 1.4;
-}
-.reveal .callout.callout-tip .callout-title {
-    font-size: 2.3rem;
-}
+.reveal .slides section div.callout h1 { font-size: calc(2.5em / 0.85); }
+.reveal .slides section div.callout h2 { font-size: calc(1.6em / 0.85); }
+.reveal .slides section div.callout h3 { font-size: calc(1.3em / 0.85); }
 .reveal .callout pre code {
     font-size: 1.25rem !important;
 }
