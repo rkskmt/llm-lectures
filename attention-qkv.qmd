@@ -125,7 +125,7 @@ e = np.exp(s / 8); print("÷√64  :", (e / e.sum()).round(4))
 
 ## 完成形 — 論文の式と3ステップ
 
-- 2017年の論文 *Attention Is All You Need* の中心の式
+- 2017年の論文 *Attention Is All You Need* の中心の式：
 
 $$
 \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V
