@@ -104,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-f73900642b947ff7c946332e8eb6f3e3.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -258,7 +258,7 @@
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
   <script src="network-ui.js" defer=""></script>
-  <meta name="qmd-web-source" content="a86558c5b3dc1f4bed3854361022abefa385adfd">
+  <meta name="qmd-web-source" content="4a074ec548980eff6b51eff8345cd957a9943656">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -311,7 +311,7 @@ rkskmt
 <h2>設計図は読めるようになっている</h2>
 <div class="slide-body">
 <ul>
-<li>GPT-2（2019年・OpenAI）の公表スペックを、自作GPTの隣に置く：</li>
+<li>GPT-2（2019年・OpenAI）の公表スペックを、自作GPTの隣に置く</li>
 </ul>
 <table class="caption-top">
 <thead>
@@ -364,7 +364,7 @@ rkskmt
 <section id="距離1スケール" class="slide level2">
 <h2>距離1：スケール</h2>
 <div class="slide-body">
-<div id="491b6adf" class="cell" data-execution_count="1">
+<div id="a63adeba" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -385,7 +385,7 @@ rkskmt
 <ul>
 <li>パラメータは float32 の数 — <span class="hl">1個が4バイト</span>。個数を掛ければ「モデルの重さ」が出る</li>
 </ul>
-<div id="5694a65c" class="cell" data-execution_count="2">
+<div id="dac82199" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"自作GPT"</span>, <span class="dv">817_125</span>), (<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
 <span id="cb1-2"><a aria-label="2"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>p <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="fl">1e9</span><span class="sc">:,.4f}</span><span class="ss"> GB"</span>)   <span class="co"># 数1個 = 4バイト</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -514,7 +514,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに質問してみる" class="slide level2">
 <h2>実験：自作GPTに質問してみる</h2>
 <div class="slide-body">
-<div id="563e2659" class="cell" data-execution_count="4">
+<div id="31cf1e86" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a aria-label="2"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb3-3"><a aria-label="3"></a></span>
@@ -579,7 +579,7 @@ GPT-3   700.0000 GB</code></pre>
 <h2>しつけの中身 — 台本で追加訓練</h2>
 <div class="slide-body">
 <ul>
-<li>指示チューニングのデータは「指示 → 望ましい応答」の<strong>台本</strong>。人が書いた手本を数万〜数百万組読ませる（形のイメージ）：</li>
+<li>指示チューニングのデータは「指示 → 望ましい応答」の<strong>台本</strong>。人が書いた手本を数万〜数百万組読ませる（形のイメージ）</li>
 </ul>
 <table class="caption-top">
 <thead>
@@ -609,7 +609,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに事実を聞く" class="slide level2">
 <h2>実験：自作GPTに事実を聞く</h2>
 <div class="slide-body">
-<div id="45b61f33" class="cell" data-execution_count="5">
+<div id="981f153f" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"主人の名前は"</span>, <span class="dv">50</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」</code></pre>
@@ -653,16 +653,16 @@ GPT-3   700.0000 GB</code></pre>
 <section id="ハルシネーションの解剖" class="slide level2">
 <h2>ハルシネーションの解剖</h2>
 <div class="slide-body">
-<div id="f39e6463" class="cell" data-execution_count="6">
+<div id="1c72cf88" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"吾輩の主人は"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">0</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も</code></pre>
 </div>
 </div>
 <ul>
-<li>途中に「<strong>寒月君は猫</strong>」というそれらしい主張。本文と照合する：</li>
+<li>途中に「<strong>寒月君は猫</strong>」というそれらしい主張。本文と照合する</li>
 </ul>
-<div id="bea8cd1f" class="cell" data-execution_count="7">
+<div id="a8b4b610" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
 <span id="cb9-2"><a aria-label="2"></a><span class="bu">print</span>(<span class="st">"寒月君は:"</span>, text.count(<span class="st">"寒月君は"</span>), <span class="st">"回"</span>)</span>
 <span id="cb9-3"><a aria-label="3"></a><span class="bu">print</span>(<span class="st">"猫として:"</span>, text.count(<span class="st">"猫として"</span>), <span class="st">"回"</span>)</span>
@@ -690,7 +690,7 @@ GPT-3   700.0000 GB</code></pre>
 <li>出力に含まれる「事実らしい主張」に下線を引く（紙でよい）</li>
 <li>その主張が本文にあるか、<code>in</code> 演算子や <code>count</code> で検索して判定（<code>"○○" in text</code> など）</li>
 </ol>
-<div id="91f9b776" class="cell" data-execution_count="8">
+<div id="da3bc125" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答の型を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
@@ -785,7 +785,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="182d1534" class="cell" data-execution_count="9">
+<div id="f85920e1" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a><span class="co"># 問題1</span></span>
