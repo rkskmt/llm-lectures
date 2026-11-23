@@ -27,6 +27,7 @@
     var counterInit = false;
     var codeExpandInit = false;
     var scrollHintInit = false;
+    var indexSnapInit = false;
     var codeZoomFontSize = 2.2;
     var codeZoomPanMode = false;
     var codeZoomDragging = false;
@@ -606,12 +607,30 @@
       } catch (e) {}
     }
 
+    // The lecture index is one tall slide in reveal.js's scroll view (at every
+    // width for the ruled and network layouts, below 435px for cards). The
+    // view's default mandatory snapping has only the top and the last screen
+    // to land on, so a reader cannot stop anywhere in between.
+    function disableIndexScrollSnap() {
+      try {
+        if (indexSnapInit || !isIndexPage() || !window.Reveal || !Reveal.on) return;
+        indexSnapInit = true;
+        var disable = function() { Reveal.configure({ scrollSnap: false }); };
+        if (Reveal.isReady && Reveal.isReady()) {
+          disable();
+        } else {
+          Reveal.on('ready', disable);
+        }
+      } catch (e) {}
+    }
+
     function setup() {
       try {
         new MutationObserver(function() {
           createHome();
           addCodeExpandButtons();
           initScrollHint();
+          disableIndexScrollSnap();
           if (document.querySelector('.reveal > .footer')) {
             createNav();
             if (window.Reveal && Reveal.isReady()) initCounter();
@@ -623,6 +642,7 @@
         fixDataUriLightbox();
         initTabsetMemory();
         initScrollHint();
+        disableIndexScrollSnap();
       } catch (e) {}
     }
 
