@@ -226,7 +226,7 @@ $$
 
 ### 問題1：視線を計算する
 
-本編と同じ「名前」「は」「まだ」の名札・情報（$\vec{\vphantom{b}k}_1=(1,1),\ \vec{\vphantom{b}k}_2=(1,0),\ \vec{\vphantom{b}k}_3=(0,1)$、$\vec{\vphantom{b}v}_1=(1,0),\ \vec{\vphantom{b}v}_2=(0,1),\ \vec{\vphantom{b}v}_3=(1,1)$）で、探しものが $\vec{\vphantom{b}q} = (0, 2)$ のとき：
+本編と同じ「名前」「は」「まだ」の名札・情報（$\vec{\vphantom{b}k}_1=(1,1),\ \vec{\vphantom{b}k}_2=(1,0),\ \vec{\vphantom{b}k}_3=(0,1)$、$\vec{\vphantom{b}v}_1=(1,0),\ \vec{\vphantom{b}v}_2=(0,1),\ \vec{\vphantom{b}v}_3=(1,1)$）で、探しものが $\vec{\vphantom{b}q} = (0, 2)$ のときの視線を計算せよ
 
 1. 関連度3つを内積で求める
 2. 「合計で割る」方式で割合にする
