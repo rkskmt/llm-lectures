@@ -119,6 +119,52 @@
 		],
 		"description": "Large key-message box, white text on a black fill"
 	},
+	"Mini slide": {
+		"prefix": "csk-mini",
+		"body": [
+			"::::: {.mini-slide width=\"${1:60%}\" label=\"${2:Sample}\"}",
+			"",
+			"::: {.mini-title}",
+			"${3:Title}",
+			":::",
+			"",
+			":::: {.mini-row}",
+			"",
+			"::: {.mini-col}",
+			"- $0",
+			":::",
+			"",
+			"::: {.mini-fig}",
+			"![](${4:image.png}){height=\"${5:50%}\"}",
+			":::",
+			"",
+			"::::",
+			"",
+			"::: {.mini-foot}",
+			"${6:Footer}",
+			":::",
+			"",
+			":::::"
+		],
+		"description": "A slide drawn inside a slide: title, text beside a figure, footer (mini-slide.lua)"
+	},
+	"Mini slide (cover)": {
+		"prefix": "csk-mini-cover",
+		"body": [
+			"::::: {.mini-slide .cover width=\"${1:60%}\"}",
+			"",
+			"::: {.mini-title}",
+			"${2:Title}",
+			":::",
+			"",
+			"${3:Subtitle}",
+			"",
+			"$0",
+			"",
+			":::::"
+		],
+		"description": "Title page of a mini slide: centered, large title"
+	},
 	"Caption note": {
 		"prefix": "csk-caption",
 		"body": [

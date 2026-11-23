@@ -56,6 +56,26 @@ classes:
   break-title:
     description: "Title-styling companion class for `.break-slide` section-divider slides."
 
+  # --- Mini slide (mini-slide.lua + custom.css) ---
+  mini-slide:
+    description: "A slide drawn inside a slide: a framed page (16:9 unless `ratio` says otherwise) for showing what a slide should look like, such as a sample of the slides students hand in, a before/after of a slide design, or a page of a report. Ordinary markdown goes inside (paragraphs, lists, tables, images, code). The page keeps its ratio and its text scales with the frame; content that does not fit is clipped, so check the render. Parts: `.mini-title`, `.mini-lead`, `.mini-row` holding `.mini-col` and `.mini-fig`, `[text]{.mini-chip}`, `.mini-foot`; add `.cover` for a title page. An image inside takes height=\"60%\" or width=\"40%\" as a share of the page (other units stop the render). A mini-slide cannot hold another one. Attributes: width, ratio, text, accent, label."
+  mini-title:
+    description: "Inside a `.mini-slide`: the title of the page, over a rule in the accent color. On a `.cover` page it is large, centered and has no rule."
+  mini-lead:
+    description: "Inside a `.mini-slide`: one key phrase on a tinted band across the page (a concept in one line)."
+  mini-row:
+    description: "Inside a `.mini-slide`: blocks side by side, centered in the height left under the title. Its children are `.mini-col` (they share the width) and `.mini-fig` (takes the width of its figure)."
+  mini-col:
+    description: "A text block of a `.mini-row`; the `.mini-col`s of a row share its width equally."
+  mini-fig:
+    description: "Inside a `.mini-slide` or a `.mini-row`: a centered figure block. Holds an image (size it with height=\"60%\", a share of the page) or a small diagram stacked from `[text]{.mini-chip}` spans and arrow characters, one per line."
+  mini-chip:
+    description: "A span inside a `.mini-slide`: a small labelled box on its own line, for diagrams built without an image. Add `.accent` for the accent color or `.warn` for red."
+  mini-foot:
+    description: "Inside a `.mini-slide`: the line in the bottom-right corner of the page (a presenter's name, a page number, a source)."
+  cover:
+    description: "On a `.mini-slide`: a title page. Everything is centered, the `.mini-title` is large and has no rule, and paragraphs are a blank line apart (join lines with a hard break)."
+
   # --- Lecture index card grid (card-grid.lua + custom.css) ---
   lectures:
     description: "Wrapper for the auto-numbered lecture-index card grid on a course index page. The metadata key `lecture-index: cards | ruled | network` (once per course, in _metadata.yaml) selects the layout of every `.lectures`, on the index and the handouts page alike."
@@ -125,6 +145,27 @@ attributes:
       type: [string, number]
       description: "Iframe height in pixels or a CSS size."
       examples: [520]
+  ".mini-slide":
+    width:
+      type: string
+      description: "Width of the frame as a CSS length (e.g. '60%', '640px'); the frame is centered. Without it the frame fills the enclosing block, such as a column."
+      examples: ["60%", "640px"]
+    ratio:
+      type: string
+      description: "Aspect ratio of the page as 'W:H'. Default '16:9'."
+      examples: ["4:3", "16:9", "210:297"]
+    text:
+      type: [string, number]
+      description: "Body text size in points of the page drawn, which is 540pt high like a PowerPoint slide. Default 24; the title and the other parts scale with it. Lower it when the content is clipped."
+      examples: [20]
+    accent:
+      type: string
+      description: "CSS color of the title rule, the `.mini-lead` band and `.mini-chip .accent`. Default '#2f6fb7'."
+      examples: ["#c0392b"]
+    label:
+      type: string
+      description: "A small tag in the top-right corner of the page (e.g. 'Sample', 'Before', 'After'). None by default."
+      examples: ["Sample"]
   ".table-style":
     first-col-rule:
       type: string
