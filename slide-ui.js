@@ -632,13 +632,12 @@
     // to raw TeX and tabs and image zoom stop working. The proper fix belongs
     // in reveal.js: keep the live nodes instead of restoring
     // slideHTMLBeforeActivation. Until then, reload on that switch; the URL
-    // hash keeps the current slide. The qmd editor's preview frame is left
-    // alone, because a reload would drop the slides it has swapped in live.
+    // hash keeps the current slide. The qmd-web plugin keeps a deck in an
+    // editor's frame out of the scroll view, so live edits never reach this.
     function initScrollExitReload() {
       try {
         if (scrollExitInit || !window.Reveal || !Reveal.on || !Reveal.isScrollView) return;
         scrollExitInit = true;
-        if (window.parent !== window && !new URLSearchParams(location.search).has('peek-embed')) return;
         var wasScroll = false;
         var check = function() {
           var isScroll = Reveal.isScrollView();

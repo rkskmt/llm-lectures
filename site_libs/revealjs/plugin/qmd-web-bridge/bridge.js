@@ -432,6 +432,14 @@ window.QmdWebBridge = function(){
     id: 'qmd-web-bridge',
     init(deck){
       if(!framed()) return;
+      // A narrow editor pane must not switch the deck to reveal.js's scroll
+      // view: the live preview is refused there, and leaving it restores slide
+      // HTML saved before MathJax, the tabsets and the lightbox ran. Set before
+      // the deck starts, so qmd_editor's preview gets it too. A peek window
+      // keeps the deck's own behaviour.
+      if(!new URLSearchParams(location.search).has('peek-embed')){
+        deck.configure({scrollActivationWidth: null});
+      }
       // after parsing, when qmd_editor's injected bridge (end of body) is visible
       if(document.readyState === 'loading'){
         document.addEventListener('DOMContentLoaded', () => start(deck), {once: true});
