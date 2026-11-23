@@ -168,6 +168,15 @@
             config.math.config = config.math.config.replace("_HTML", "_CHTML");
             config.math.CommonHTML = { scale: 127, matchFontHeight: false };
           }
+          // A ruled or network lecture index lays itself out at the
+          // window's width (custom.css). reveal.js's slide view
+          // fixes every slide at 1280x720 and scales it, and reveal.js
+          // switches to the scroll view only below 435px, so open such
+          // a page in the scroll view at every width. Quarto calls
+          // initialize at the end of <body>, so the page is parsed.
+          if (config && document.querySelector(".lectures.ruled, .lectures.network")) {
+            config.view = "scroll";
+          }
           return initialize.call(this, config);
         };
       }
@@ -179,7 +188,8 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
-  <meta name="qmd-web-source" content="a3eb3e81788544634eeeded58bcefc62d8719e73 f20181d28db3ab047d7fe759c7bcbc9ca77b42c4">
+  <script src="network-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="a3eb3e81788544634eeeded58bcefc62d8719e73">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -189,6 +199,7 @@
 <section id="大規模言語モデル" class="slide level2">
 <h2>大規模言語モデル</h2>
 <div class="slide-body">
+<p><a href="./handouts.html" class="pdf-gate" title="配布資料（PDF）">PDF</a></p>
 <div class="idx-lead">
 <p>全15回。「次の1文字を当てる」から始めて、最終回は<strong>推し文豪ボット</strong>（自作GPT）を育てる。</p>
 </div>

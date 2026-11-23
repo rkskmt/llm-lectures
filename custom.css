@@ -62,20 +62,18 @@
 .reveal .slides section.present::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.4) !important;
 }
-.callout.callout-note {
-    font-size: 1.5rem;
+/* Callouts sit a step below the slide text, not at Quarto's 0.7em, which is
+   hard to read when projected. The selector must match Quarto's own
+   `.reveal .slides section div.callout` rule to win over it; the title bar
+   inherits this size (Quarto sets it to `inherit`). Headings inside a callout
+   keep their slide size, as Quarto's calc(…/0.7) rules intend. */
+.reveal .slides section div.callout {
+    font-size: 0.85em;
     line-height: 1.4;
 }
-.callout.callout-note .callout-title {
-    font-size: 2.3rem;
-}
-.reveal .callout.callout-tip {
-    font-size: 1.5rem;
-    line-height: 1.4;
-}
-.reveal .callout.callout-tip .callout-title {
-    font-size: 2.3rem;
-}
+.reveal .slides section div.callout h1 { font-size: calc(2.5em / 0.85); }
+.reveal .slides section div.callout h2 { font-size: calc(1.6em / 0.85); }
+.reveal .slides section div.callout h3 { font-size: calc(1.3em / 0.85); }
 .reveal .callout pre code {
     font-size: 1.25rem !important;
 }
@@ -248,7 +246,12 @@
 /* `::: {.caption-note .center}` — centers the chip, for a caption under a
    centered element (a display formula, a centered figure). Left stays the
    default: tables and code output are left-anchored, and so is their note. */
-.reveal .caption-note.center {
+.reveal .caption-note.center,
+.reveal .columns > .column > .caption-note.center {
+  /* The second selector is for a chip placed directly in a column: Quarto's
+     column gutter rule (`.reveal .columns > .column > :not(ul, ol)`, which
+     sets margin-left/right) is more specific than the first selector, so
+     without it the chip stays at the left edge of the column. */
   margin-inline: auto;
 }
 .reveal .caption-note p {
@@ -412,6 +415,200 @@ table td:first-child {
 }
 .reveal .takeaway.dark a {
   text-decoration: underline;
+}
+/* Mini slide — a slide drawn inside a slide (`::: {.mini-slide}`), for
+   showing what a slide should look like: a sample of the slides students hand
+   in, a before/after of a slide design, a page of a report. Ordinary markdown
+   goes inside. mini-slide.lua wraps the content in .mini-slide-page and turns
+   the frame's attributes (width, ratio, text, accent, label) into the custom
+   properties read here; an image's percentage size becomes a share of the page.
+
+   Without `width` the frame is an ordinary block: it fills its container and,
+   in a column, keeps Quarto's column gutter. With `width` the filter also
+   sets auto side margins inline, which centers the narrower frame.
+
+   The frame is a size container, so the page and everything in it can be
+   sized in container query units and scale with the frame. --pt is one point
+   of the page drawn: the page is 540pt high like a PowerPoint slide (960pt
+   wide at 16:9), and --mini-text is the body size in those points. Every
+   other size inside is in em of the body size, so `text` is the one knob for
+   density. Content that does not fit is clipped, as on a real slide.
+
+   The rules for p, li, table and code restate what the theme and reveal.js
+   set for a full-size slide (lighter weight, rem sizes, list margins); the
+   page must not inherit sizes meant for the 1280x720 slide around it.
+
+   Every selector starts with `.reveal .slides`. reveal.js's print stylesheet
+   (used by the handout PDF) resets every div, p and list with
+   `html:not(.print-pdf) .reveal div { position: static; width: auto;
+   height: auto; display: block; overflow: visible; margin: 0 }`, and three
+   classes outrank it, so the page keeps its layout on paper. The print sheet
+   also forces `font-size: 20pt !important` on p, li and td and
+   `text-align: left !important` on blocks: hence the `!important` on those
+   two properties below. */
+.reveal .slides .mini-slide {
+  container-type: inline-size;
+  position: relative;
+  box-sizing: border-box;
+  max-width: 100%;
+  aspect-ratio: var(--mini-ratio, 16 / 9);
+  margin: 0.3em 0;
+  border: 1px solid #9a9a9a;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18);
+  background: #fff;
+  overflow: hidden;
+  /* Print the tinted bands, chips and the corner tag as on screen. */
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+.reveal .slides .mini-slide-page {
+  --pt: calc(100cqw / var(--mini-width-pt, 960));
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: calc(30 * var(--pt)) calc(44 * var(--pt)) calc(44 * var(--pt));
+  font-size: calc(var(--mini-text, 24) * var(--pt));
+  line-height: 1.4;
+  text-align: left;
+  color: #131516;
+}
+.reveal .slides .mini-slide-page p,
+.reveal .slides .mini-slide-page li {
+  margin: 0;
+  font-size: 1em !important;
+  font-weight: normal;
+  line-height: 1.4;
+}
+.reveal .slides .mini-slide-page ul,
+.reveal .slides .mini-slide-page ol {
+  display: block;
+  margin: 0 0 0 1.1em;
+  padding: 0;
+  font-weight: normal;
+}
+.reveal .slides .mini-slide-page li + li { margin-top: 0.3em; }
+.reveal .slides .mini-slide-page li li + li { margin-top: 0; }
+.reveal .slides .mini-slide-page strong { font-weight: 700; }
+.reveal .slides .mini-slide-page table { font-size: 0.85em; }
+.reveal .slides .mini-slide-page th,
+.reveal .slides .mini-slide-page td {
+  font-size: 1em !important;
+  font-weight: normal;
+}
+.reveal .slides .mini-slide-page thead th { font-weight: 700; }
+/* Code at 0.8 of the body size. The copy and zoom buttons act on the real
+   slide, not on a picture of one. */
+.reveal .slides .mini-slide-page pre { font-size: 0.8em; }
+.reveal .slides .mini-slide-page pre code { font-size: 1em !important; }
+.reveal .slides .mini-slide-page .code-copy-button,
+.reveal .slides .mini-slide-page .code-expand-button { display: none; }
+.reveal .slides .mini-slide-page img {
+  display: block;
+  margin: 0 auto;
+  border: 0;
+}
+/* The corner tag: `label="Sample"` on the frame. */
+.reveal .slides .mini-slide-page[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 0.6em;
+  background: #555;
+  color: #fff;
+  font-size: 0.75em;
+  line-height: 1.5;
+}
+/* `.mini-title` — the title of the page, over a rule in the accent color. */
+.reveal .slides .mini-title {
+  margin-bottom: 0.5em;
+  padding-bottom: 0.12em;
+  border-bottom: 0.11em solid var(--mini-accent, #2f6fb7);
+  font-size: 1.5em;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.reveal .slides .mini-slide-page .mini-title p {
+  font-weight: 700;
+  line-height: 1.3;
+}
+/* `.mini-lead` — one key phrase on a tinted band across the page. */
+.reveal .slides .mini-lead {
+  margin-bottom: 0.6em;
+  padding: 0.25em 0.5em;
+  background: color-mix(in srgb, var(--mini-accent, #2f6fb7) 14%, #fff);
+  text-align: center !important;
+  font-size: 1.3em;
+  font-weight: 700;
+}
+.reveal .slides .mini-slide-page .mini-lead p {
+  text-align: center !important;
+  font-weight: 700;
+}
+/* `.mini-row` — blocks side by side, centered in the height left under the
+   title. The child blocks share the width; a `.mini-fig` takes only the
+   width of its figure. */
+.reveal .slides .mini-row {
+  display: flex;
+  flex: 1 1 auto;
+  gap: 1.2em;
+  align-items: center;
+  min-height: 0;
+}
+.reveal .slides .mini-row > div {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.reveal .slides .mini-row > .mini-fig { flex: 0 0 auto; }
+/* `.mini-fig` — a centered figure block: an image, or a diagram stacked from
+   `.mini-chip` spans and arrow characters. */
+.reveal .slides .mini-fig { text-align: center !important; }
+.reveal .slides .mini-slide-page .mini-fig p { text-align: center !important; }
+/* `[text]{.mini-chip}` — a small labelled box, one per line; `.accent` and
+   `.warn` color it. */
+.reveal .slides .mini-chip {
+  display: block;
+  width: fit-content;
+  margin: 0.25em auto;
+  padding: 0.15em 0.7em;
+  border: 0.09em solid #555;
+  border-radius: 0.4em;
+  background: #f3f6fa;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+.reveal .slides .mini-chip.accent {
+  border-color: var(--mini-accent, #2f6fb7);
+  background: color-mix(in srgb, var(--mini-accent, #2f6fb7) 14%, #fff);
+  font-weight: 700;
+}
+.reveal .slides .mini-chip.warn {
+  border-color: #c0392b;
+  background: #fdecea;
+}
+/* `.mini-foot` — the line in the bottom-right corner of the page (a
+   presenter's name, a page number, a source). */
+.reveal .slides .mini-foot {
+  position: absolute;
+  right: 0.9em;
+  bottom: 0.5em;
+  font-size: 0.75em;
+}
+/* `.mini-slide .cover` — a title page: everything centered, the title large
+   and without its rule, a blank line between paragraphs. */
+.reveal .slides .mini-slide.cover .mini-slide-page {
+  justify-content: center;
+  text-align: center !important;
+}
+.reveal .slides .mini-slide.cover .mini-slide-page p { text-align: center !important; }
+.reveal .slides .mini-slide.cover .mini-slide-page p + p { margin-top: 1.2em; }
+.reveal .slides .mini-slide.cover .mini-title {
+  margin-bottom: 0.1em;
+  padding-bottom: 0;
+  border-bottom: 0;
+  font-size: 2.25em;
 }
 .tweak {
   width: fit-content;
