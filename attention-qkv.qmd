@@ -6,7 +6,7 @@ subtitle: "自己注意の実装 — 有名な式の正体は行列積と softma
 ## 前回の振り返り
 
 - 注意＝3ステップの表計算：**関連度（内積）→ 割合（softmax）→ 重み付き平均**
-- 手計算も検算も済んだ。残った疑問はこれだった：
+- 手計算も検算も済んだ。残った疑問はこれだった
 
 ::: {.callout-important title="前回の宿題"}
 名札 $k$・持ってる情報 $v$・探しもの $q$ の中身は、**誰が書くのか？**
@@ -36,7 +36,7 @@ print(X @ X.T)
 
 ## q・k・v の作り方 — 行列を1枚ずつ
 
-- 文字の埋め込み $\vec{\vphantom{b}x}$ から、3種類のベクトルを作る：
+- 文字の埋め込み $\vec{\vphantom{b}x}$ から、3種類のベクトルを作る
 
 $$
 \vec{\vphantom{b}q} = \vec{\vphantom{b}x}\, W_Q \qquad
@@ -110,7 +110,7 @@ for d in [2, 64]:
 
 ::: {.fragment}
 - 足し合わせる項が $d$ 個あるので $\sqrt{d}$ 倍で膨らむ（2→64 で約5.7倍）
-- スコアが大きすぎると softmax が**一極集中**して、視線が1点に固まってしまう：
+- スコアが大きすぎると softmax が**一極集中**して、視線が1点に固まってしまう
 
 ```{python}
 #| echo: true
@@ -125,7 +125,7 @@ e = np.exp(s / 8); print("÷√64  :", (e / e.sum()).round(4))
 
 ## 完成形 — 論文の式と3ステップ
 
-- 2017年の論文 *Attention Is All You Need* の中心の式：
+- 2017年の論文 *Attention Is All You Need* の中心の式
 
 $$
 \mathrm{Attention}(Q, K, V) = \mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d}}\right) V
