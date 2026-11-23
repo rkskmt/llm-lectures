@@ -29,6 +29,7 @@
     var scrollHintInit = false;
     var indexSnapInit = false;
     var scrollExitInit = false;
+    var scrollTargetInit = false;
     var codeZoomFontSize = 2.2;
     var codeZoomPanMode = false;
     var codeZoomDragging = false;
@@ -661,6 +662,37 @@
       } catch (e) {}
     }
 
+    // WORKAROUND for reveal.js 5.1.0. A deck opened in the scroll view with a
+    // slide in its URL scrolls before the pages have their height, lands on an
+    // earlier slide and overwrites the URL with it. The proper fix belongs in
+    // reveal.js: apply the URL after the pages are laid out. Until then, take
+    // the slide from the navigation entry, which keeps the URL as it was opened.
+    function openScrollViewTarget() {
+      try {
+        if (scrollTargetInit || !window.Reveal || !Reveal.on || !Reveal.isScrollView) return;
+        scrollTargetInit = true;
+        if (isIndexPage()) return;
+        var entry = performance.getEntriesByType('navigation')[0];
+        if (!entry || entry.type !== 'navigate') return;
+        var match = entry.name.match(/#\/([^\/]+)$/);
+        if (!match) return;
+        var id = decodeURIComponent(match[1]);
+        var go = function() {
+          if (!Reveal.isScrollView()) return;
+          var slide = document.getElementById(id);
+          var page = slide && slide.closest('.scroll-page');
+          if (!page) return;
+          page.scrollIntoView({ block: 'start', behavior: 'instant' });
+          history.replaceState(null, '', '#/' + match[1]);
+        };
+        if (Reveal.isReady && Reveal.isReady()) {
+          setTimeout(go, 0);
+        } else {
+          Reveal.on('ready', function() { setTimeout(go, 0); });
+        }
+      } catch (e) {}
+    }
+
     function setup() {
       try {
         new MutationObserver(function() {
@@ -669,6 +701,7 @@
           initScrollHint();
           disableIndexScrollSnap();
           initScrollExitReload();
+          openScrollViewTarget();
           if (document.querySelector('.reveal > .footer')) {
             createNav();
             if (window.Reveal && Reveal.isReady()) initCounter();
@@ -682,6 +715,7 @@
         initScrollHint();
         disableIndexScrollSnap();
         initScrollExitReload();
+        openScrollViewTarget();
       } catch (e) {}
     }
 
