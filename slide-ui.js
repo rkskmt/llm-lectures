@@ -28,6 +28,8 @@
     var codeExpandInit = false;
     var scrollHintInit = false;
     var indexSnapInit = false;
+    var scrollExitInit = false;
+    var scrollTargetInit = false;
     var codeZoomFontSize = 2.2;
     var codeZoomPanMode = false;
     var codeZoomDragging = false;
@@ -624,6 +626,73 @@
       } catch (e) {}
     }
 
+    // WORKAROUND for reveal.js 5.1.0. Leaving the scroll view (a phone turned
+    // from portrait to landscape) replaces the slides with an HTML string saved
+    // before MathJax, the tabsets and the lightbox ran, so formulas fall back
+    // to raw TeX and tabs and image zoom stop working. The proper fix belongs
+    // in reveal.js: keep the live nodes instead of restoring
+    // slideHTMLBeforeActivation. Until then, reload on that switch; the URL
+    // hash keeps the current slide. The qmd editor's preview frame is left
+    // alone, because a reload would drop the slides it has swapped in live.
+    function initScrollExitReload() {
+      try {
+        if (scrollExitInit || !window.Reveal || !Reveal.on || !Reveal.isScrollView) return;
+        scrollExitInit = true;
+        if (window.parent !== window && !new URLSearchParams(location.search).has('peek-embed')) return;
+        var wasScroll = false;
+        var check = function() {
+          var isScroll = Reveal.isScrollView();
+          if (wasScroll && !isScroll) {
+            document.documentElement.style.visibility = 'hidden';
+            location.reload();
+            return;
+          }
+          wasScroll = isScroll;
+        };
+        var start = function() {
+          wasScroll = Reveal.isScrollView();
+          // Runs after reveal.js's own resize handler has switched the view.
+          window.addEventListener('resize', function() { setTimeout(check, 0); });
+        };
+        if (Reveal.isReady && Reveal.isReady()) {
+          start();
+        } else {
+          Reveal.on('ready', start);
+        }
+      } catch (e) {}
+    }
+
+    // WORKAROUND for reveal.js 5.1.0. A deck opened in the scroll view with a
+    // slide in its URL scrolls before the pages have their height, lands on an
+    // earlier slide and overwrites the URL with it. The proper fix belongs in
+    // reveal.js: apply the URL after the pages are laid out. Until then, take
+    // the slide from the navigation entry, which keeps the URL as it was opened.
+    function openScrollViewTarget() {
+      try {
+        if (scrollTargetInit || !window.Reveal || !Reveal.on || !Reveal.isScrollView) return;
+        scrollTargetInit = true;
+        if (isIndexPage()) return;
+        var entry = performance.getEntriesByType('navigation')[0];
+        if (!entry || entry.type !== 'navigate') return;
+        var match = entry.name.match(/#\/([^\/]+)$/);
+        if (!match) return;
+        var id = decodeURIComponent(match[1]);
+        var go = function() {
+          if (!Reveal.isScrollView()) return;
+          var slide = document.getElementById(id);
+          var page = slide && slide.closest('.scroll-page');
+          if (!page) return;
+          page.scrollIntoView({ block: 'start', behavior: 'instant' });
+          history.replaceState(null, '', '#/' + match[1]);
+        };
+        if (Reveal.isReady && Reveal.isReady()) {
+          setTimeout(go, 0);
+        } else {
+          Reveal.on('ready', function() { setTimeout(go, 0); });
+        }
+      } catch (e) {}
+    }
+
     function setup() {
       try {
         new MutationObserver(function() {
@@ -631,6 +700,8 @@
           addCodeExpandButtons();
           initScrollHint();
           disableIndexScrollSnap();
+          initScrollExitReload();
+          openScrollViewTarget();
           if (document.querySelector('.reveal > .footer')) {
             createNav();
             if (window.Reveal && Reveal.isReady()) initCounter();
@@ -643,6 +714,8 @@
         initTabsetMemory();
         initScrollHint();
         disableIndexScrollSnap();
+        initScrollExitReload();
+        openScrollViewTarget();
       } catch (e) {}
     }
 
