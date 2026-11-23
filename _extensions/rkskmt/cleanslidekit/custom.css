@@ -1,6 +1,22 @@
 .reveal {
   font-family: system-ui, -apple-system, "Hiragino Sans", "Yu Gothic UI", "Segoe UI", "Meiryo", sans-serif;
 }
+/* Body text weight. `lighter` computes to 100: a phone's system font has a
+   real Thin but its Japanese fallback does not, so Latin letters and digits
+   turned hair-thin inside Japanese sentences. Declared here rather than in
+   theme.scss because every deck links the compiled theme it was last rendered
+   with, while this file reaches all decks at once. Kept first so that later
+   rules in this file still win. */
+:root { --r-heading-font-weight: 400; }
+.reveal p,
+.reveal ul,
+.reveal ol,
+.reveal table th,
+.reveal table td,
+#title-slide .title,
+#title-slide .subtitle {
+  font-weight: 400;
+}
 .reveal .slides section:not(.stack):not(.break-slide) > .slide-body {
   width: 100% !important;
   margin: 0 !important;
@@ -217,7 +233,6 @@
   font-size: 0.8em;
   color: #444;
   font-family: inherit;
-  font-weight: lighter;
 }
 /* Caption that annotates whatever sits directly above it — a table, a figure,
    or a code cell's output. A bordered gray "legend" chip: the frame, gray
@@ -435,7 +450,7 @@ table td:first-child {
    density. Content that does not fit is clipped, as on a real slide.
 
    The rules for p, li, table and code restate what the theme and reveal.js
-   set for a full-size slide (lighter weight, rem sizes, list margins); the
+   set for a full-size slide (font weight, rem sizes, list margins); the
    page must not inherit sizes meant for the 1280x720 slide around it.
 
    Every selector starts with `.reveal .slides`. reveal.js's print stylesheet

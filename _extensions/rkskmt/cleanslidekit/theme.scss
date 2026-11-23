@@ -12,7 +12,6 @@ $accent2: #9a2515;
 
 $presentation-font-size-root: 32px;
 $presentation-heading-color: $jet;
-$presentation-heading-font-weight: lighter;
 $body-color: $jet;
 $link-color: $accent;
 $selection-bg: #26351c;
@@ -29,10 +28,6 @@ $presentation-heading-font: $font-family-sans-serif;
   line-height: 1.5em;
 }
 
-.reveal p {
-  font-weight: lighter;
-}
-
 // title slide
 
 #title-slide {
@@ -41,14 +36,12 @@ $presentation-heading-font: $font-family-sans-serif;
   .title {
     color: $body-color;
     font-size: 1.4em;
-    font-weight: lighter;
   }
 
   .subtitle {
     color: $accent;
     font-style: italic;
     margin-top: 0em;
-    font-weight: lighter;
   }
 
   .institute,
@@ -83,7 +76,6 @@ $presentation-heading-font: $font-family-sans-serif;
 // lists
 
 .reveal ul {
-  font-weight: lighter;
   padding-left: 16px;
 
   li::marker {
@@ -105,7 +97,6 @@ $presentation-heading-font: $font-family-sans-serif;
 }
 
 .reveal ol {
-  font-weight: lighter;
   padding-left: 16px;
 
   li::marker {
@@ -127,7 +118,6 @@ $presentation-heading-font: $font-family-sans-serif;
   border: none;
   padding: .23em;
   text-align: left;
-  font-weight: lighter;
 }
 
 .reveal table thead th,

@@ -28,6 +28,7 @@
     var codeExpandInit = false;
     var scrollHintInit = false;
     var indexSnapInit = false;
+    var scrollExitInit = false;
     var codeZoomFontSize = 2.2;
     var codeZoomPanMode = false;
     var codeZoomDragging = false;
@@ -624,6 +625,42 @@
       } catch (e) {}
     }
 
+    // WORKAROUND for reveal.js 5.1.0. Leaving the scroll view (a phone turned
+    // from portrait to landscape) replaces the slides with an HTML string saved
+    // before MathJax, the tabsets and the lightbox ran, so formulas fall back
+    // to raw TeX and tabs and image zoom stop working. The proper fix belongs
+    // in reveal.js: keep the live nodes instead of restoring
+    // slideHTMLBeforeActivation. Until then, reload on that switch; the URL
+    // hash keeps the current slide. The qmd editor's preview frame is left
+    // alone, because a reload would drop the slides it has swapped in live.
+    function initScrollExitReload() {
+      try {
+        if (scrollExitInit || !window.Reveal || !Reveal.on || !Reveal.isScrollView) return;
+        scrollExitInit = true;
+        if (window.parent !== window && !new URLSearchParams(location.search).has('peek-embed')) return;
+        var wasScroll = false;
+        var check = function() {
+          var isScroll = Reveal.isScrollView();
+          if (wasScroll && !isScroll) {
+            document.documentElement.style.visibility = 'hidden';
+            location.reload();
+            return;
+          }
+          wasScroll = isScroll;
+        };
+        var start = function() {
+          wasScroll = Reveal.isScrollView();
+          // Runs after reveal.js's own resize handler has switched the view.
+          window.addEventListener('resize', function() { setTimeout(check, 0); });
+        };
+        if (Reveal.isReady && Reveal.isReady()) {
+          start();
+        } else {
+          Reveal.on('ready', start);
+        }
+      } catch (e) {}
+    }
+
     function setup() {
       try {
         new MutationObserver(function() {
@@ -631,6 +668,7 @@
           addCodeExpandButtons();
           initScrollHint();
           disableIndexScrollSnap();
+          initScrollExitReload();
           if (document.querySelector('.reveal > .footer')) {
             createNav();
             if (window.Reveal && Reveal.isReady()) initCounter();
@@ -643,6 +681,7 @@
         initTabsetMemory();
         initScrollHint();
         disableIndexScrollSnap();
+        initScrollExitReload();
       } catch (e) {}
     }
 
