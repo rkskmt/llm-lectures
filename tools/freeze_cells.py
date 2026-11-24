@@ -13,6 +13,8 @@
 #     runs `print(frozen["frz-<name>"], end="")` (`frozen` is loaded by a
 #     hidden `# frozen display` cell near the top of the deck);
 #   - figures: an image `<OUT>/<deck>-frz-<name>-<n>.png` placed after it.
+#     It is saved through fig_cap.py (Full HD, 256 colors). A figure that
+#     already has an image keeps that pixel size, so the slide does not change.
 #
 # This script runs every cell Quarto would run plus the frozen ones, in order
 # and in one namespace, exactly as a student who copies the slides top to
@@ -42,6 +44,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
+
+import fig_cap  # noqa: E402  (same directory as this script)
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = Path("data/runs/frozen")   # relative to ROOT; the deck refers to it the same way
@@ -88,7 +92,7 @@ def freeze(deck):
             for num in plt.get_fignums():
                 current["n"] += 1
                 png = ROOT / OUT / f"{stem}-{current['label']}-{current['n']}.png"
-                plt.figure(num).savefig(png, dpi=plt.rcParams["figure.dpi"], bbox_inches="tight")
+                fig_cap.save_figure(plt.figure(num), png)
                 print(f"wrote {png.relative_to(ROOT)}", file=sys.stderr)
         plt.close("all")
 

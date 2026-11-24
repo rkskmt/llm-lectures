@@ -10,19 +10,32 @@
 # Loaded when the Jupyter kernel starts (.ipython/profile_default/startup/,
 # enabled by IPYTHONDIR in _environment), so decks need no code for it.
 # A figure saved to a path, like a student's plt.savefig("x.png"), is untouched.
+# Tools that save a deck's figure call save_figure().
 import io
+from pathlib import Path
 
 from matplotlib.backend_bases import FigureCanvasBase
 from PIL import Image
 
 MAX_WIDTH, MAX_HEIGHT = 1920, 1080
+DISPLAY_DPI = 200  # what Quarto's default retina output draws at
 _print_figure = FigureCanvasBase.print_figure
 
 
-def _draw(canvas, args, kwargs, dpi):
-    buffer = io.BytesIO()
-    _print_figure(canvas, buffer, *args, **{**kwargs, "dpi": dpi})
-    return buffer.getvalue()
+def _fit(draw, dpi):
+    data = draw(dpi)
+    width, height = Image.open(io.BytesIO(data)).size
+    if width <= MAX_WIDTH and height <= MAX_HEIGHT:
+        return data
+    # A whole-number dpi gives the same pixel size on every run.
+    dpi = int(dpi * min(MAX_WIDTH / width, MAX_HEIGHT / height))
+    for _ in range(8):  # the tight bounding box can move a few pixels with the dpi
+        data = draw(dpi)
+        width, height = Image.open(io.BytesIO(data)).size
+        if width <= MAX_WIDTH and height <= MAX_HEIGHT:
+            return data
+        dpi -= 1
+    raise RuntimeError(f"figure is {width}x{height}, over {MAX_WIDTH}x{MAX_HEIGHT}")
 
 
 def _to_256_colors(data, target):
@@ -37,19 +50,34 @@ def _to_256_colors(data, target):
 def print_figure(self, filename, *args, **kwargs):
     if kwargs.get("format") != "png" or not isinstance(filename, io.BytesIO):
         return _print_figure(self, filename, *args, **kwargs)
-    dpi = kwargs["dpi"]
-    data = _draw(self, args, kwargs, dpi)
-    size = Image.open(io.BytesIO(data)).size
-    # The tight bounding box can move by a few pixels with the dpi, so repeat.
-    for _ in range(6):
-        if size[0] <= MAX_WIDTH and size[1] <= MAX_HEIGHT:
-            break
-        dpi *= min(MAX_WIDTH / size[0], MAX_HEIGHT / size[1]) * 0.999
-        data = _draw(self, args, kwargs, dpi)
-        size = Image.open(io.BytesIO(data)).size
-    if size[0] > MAX_WIDTH or size[1] > MAX_HEIGHT:
-        raise RuntimeError(f"figure is {size[0]}x{size[1]}, over {MAX_WIDTH}x{MAX_HEIGHT}")
-    _to_256_colors(data, filename)
+
+    def draw(dpi):
+        buffer = io.BytesIO()
+        _print_figure(self, buffer, *args, **{**kwargs, "dpi": dpi})
+        return buffer.getvalue()
+
+    _to_256_colors(_fit(draw, kwargs["dpi"]), filename)
+
+
+def save_figure(figure, path):
+    """Save a figure for a deck to link, under the same limits.
+
+    The theme displays an image at its pixel size, so a figure that already has
+    a saved image keeps that size and the slide does not change.
+    """
+    path = Path(path)
+
+    def draw(dpi):
+        buffer = io.BytesIO()
+        _print_figure(figure.canvas, buffer, format="png", dpi=dpi, bbox_inches="tight")
+        return buffer.getvalue()
+
+    dpi = DISPLAY_DPI
+    if path.exists():
+        saved_width, saved_height = Image.open(path).size
+        width, height = Image.open(io.BytesIO(draw(DISPLAY_DPI))).size
+        dpi = min(DISPLAY_DPI, round(DISPLAY_DPI * min(saved_width / width, saved_height / height)))
+    _to_256_colors(_fit(draw, dpi), path)
 
 
 FigureCanvasBase.print_figure = print_figure
