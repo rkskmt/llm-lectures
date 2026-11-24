@@ -249,7 +249,7 @@ Transformer の「考える」は、見た目より物量で支えられてい�
 
 ### 問題2：パラメータの勘定
 
-`MultiHead(n_embd=96, n_head=4, block_size=64)` の**パラメータ総数を手で計算**してから、`sum(p.numel() for p in mh.parameters())` と一致させよ。
+`MultiHead(n_embd=96, n_head=4, block_size=64)` の**パラメータ総数を計算**してから、`sum(p.numel() for p in mh.parameters())` と一致させよ。
 
 1. ヘッド1本：`query`・`key`・`value`（各 96×24、バイアスなし）
 2. ヘッド4本ぶんに `proj`（96×96＋バイアス96）を足す
