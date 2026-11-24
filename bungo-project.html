@@ -410,7 +410,7 @@ rkskmt
 <ul>
 <li>青空文庫のテキストは Shift_JIS で、ルビ《…》や注記［＃…］が混ざっている。洗ってから使う</li>
 </ul>
-<div id="33ec044a" class="cell">
+<div id="ee243b74" class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> re</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>raw <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/ginga_tetsudo.txt"</span>, encoding<span class="op">=</span><span class="st">"cp932"</span>).read()   <span class="co"># DLした生テキスト</span></span>
@@ -440,7 +440,7 @@ rkskmt
 <li>訓練コードは<strong>小さなGPTの回のものを1行だけ差し替える</strong>：読み込むファイル名だけ</li>
 <li><a href="tools/refimpl/gpt.py">gpt.py</a> を自分のスクリプトと同じフォルダに置く（小さなGPTの回と同じ配置）</li>
 </ul>
-<div id="10e97650" class="cell">
+<div id="00167cc4" class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a><span class="im">import</span> time</span>
 <span id="cb2-2"><a aria-label="2"></a></span>
 <span id="cb2-3"><a aria-label="3"></a><span class="im">import</span> torch</span>
@@ -559,7 +559,7 @@ rkskmt
 <section id="偽物を提出する" class="slide level2 scrollable">
 <h2>偽物を提出する</h2>
 <div class="slide-body">
-<div id="ece9cc1a" class="cell">
+<div id="5a217778" class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb3-3"><a aria-label="3"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
@@ -593,7 +593,7 @@ rkskmt
 <li>過学習ぎみの重みや低い temperature では、<span class="hl">本文の丸写しに近い文</span>が出ることがある。偽物は文体の<strong>創作</strong>であって暗記の吐き出しではないこと — 大会のフェアプレー</li>
 <li>コーパスとのひと続きの<strong>最長一致</strong>を測ってから提出する</li>
 </ul>
-<div id="3ecea47d" class="cell">
+<div id="13fa8199" class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a aria-label="1"></a><span class="kw">def</span> longest_match(fake, text):</span>
 <span id="cb4-2"><a aria-label="2"></a>    best <span class="op">=</span> <span class="st">""</span></span>
 <span id="cb4-3"><a aria-label="3"></a>    <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(fake)):</span>

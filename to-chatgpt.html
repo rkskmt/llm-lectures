@@ -364,11 +364,11 @@ rkskmt
 <section id="距離1スケール" class="slide level2">
 <h2>距離1：スケール</h2>
 <div class="slide-body">
-<div id="a63adeba" class="cell" data-execution_count="1">
+<div id="4561cce6" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="to-chatgpt_files/figure-revealjs/cell-2-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img data-src="to-chatgpt_files/figure-revealjs/cell-2-output-1.png" width="710" height="334"></a></p>
+<p><a href="to-chatgpt_files/figure-revealjs/cell-2-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img data-src="to-chatgpt_files/figure-revealjs/cell-2-output-1.png" width="709" height="333"></a></p>
 </figure>
 </div>
 </div>
@@ -385,7 +385,7 @@ rkskmt
 <ul>
 <li>パラメータは float32 の数 — <span class="hl">1個が4バイト</span>。個数を掛ければ「モデルの重さ」が出る</li>
 </ul>
-<div id="dac82199" class="cell" data-execution_count="2">
+<div id="4225f3ca" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="cf">for</span> name, p <span class="kw">in</span> [(<span class="st">"自作GPT"</span>, <span class="dv">817_125</span>), (<span class="st">"GPT-2"</span>, <span class="fl">1.5e9</span>), (<span class="st">"GPT-3"</span>, <span class="fl">175e9</span>)]:</span>
 <span id="cb1-2"><a aria-label="2"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">}</span><span class="ch">\t</span><span class="sc">{</span>p <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="fl">1e9</span><span class="sc">:,.4f}</span><span class="ss"> GB"</span>)   <span class="co"># 数1個 = 4バイト</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
@@ -514,7 +514,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに質問してみる" class="slide level2">
 <h2>実験：自作GPTに質問してみる</h2>
 <div class="slide-body">
-<div id="31cf1e86" class="cell" data-execution_count="4">
+<div id="d29a39c0" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a aria-label="2"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb3-3"><a aria-label="3"></a></span>
@@ -609,7 +609,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="実験自作gptに事実を聞く" class="slide level2">
 <h2>実験：自作GPTに事実を聞く</h2>
 <div class="slide-body">
-<div id="981f153f" class="cell" data-execution_count="5">
+<div id="9d48310c" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"主人の名前は"</span>, <span class="dv">50</span>, seed<span class="op">=</span><span class="dv">1</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>主人の名前はまだそうだね」と迷亭君はますまいと云わない。「え、どうだな。あの娘を貰いた。もっともそんなところで」</code></pre>
@@ -653,7 +653,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="ハルシネーションの解剖" class="slide level2">
 <h2>ハルシネーションの解剖</h2>
 <div class="slide-body">
-<div id="1c72cf88" class="cell" data-execution_count="6">
+<div id="0f4175ed" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"吾輩の主人は"</span>, <span class="dv">60</span>, seed<span class="op">=</span><span class="dv">0</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩の主人はあるまいと思うくらいならよかろうか。寒月君は猫としてはならんのだから吾輩の頭をあたかも知れない。しかし寒月君において、も</code></pre>
@@ -662,7 +662,7 @@ GPT-3   700.0000 GB</code></pre>
 <ul>
 <li>途中に「<strong>寒月君は猫</strong>」というそれらしい主張。本文と照合する</li>
 </ul>
-<div id="a8b4b610" class="cell" data-execution_count="7">
+<div id="bc310697" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
 <span id="cb9-2"><a aria-label="2"></a><span class="bu">print</span>(<span class="st">"寒月君は:"</span>, text.count(<span class="st">"寒月君は"</span>), <span class="st">"回"</span>)</span>
 <span id="cb9-3"><a aria-label="3"></a><span class="bu">print</span>(<span class="st">"猫として:"</span>, text.count(<span class="st">"猫として"</span>), <span class="st">"回"</span>)</span>
@@ -690,7 +690,7 @@ GPT-3   700.0000 GB</code></pre>
 <li>出力に含まれる「事実らしい主張」に下線を引く（紙でよい）</li>
 <li>その主張が本文にあるか、<code>in</code> 演算子や <code>count</code> で検索して判定（<code>"○○" in text</code> など）</li>
 </ol>
-<div id="da3bc125" class="cell" data-execution_count="8">
+<div id="e7ec2d96" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答の型を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
@@ -785,7 +785,7 @@ GPT-3   700.0000 GB</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="f85920e1" class="cell" data-execution_count="9">
+<div id="040025d6" class="cell" data-execution_count="9">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a><span class="co"># 問題1</span></span>

@@ -342,7 +342,7 @@ rkskmt
 <section id="実験線形線形線形" class="slide level2">
 <h2>実験：線形×線形＝線形</h2>
 <div class="slide-body">
-<div id="041a0644" class="cell" data-execution_count="1">
+<div id="903a60f6" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a aria-label="2"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb1-3"><a aria-label="3"></a></span>
@@ -377,7 +377,7 @@ tensor([[ 0.4006,  0.7693],
 <p><span class="math display">\[
 \mathrm{ReLU}(x) = \max(0,\ x)
 \]</span></p>
-<div id="04fd6255" class="cell" data-execution_count="2">
+<div id="4528b877" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -386,7 +386,7 @@ tensor([[ 0.4006,  0.7693],
 </div>
 </div>
 </div>
-<div id="3366fc0b" class="cell" data-execution_count="3">
+<div id="3f7dd2a0" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a aria-label="2"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb3-3"><a aria-label="3"></a></span>
@@ -404,11 +404,11 @@ tensor([[ 0.4006,  0.7693],
 <section id="折り目を足すと曲がった規則が作れる" class="slide level2">
 <h2>折り目を足すと、曲がった規則が作れる</h2>
 <div class="slide-body">
-<div id="eff8e423" class="cell" data-execution_count="4">
+<div id="d058f6d9" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="mlp-lm_files/figure-revealjs/cell-5-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="mlp-lm_files/figure-revealjs/cell-5-output-1.png" width="912" height="277"></a></p>
+<p><a href="mlp-lm_files/figure-revealjs/cell-5-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="mlp-lm_files/figure-revealjs/cell-5-output-1.png" width="911" height="277"></a></p>
 </figure>
 </div>
 </div>
@@ -436,7 +436,7 @@ tensor([[ 0.4006,  0.7693],
 <ul>
 <li>名前の前に窓ぶんの「・」を敷いてから、1文字ずつずらして切る</li>
 </ul>
-<div id="9918a1ae" class="cell" data-execution_count="5">
+<div id="2662d3e5" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb5-2"><a aria-label="2"></a></span>
 <span id="cb5-3"><a aria-label="3"></a>names <span class="op">=</span> pd.read_csv(<span class="st">"data/chimei.csv"</span>)[<span class="st">"yomi"</span>].tolist()</span>
@@ -479,7 +479,7 @@ tensor([[ 0.4006,  0.7693],
 </ul></li>
 <li>見せていない175件で当てられたら、それは暗記ではなく<strong>実力</strong></li>
 </ul>
-<div id="93011e38" class="cell" data-execution_count="6">
+<div id="63647d9b" class="cell" data-execution_count="6">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb7-2"><a aria-label="2"></a><span class="im">import</span> torch</span>
 <span id="cb7-3"><a aria-label="3"></a></span>
@@ -529,7 +529,7 @@ tensor([[ 0.4006,  0.7693],
 <span id="cb9-26"><a aria-label="26"></a>    <span class="bu">print</span>(<span class="ss">f"train loss: </span><span class="sc">{</span>F<span class="sc">.</span>cross_entropy(model(X), y)<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
 <span id="cb9-27"><a aria-label="27"></a>    <span class="bu">print</span>(<span class="ss">f"val   loss: </span><span class="sc">{</span>F<span class="sc">.</span>cross_entropy(model(Xv), yv)<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="ddc33709" class="cell" data-execution_count="8">
+<div id="cc40e2c6" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-stdout">
 <pre><code>train loss: 1.8608
 val   loss: 2.6155</code></pre>
@@ -559,7 +559,7 @@ val   loss: 2.6155</code></pre>
 <span id="cb11-10"><a aria-label="10"></a>        window <span class="op">=</span> window[<span class="dv">1</span>:] <span class="op">+</span> [i]     <span class="co"># 窓を1文字ぶんスライド</span></span>
 <span id="cb11-11"><a aria-label="11"></a>    <span class="bu">print</span>(s)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="4f827cfb" class="cell" data-execution_count="10">
+<div id="0792fbe5" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-stdout">
 <pre><code>おおじたわらまち
 つるぎし
@@ -607,7 +607,7 @@ val   loss: 2.6155</code></pre>
 <section id="うますぎる名前には気をつける" class="slide level2">
 <h2>うますぎる名前には気をつける</h2>
 <div class="slide-body">
-<div id="f5f90dac" class="cell" data-execution_count="11">
+<div id="9ba77711" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a aria-label="1"></a>made <span class="op">=</span> [<span class="st">"おおじたわらまち"</span>, <span class="st">"つるぎし"</span>, <span class="st">"きょうおんし"</span>, <span class="st">"みなみちょう"</span>, <span class="st">"おおのし"</span>]</span>
 <span id="cb13-2"><a aria-label="2"></a><span class="cf">for</span> s <span class="kw">in</span> made:</span>
 <span id="cb13-3"><a aria-label="3"></a>    <span class="bu">print</span>(s, <span class="st">"→"</span>, <span class="st">"実在する"</span> <span class="cf">if</span> s <span class="kw">in</span> names <span class="cf">else</span> <span class="st">"新作"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
@@ -858,7 +858,7 @@ val   loss: 2.6155</code></pre>
 <span id="cb15-15"><a aria-label="15"></a><span class="co"># 1つの名前から「文字数+1」個の窓が取れる。敷いた「・」の数が窓幅と一緒に増えるので、組数は窓幅によらない</span></span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<div id="5f39f907" class="cell" data-execution_count="14">
+<div id="ce248175" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-stdout">
 <pre><code>かわさ → [('と', 0.382), ('き', 0.352), ('か', 0.089)]
 よこは → [('ま', 0.768), ('ち', 0.106), ('し', 0.042)]

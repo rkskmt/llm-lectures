@@ -312,7 +312,7 @@ rkskmt
 <ul>
 <li>変換などせず、==埋め込み <span class="math inline">\(x\)</span> どうしの内積==を関連度にすればよさそうに見える：スコア <span class="math inline">\(= XX^\top\)</span></li>
 </ul>
-<div id="e9d24d2f" class="cell" data-execution_count="1">
+<div id="6546b25c" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">1.0</span>], [<span class="fl">1.0</span>, <span class="fl">1.0</span>]])   <span class="co"># 3文字ぶんの埋め込み</span></span>
@@ -384,7 +384,7 @@ rkskmt
 <ul>
 <li>文が <span class="math inline">\(T\)</span> 文字なら、埋め込みを縦に積んだ行列 <span class="math inline">\(X\)</span>（<span class="math inline">\(T\)</span> 行）に掛ければ<strong>全文字ぶん一度に</strong>変換できる — 行列積は<span class="hl">内積の一括処理機</span></li>
 </ul>
-<div id="037987fc" class="cell" data-execution_count="2">
+<div id="53cb8c5f" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb3-2"><a aria-label="2"></a></span>
 <span id="cb3-3"><a aria-label="3"></a>X <span class="op">=</span> np.array([[<span class="fl">1.0</span>, <span class="fl">0.0</span>],     <span class="co"># 3文字ぶんの埋め込み（おもちゃサイズ）</span></span>
@@ -427,7 +427,7 @@ rkskmt
 </div>
 </div>
 </div>
-<div id="e987d266" class="cell" data-execution_count="3">
+<div id="290faa8f" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb5-2"><a aria-label="2"></a></span>
 <span id="cb5-3"><a aria-label="3"></a>rng <span class="op">=</span> np.random.default_rng(<span class="dv">0</span>)</span>
@@ -446,7 +446,7 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <li>足し合わせる項が <span class="math inline">\(d\)</span> 個あるので <span class="math inline">\(\sqrt{d}\)</span> 倍で膨らむ（2→64 で約5.7倍）</li>
 <li>スコアが大きすぎると softmax が<strong>一極集中</strong>して、視線が1点に固まってしまう</li>
 </ul>
-<div id="a40b1f44" class="cell" data-execution_count="4">
+<div id="97f30521" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a>s <span class="op">=</span> np.array([<span class="fl">8.0</span>, <span class="fl">0.0</span>, <span class="op">-</span><span class="fl">8.0</span>])            <span class="co"># d=64 スケールの生スコア</span></span>
 <span id="cb7-2"><a aria-label="2"></a>e <span class="op">=</span> np.exp(s)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"そのまま:"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span>
 <span id="cb7-3"><a aria-label="3"></a>e <span class="op">=</span> np.exp(s <span class="op">/</span> <span class="dv">8</span>)<span class="op">;</span> <span class="bu">print</span>(<span class="st">"÷√64  :"</span>, (e <span class="op">/</span> e.<span class="bu">sum</span>()).<span class="bu">round</span>(<span class="dv">4</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
@@ -504,7 +504,7 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="peek-qkv-full" class="slide level2">
 <h2>通しで動かす</h2>
 <div class="slide-body">
-<div id="84378860" class="cell" data-execution_count="5">
+<div id="4b31b85d" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb9-2"><a aria-label="2"></a></span>
 <span id="cb9-3"><a aria-label="3"></a><span class="kw">def</span> softmax_rows(S):</span>
@@ -540,7 +540,7 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="視線の表を絵にする" class="slide level2">
 <h2>視線の表を絵にする</h2>
 <div class="slide-body">
-<div id="83fb9617" class="cell" data-execution_count="6">
+<div id="7c6319e4" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -590,7 +590,7 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <ul>
 <li>あとで組み立てやすいよう、部品をクラスにする。PyTorch の部品の型が <code>nn.Module</code>：<span class="hl"><code>__init__</code> に持ち物（層）、<code>forward</code> に計算手順</span>を書けば、<code>sa(x)</code> と呼べる部品になる</li>
 </ul>
-<div id="cd5031a8" class="cell" data-execution_count="7">
+<div id="ce07a654" class="cell" data-execution_count="7">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb11-2"><a aria-label="2"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
 <span id="cb11-3"><a aria-label="3"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
@@ -723,7 +723,7 @@ d= 64: 内積の典型的な大きさ = 7.92</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="2831fed5" class="cell" data-execution_count="8">
+<div id="c6b2bd90" class="cell" data-execution_count="8">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>

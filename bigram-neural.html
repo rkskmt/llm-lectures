@@ -358,7 +358,7 @@ rkskmt
 <ul>
 <li>今日から <strong>PyTorch</strong> を使う。基本の箱は <strong>tensor</strong> — NumPy 配列の親戚で、作り方も演算もほぼ同じ感覚</li>
 </ul>
-<div id="19b4b527" class="cell" data-execution_count="1">
+<div id="0e9469cb" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>a <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">2.0</span>], [<span class="fl">3.0</span>, <span class="fl">4.0</span>]])</span>
@@ -381,7 +381,7 @@ tensor([210., 430.])</code></pre>
 <ul>
 <li>tensor は<span class="hl">自分がどう計算されたかを覚えている</span>。だから「結果を入力で微分した傾き」を自動で出せる</li>
 </ul>
-<div id="52a923a4" class="cell" data-execution_count="2">
+<div id="7872c3d8" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a aria-label="2"></a></span>
 <span id="cb3-3"><a aria-label="3"></a>x <span class="op">=</span> torch.tensor(<span class="fl">3.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)   <span class="co"># 「微分を追跡せよ」の印</span></span>
@@ -407,7 +407,7 @@ tensor([210., 430.])</code></pre>
 <li>モデルに入れるために、文字番号を75次元のベクトルにする</li>
 <li><strong>one-hot ベクトル</strong>：その文字の位置だけ 1、あとは全部 0</li>
 </ul>
-<div id="30a66031" class="cell" data-execution_count="3">
+<div id="ad6bd983" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb5-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb5-3"><a aria-label="3"></a></span>
@@ -453,7 +453,7 @@ tensor([1., 0., 0., 0., 0., 0.]) ...</code></pre>
 <p><span class="math display">\[
 \mathrm{softmax}(s_k) = \frac{e^{s_k}}{\sum_j e^{s_j}}
 \]</span></p>
-<div id="d6bea6ae" class="cell" data-execution_count="4">
+<div id="92301370" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb7-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb7-3"><a aria-label="3"></a></span>
@@ -475,11 +475,11 @@ tensor(1.0000)</code></pre>
 <section id="softmax-の形-es-は差の増幅器" class="slide level2">
 <h2>softmax の形 — <span class="math inline">\(e^s\)</span> は差の増幅器</h2>
 <div class="slide-body">
-<div id="d7793f20" class="cell" data-execution_count="5">
+<div id="6224b473" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="bigram-neural_files/figure-revealjs/cell-6-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="bigram-neural_files/figure-revealjs/cell-6-output-1.png" width="912" height="293"></a></p>
+<p><a href="bigram-neural_files/figure-revealjs/cell-6-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="bigram-neural_files/figure-revealjs/cell-6-output-1.png" width="911" height="292"></a></p>
 </figure>
 </div>
 </div>
@@ -506,7 +506,7 @@ tensor(1.0000)</code></pre>
 <p><span class="math display">\[
 \text{損失} = -\log\big(\text{正解に付けた確率}\big)
 \]</span></p>
-<div id="1d6cda8a" class="cell" data-execution_count="6">
+<div id="59e3f2d0" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -544,7 +544,7 @@ tensor(1.0000)</code></pre>
 <li>損失は <span class="math inline">\(W\)</span>（5,625個の数）しだいで変わる。<span class="math inline">\(W\)</span> をどっちに動かせば損失が減る？</li>
 <li><code>backward()</code> が出す<strong>勾配</strong>（<span class="en">gradient</span>）＝「どちらへ動かすと損失が増えるか」の矢印。<span class="hl">その逆へ少しずつ動かし続ける</span>のが<strong>勾配降下法</strong>（<span class="en">gradient descent</span>）。1歩の幅が<strong>学習率</strong>（<code>lr</code>）</li>
 </ul>
-<div id="4b2a50e9" class="cell" data-execution_count="7">
+<div id="a0432612" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
@@ -634,7 +634,7 @@ tensor(1.0000)</code></pre>
 <span id="cb9-25"><a aria-label="25"></a>    <span class="cf">if</span> it <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">10</span>, <span class="dv">50</span>, <span class="dv">100</span>):</span>
 <span id="cb9-26"><a aria-label="26"></a>        <span class="bu">print</span>(<span class="ss">f"更新 </span><span class="sc">{</span>it<span class="sc">:3d}</span><span class="ss">回 | Loss: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="47fe65ce" class="cell" data-execution_count="9">
+<div id="31cc3389" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-stdout">
 <pre><code>更新   1回 | Loss: 4.3175
 更新  10回 | Loss: 2.4495
@@ -663,7 +663,7 @@ tensor(1.0000)</code></pre>
 <span id="cb11-2"><a aria-label="2"></a><span class="bu">print</span>(<span class="st">"P(う|ょ)  数え:"</span>, P_count[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>),</span>
 <span id="cb11-3"><a aria-label="3"></a>      <span class="st">" 学習:"</span>, P_learn[stoi[<span class="st">'ょ'</span>], stoi[<span class="st">'う'</span>]].<span class="bu">round</span>(<span class="dv">3</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="b3ecae12" class="cell" data-execution_count="12">
+<div id="83eea416" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-stdout">
 <pre><code>確率の差の最大: 0.0067
 P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
@@ -725,7 +725,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <span id="cb13-10"><a aria-label="10"></a>        s <span class="op">+=</span> chars[i]</span>
 <span id="cb13-11"><a aria-label="11"></a>    <span class="bu">print</span>(s)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="60da1c97" class="cell" data-execution_count="14">
+<div id="bd33bff3" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-stdout">
 <pre><code>とさいいままちょうむら
 みいなかわち
@@ -851,7 +851,7 @@ P(う|ょ)  数え: 0.99  学習: 0.986</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="4076f7f8" class="cell" data-execution_count="15">
+<div id="c0fac0a5" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a aria-label="1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>

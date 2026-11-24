@@ -318,7 +318,7 @@ rkskmt
 <li>新しい数学はゼロ：埋め込み・行列・tanh（シグモイドの親戚のS字カーブ）・softmax</li>
 <li>違いは<strong>ループが構造の中にある</strong>ことだけ — forward の中に「1文字ずつ」の for 文が入る</li>
 </ul>
-<div id="85d652f1" class="cell" data-execution_count="1">
+<div id="0d116a8e" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-2"><a aria-label="2"></a><span class="im">import</span> torch</span>
 <span id="cb1-3"><a aria-label="3"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
@@ -377,7 +377,7 @@ rkskmt
 <span id="cb2-21"><a aria-label="21"></a>    opt.step()</span>
 <span id="cb2-22"><a aria-label="22"></a><span class="bu">print</span>(<span class="ss">f"500歩後の損失: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.3f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="22879a88" class="cell" data-execution_count="3">
+<div id="0826d22f" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-stdout">
 <pre><code>500歩後の損失: 2.077</code></pre>
 </div>
@@ -403,7 +403,7 @@ rkskmt
 <span id="cb4-10"><a aria-label="10"></a>        name <span class="op">+=</span> chars[i]</span>
 <span id="cb4-11"><a aria-label="11"></a>    <span class="bu">print</span>(name)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="f8da6dac" class="cell" data-execution_count="5">
+<div id="4c9bb44a" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-stdout">
 <pre><code>おおのつちょう
 みつしべつし
@@ -461,11 +461,11 @@ rkskmt
 <section id="つまずき①-過学習が速い" class="slide level2">
 <h2>つまずき① 過学習が速い</h2>
 <div class="slide-body">
-<div id="50090883" class="cell" data-execution_count="6">
+<div id="01bbfcc7" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="rnn-history-appendix_files/figure-revealjs/cell-7-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="rnn-history-appendix_files/figure-revealjs/cell-7-output-1.png" width="663" height="316"></a></p>
+<p><a href="rnn-history-appendix_files/figure-revealjs/cell-7-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="rnn-history-appendix_files/figure-revealjs/cell-7-output-1.png" width="662" height="316"></a></p>
 </figure>
 </div>
 </div>
@@ -483,11 +483,11 @@ rkskmt
 <li>記憶は毎歩、<span class="math inline">\(\tanh\)</span> と <span class="math inline">\(W_h\)</span> の<strong>同じ関所</strong>を通る。誤差が入口へ<strong>戻る</strong>ときも同じ関所を逆に通る</li>
 <li>64文字さかのぼるなら関所64回 — 1回ごとに少し痩せる勾配は、<span class="hl">指数関数的に消えていく</span></li>
 </ul>
-<div id="0e684e93" class="cell" data-execution_count="7">
+<div id="d673320c" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="rnn-history-appendix_files/figure-revealjs/cell-8-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="rnn-history-appendix_files/figure-revealjs/cell-8-output-1.png" width="661" height="316"></a></p>
+<p><a href="rnn-history-appendix_files/figure-revealjs/cell-8-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="rnn-history-appendix_files/figure-revealjs/cell-8-output-1.png" width="660" height="315"></a></p>
 </figure>
 </div>
 </div>
@@ -515,7 +515,7 @@ rkskmt
 <li><span class="math inline">\(h_t\)</span> は <span class="math inline">\(h_{t-1}\)</span> 待ち — <strong>今日の1歩は、昨日の1歩が終わるまで始まらない</strong></li>
 <li>並列計算機（GPU）は「同時にたくさん」が取り柄なのに、RNN の訓練はその取り柄を使えない</li>
 </ul>
-<div id="3dc9c8a4" class="cell" data-execution_count="8">
+<div id="f18426da" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-stdout">
 <pre><code>forward 1回 (32文×64文字、1スレッドCPU):
   RNN（1層のループ64歩）   : 1692 ms

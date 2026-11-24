@@ -312,7 +312,7 @@ rkskmt
 <ul>
 <li>ミニバッチで学習するので、今日から入力は<span class="hl">複数の文をまとめた3次元</span>：（バッチ, 文字数, 次元）</li>
 </ul>
-<div id="e2640156" class="cell" data-execution_count="1">
+<div id="43ce60d5" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>x <span class="op">=</span> torch.randn(<span class="dv">32</span>, <span class="dv">5</span>, <span class="dv">8</span>)              <span class="co"># 32文・5文字・8次元</span></span>
@@ -330,7 +330,7 @@ rkskmt
 <section id="ヘッドをバッチ対応にする" class="slide level2">
 <h2>ヘッドをバッチ対応にする</h2>
 <div class="slide-body">
-<div id="c983d670" class="cell" data-execution_count="2">
+<div id="9cab4682" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="im">import</span> math</span>
 <span id="cb3-2"><a aria-label="2"></a><span class="im">import</span> torch</span>
 <span id="cb3-3"><a aria-label="3"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
@@ -383,7 +383,7 @@ rkskmt
 <section id="peek-multihead" class="slide level2">
 <h2>マルチヘッド注意</h2>
 <div class="slide-body">
-<div id="ed4b77f4" class="cell" data-execution_count="3">
+<div id="419a0836" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a aria-label="1"></a><span class="kw">class</span> MultiHead(nn.Module):</span>
 <span id="cb5-2"><a aria-label="2"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd, n_head, block_size):</span>
 <span id="cb5-3"><a aria-label="3"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -453,7 +453,7 @@ rkskmt
 <li>注意は他の文字から情報を<strong>集める</strong>部品。集めた情報を<strong>加工する</strong>場所がまだない</li>
 <li>各位置ごとに、小さな2層ネット（線形 → ReLU → 線形）を通す</li>
 </ul>
-<div id="39059027" class="cell" data-execution_count="4">
+<div id="8fbb3528" class="cell" data-execution_count="4">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="kw">class</span> FeedForward(nn.Module):</span>
 <span id="cb7-2"><a aria-label="2"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, n_embd):</span>
 <span id="cb7-3"><a aria-label="3"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
@@ -602,7 +602,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="f7eb0ed7" class="cell" data-execution_count="5">
+<div id="02a07c79" class="cell" data-execution_count="5">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a aria-label="1"></a><span class="co"># 問題1: 各ヘッド (2, 10, 24) → cat (2, 10, 96) → proj (2, 10, 96)</span></span>

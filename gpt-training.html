@@ -104,7 +104,7 @@
     code span.vs { color: #032f62; } /* VerbatimString */
     code span.wa { color: #ff5555; } /* Warning */
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-f73900642b947ff7c946332e8eb6f3e3.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -305,7 +305,7 @@ rkskmt
 <ul>
 <li>文章を <strong>64文字</strong>（<code>block_size</code>）ずつ切り出し、「1文字ずらし」を正解にする</li>
 </ul>
-<div id="89398648" class="cell" data-execution_count="2">
+<div id="68360c86" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a aria-label="2"></a></span>
 <span id="cb1-3"><a aria-label="3"></a>text <span class="op">=</span> <span class="bu">open</span>(<span class="st">"data/neko.txt"</span>, encoding<span class="op">=</span><span class="st">"utf-8"</span>).read()</span>
@@ -338,7 +338,7 @@ rkskmt
 <section id="ミニバッチを切り出す" class="slide level2">
 <h2>ミニバッチを切り出す</h2>
 <div class="slide-body">
-<div id="57199f09" class="cell" data-execution_count="3">
+<div id="09cc0401" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a aria-label="1"></a><span class="kw">def</span> get_batch(data, block_size<span class="op">=</span><span class="dv">64</span>, batch_size<span class="op">=</span><span class="dv">32</span>):</span>
 <span id="cb3-2"><a aria-label="2"></a>    ix <span class="op">=</span> torch.randint(<span class="bu">len</span>(data) <span class="op">-</span> block_size <span class="op">-</span> <span class="dv">1</span>, (batch_size,))</span>
 <span id="cb3-3"><a aria-label="3"></a>    x <span class="op">=</span> torch.stack([data[i:i <span class="op">+</span> block_size] <span class="cf">for</span> i <span class="kw">in</span> ix])</span>
@@ -380,7 +380,7 @@ rkskmt
 <span id="cb5-17"><a aria-label="17"></a>    <span class="cf">if</span> it <span class="kw">in</span> (<span class="dv">1</span>, <span class="dv">100</span>, <span class="dv">200</span>, <span class="dv">300</span>):</span>
 <span id="cb5-18"><a aria-label="18"></a>        <span class="bu">print</span>(<span class="ss">f"更新 </span><span class="sc">{</span>it<span class="sc">:3d}</span><span class="ss">回 | Loss: </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="1af6d73e" class="cell" data-execution_count="5">
+<div id="0eda012e" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-stdout">
 <pre><code>更新   1回 | Loss: 8.2259
 更新 100回 | Loss: 4.9774
@@ -411,7 +411,7 @@ rkskmt
 <span id="cb7-10"><a aria-label="10"></a>torch.manual_seed(<span class="dv">0</span>)</span>
 <span id="cb7-11"><a aria-label="11"></a><span class="bu">print</span>(generate(model, <span class="st">"吾輩は"</span>, <span class="dv">80</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="6d59f74d" class="cell" data-execution_count="7">
+<div id="84e7dfbc" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩はある。何味へ本からるは食うだんがいて元も主人が厭を…死の湯のごと、超吾輩分化なん一来出であると云うと行る前将に田のして武濶士だ、飴る悟衛時はよこは驚りま早ってで</code></pre>
 </div>
@@ -525,11 +525,11 @@ rkskmt
 </div>
 </div>
 <div class="fragment">
-<div id="764b03a5" class="cell" data-execution_count="8">
+<div id="363cc4e9" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="gpt-training_files/figure-revealjs/cell-9-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img data-src="gpt-training_files/figure-revealjs/cell-9-output-1.png" width="710" height="364"></a></p>
+<p><a href="gpt-training_files/figure-revealjs/cell-9-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img data-src="gpt-training_files/figure-revealjs/cell-9-output-1.png" width="709" height="363"></a></p>
 </figure>
 </div>
 </div>
@@ -590,7 +590,7 @@ rkskmt
 <span id="cb9-11"><a aria-label="11"></a>torch.manual_seed(<span class="dv">1</span>)</span>
 <span id="cb9-12"><a aria-label="12"></a><span class="bu">print</span>(generate(model, <span class="st">"吾輩は"</span>, <span class="dv">100</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<div id="13dadf43" class="cell" data-execution_count="10">
+<div id="64cefa74" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩は最後屁ぽために獣に不平を洩れたまって……」「うん、どうだなに蝙蝠傘に話し給え。あんまりあの」と心配して、食べてこの質問をは弁当人の不平を少しか忘れている。
 　芸者はやはりかず、落ちておこちへ降がって聞</code></pre>
@@ -608,11 +608,11 @@ rkskmt
 <li>「束ねて、考える」の回の宿題を回収する — あのとき<span class="hl">どのヘッドがどんな「係」（視線の分業）になるかは学習まかせ</span>と約束した</li>
 <li>訓練済みモデルに冒頭の一文を読ませ、層×ヘッドの<strong>視線の表</strong>（Q・K・V の回で作った「誰が誰を見るか」の表）を取り出して眺める</li>
 </ul>
-<div id="4b22b6a5" class="cell" data-execution_count="11">
+<div id="adfe009d" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="gpt-training_files/figure-revealjs/cell-12-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="gpt-training_files/figure-revealjs/cell-12-output-1.png" width="885" height="440"></a></p>
+<p><a href="gpt-training_files/figure-revealjs/cell-12-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="gpt-training_files/figure-revealjs/cell-12-output-1.png" width="884" height="439"></a></p>
 </figure>
 </div>
 </div>
@@ -626,11 +626,11 @@ rkskmt
 <section id="名前はまだの視線" class="slide level2">
 <h2>「名前はまだ」の視線</h2>
 <div class="slide-body">
-<div id="dace8ad7" class="cell" data-execution_count="12">
+<div id="c1928dda" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="gpt-training_files/figure-revealjs/cell-13-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="gpt-training_files/figure-revealjs/cell-13-output-1.png" width="432" height="450"></a></p>
+<p><a href="gpt-training_files/figure-revealjs/cell-13-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="gpt-training_files/figure-revealjs/cell-13-output-1.png" width="431" height="450"></a></p>
 </figure>
 </div>
 </div>
@@ -644,11 +644,11 @@ rkskmt
 <section id="文字前のカッコを見る係" class="slide level2">
 <h2>14文字前のカッコを見る係</h2>
 <div class="slide-body">
-<div id="0f73adf9" class="cell" data-execution_count="13">
+<div id="f74abef6" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="gpt-training_files/figure-revealjs/cell-14-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img data-src="gpt-training_files/figure-revealjs/cell-14-output-1.png" width="546" height="565"></a></p>
+<p><a href="gpt-training_files/figure-revealjs/cell-14-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img data-src="gpt-training_files/figure-revealjs/cell-14-output-1.png" width="520" height="539"></a></p>
 </figure>
 </div>
 </div>
@@ -668,7 +668,7 @@ rkskmt
 </ul>
 <iframe src="data/runs/neko/attn_view.html" width="100%" height="430" style="border: 1px solid #ccc; border-radius: 6px; background: white;">
 </iframe>
-<div id="1d8de47b" class="cell" data-execution_count="14">
+<div id="a91ef689" class="cell" data-execution_count="14">
 <details class="code-fold">
 <summary>自分の手元で動かすコード（pip install bertviz が必要）</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
@@ -843,7 +843,7 @@ rkskmt
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="adb213dc" class="cell" data-execution_count="15">
+<div id="c77246d0" class="cell" data-execution_count="15">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a><span class="im">import</span> torch</span>

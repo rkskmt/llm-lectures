@@ -285,7 +285,7 @@ rkskmt
 <li>モデルの出力は<strong>確率分布</strong> — 生成の自由度は「その分布から<span class="hl">どう引くか</span>」に集約される</li>
 <li>今日は引き方のツマミを2つ握る。まずは準備</li>
 </ul>
-<div id="256129ed" class="cell" data-execution_count="2">
+<div id="96b21609" class="cell" data-execution_count="2">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a aria-label="2"></a><span class="im">from</span> gpt <span class="im">import</span> GPT</span>
 <span id="cb1-3"><a aria-label="3"></a></span>
@@ -308,7 +308,7 @@ rkskmt
 <ul>
 <li>「一番ありそうな文字を選び続ける」のが最強に思える。バイグラムの Tweak で見た <strong>argmax 作戦</strong></li>
 </ul>
-<div id="2c784349" class="cell" data-execution_count="3">
+<div id="69eab602" class="cell" data-execution_count="3">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a aria-label="1"></a><span class="kw">def</span> gen(prompt, n, temperature<span class="op">=</span><span class="fl">1.0</span>, top_k<span class="op">=</span><span class="va">None</span>, seed<span class="op">=</span><span class="dv">0</span>):</span>
 <span id="cb2-2"><a aria-label="2"></a>    torch.manual_seed(seed)</span>
 <span id="cb2-3"><a aria-label="3"></a>    idx <span class="op">=</span> torch.tensor([[stoi[c] <span class="cf">for</span> c <span class="kw">in</span> prompt]])</span>
@@ -353,11 +353,11 @@ rkskmt
 <li><span class="math inline">\(T &gt; 1\)</span>：スコア差が縮小 → 分布が<strong>平らになる</strong>（番狂わせが増える、危険）</li>
 <li><span class="math inline">\(T \to 0\)</span>：ほぼ argmax。<span class="math inline">\(T = 1\)</span>：モデルの分布そのまま</li>
 </ul>
-<div id="d31b37cd" class="cell" data-execution_count="4">
+<div id="444a7bc2" class="cell" data-execution_count="4">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="sampling_files/figure-revealjs/cell-5-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="sampling_files/figure-revealjs/cell-5-output-1.png" width="998" height="305"></a></p>
+<p><a href="sampling_files/figure-revealjs/cell-5-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img data-src="sampling_files/figure-revealjs/cell-5-output-1.png" width="956" height="293"></a></p>
 </figure>
 </div>
 </div>
@@ -373,7 +373,7 @@ rkskmt
 <ul>
 <li>softmax の回のスコア (2, 1, −1) を、<span class="math inline">\(T\)</span> で割ってから通すと</li>
 </ul>
-<div id="49f061e9" class="cell" data-execution_count="5">
+<div id="656a9bc4" class="cell" data-execution_count="5">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a aria-label="1"></a><span class="im">import</span> torch</span>
 <span id="cb4-2"><a aria-label="2"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
 <span id="cb4-3"><a aria-label="3"></a></span>
@@ -411,7 +411,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 </div>
 </div>
 </div>
-<div id="6dd5df6d" class="cell" data-execution_count="6">
+<div id="0dccd3a6" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-stdout">
 <pre><code>--- A ---
 吾輩は登ぱり何音野株か知るシ囃通り数が奇秘をも刑い台み掻…死絽を溜ごし嘔算吾私製霞如世一来出で』裁めて爆面引る前将見田置し日武捐虞だ、飴ん悟り激纏珍騒振る所以早顔心で 
@@ -442,11 +442,11 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li><span class="math inline">\(T\)</span> を上げたいが暴走は困る → <strong>上位 <span class="math inline">\(k\)</span> 文字だけ残して</strong>、あとは <span class="math inline">\(-\infty\)</span> にしてから抽選</li>
 </ul>
-<div id="50e0d78d" class="cell" data-execution_count="7">
+<div id="135c032d" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="sampling_files/figure-revealjs/cell-8-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="sampling_files/figure-revealjs/cell-8-output-1.png" width="815" height="259"></a></p>
+<p><a href="sampling_files/figure-revealjs/cell-8-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img data-src="sampling_files/figure-revealjs/cell-8-output-1.png" width="815" height="258"></a></p>
 </figure>
 </div>
 </div>
@@ -454,7 +454,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li>票を <span class="math inline">\(-\infty\)</span> で消す — <span class="hl">因果マスクと同じ手口</span>（softmax の前に消すのが作法）</li>
 </ul>
-<div id="33b61d71" class="cell" data-execution_count="8">
+<div id="47c3a2a1" class="cell" data-execution_count="8">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a aria-label="1"></a><span class="bu">print</span>(gen(<span class="st">"吾輩は"</span>, <span class="dv">80</span>, temperature<span class="op">=</span><span class="fl">2.0</span>, top_k<span class="op">=</span><span class="dv">40</span>))</span></code></pre></div><button title="コピー" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>吾輩はあるま品分に、かいるはずよりほといものも近い猫とし得るのを忘れしきりを捉まってあたかなかって見ましまか」
@@ -480,11 +480,11 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <li>top-k の弱点：<strong>常に k 席</strong>の固定枠 — 自信満々の場面では広すぎ、大混戦では狭すぎる</li>
 <li><strong>top-p</strong>（<span class="en">nucleus sampling</span>）は席数でなく<span class="hl">得票の合計</span>で切る：確率の高い順に足していき、合計が <span class="math inline">\(p\)</span> に達したら打ち止め</li>
 </ul>
-<div id="0b37c40d" class="cell" data-execution_count="9">
+<div id="c6d4ea6d" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div>
 <figure>
-<p><a href="sampling_files/figure-revealjs/cell-10-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img data-src="sampling_files/figure-revealjs/cell-10-output-1.png" width="758" height="316"></a></p>
+<p><a href="sampling_files/figure-revealjs/cell-10-output-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img data-src="sampling_files/figure-revealjs/cell-10-output-1.png" width="757" height="315"></a></p>
 </figure>
 </div>
 </div>
@@ -518,7 +518,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 <ul>
 <li>「確率的な生成」と「再現できる実験」は両立する — コンピュータの乱数は<strong>疑似</strong>乱数で、<span class="hl">種（シード）が同じなら出目の列も同じ</span></li>
 </ul>
-<div id="bf54a810" class="cell" data-execution_count="10">
+<div id="f2408409" class="cell" data-execution_count="10">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a aria-label="1"></a>torch.manual_seed(<span class="dv">0</span>)</span>
 <span id="cb10-2"><a aria-label="2"></a><span class="bu">print</span>(torch.multinomial(torch.tensor([<span class="fl">0.7</span>, <span class="fl">0.2</span>, <span class="fl">0.1</span>]), <span class="dv">8</span>, replacement<span class="op">=</span><span class="va">True</span>))</span>
 <span id="cb10-3"><a aria-label="3"></a>torch.manual_seed(<span class="dv">0</span>)</span>
@@ -528,7 +528,7 @@ T=2.0: tensor([0.5470, 0.3310, 0.1220])</code></pre>
 tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 </div>
 </div>
-<div id="d6fed8e3" class="cell" data-execution_count="11">
+<div id="1858662f" class="cell" data-execution_count="11">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a aria-label="1"></a>a <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)</span>
 <span id="cb12-2"><a aria-label="2"></a>b <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">7</span>)   <span class="co"># 同じ種でもう一度</span></span>
 <span id="cb12-3"><a aria-label="3"></a>c <span class="op">=</span> gen(<span class="st">"吾輩は"</span>, <span class="dv">40</span>, temperature<span class="op">=</span><span class="fl">0.8</span>, seed<span class="op">=</span><span class="dv">8</span>)   <span class="co"># 種を変える</span></span>
@@ -673,7 +673,7 @@ tensor([2, 1, 0, 2, 0, 1, 0, 0])</code></pre>
 <section id="解答例" class="slide level2">
 <h2>解答例</h2>
 <div class="slide-body">
-<div id="aaae5d6a" class="cell" data-execution_count="12">
+<div id="88b6503e" class="cell" data-execution_count="12">
 <details class="code-fold">
 <summary>解答例を見る</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a aria-label="1"></a><span class="co"># 問題1</span></span>

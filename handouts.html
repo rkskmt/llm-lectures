@@ -35,7 +35,7 @@
       vertical-align: middle;
     }
   </style>
-  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-e69bca93ec9d1486cefcf16a785f5ce6.css">
+  <link rel="stylesheet" href="site_libs/revealjs/dist/theme/quarto-f73900642b947ff7c946332e8eb6f3e3.css">
   <link href="site_libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="site_libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -168,6 +168,15 @@
             config.math.config = config.math.config.replace("_HTML", "_CHTML");
             config.math.CommonHTML = { scale: 127, matchFontHeight: false };
           }
+          // A ruled or network lecture index lays itself out at the
+          // window's width (custom.css). reveal.js's slide view
+          // fixes every slide at 1280x720 and scales it, and reveal.js
+          // switches to the scroll view only below 435px, so open such
+          // a page in the scroll view at every width. Quarto calls
+          // initialize at the end of <body>, so the page is parsed.
+          if (config && document.querySelector(".lectures.ruled, .lectures.network")) {
+            config.view = "scroll";
+          }
           return initialize.call(this, config);
         };
       }
@@ -179,7 +188,8 @@
   <script src="peek-ui.js" defer=""></script>
   <script src="badge-ui.js" defer=""></script>
   <script src="toc-ui.js" defer=""></script>
-  <meta name="qmd-web-source" content="363cf56eeea9c903f91b6a0274c50eab9effd348 83c359b36613603fca12714e7ac68b25e2847caa">
+  <script src="network-ui.js" defer=""></script>
+  <meta name="qmd-web-source" content="363cf56eeea9c903f91b6a0274c50eab9effd348">
 </head>
 <body class="quarto-light">
   <div class="reveal">
