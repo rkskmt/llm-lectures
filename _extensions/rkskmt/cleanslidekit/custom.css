@@ -1415,6 +1415,10 @@ a.lightbox[href]::after {
 .reveal .callout .callout-title p,
 .reveal .callout .callout-title strong,
 .reveal .callout .callout-title code { color: #fff !important; }   /* code in a header bar must be white too */
+/* A link keeps its teal, which sinks into the coloured bar: make it white
+   and mark it by an underline (a .peek link already has its dotted one). */
+.reveal .callout .callout-title a { color: #fff !important; }
+.reveal .callout .callout-title a:not(.peek) { text-decoration: underline; }
 .reveal .callout .callout-icon::before { filter: brightness(0) invert(1) !important; }
 
 .reveal .callout-note      .callout-title { background: #1c7ed6 !important; }
