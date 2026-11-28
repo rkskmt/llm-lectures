@@ -445,7 +445,7 @@ table td:first-child {
    width instead of the box's balanced wrapping: the fill spans the whole
    width either way, and balanced lines would leave a white gap after them. */
 .reveal .takeaway > .takeaway-title {
-  --takeaway-title-scale: 0.7;
+  --takeaway-title-scale: 0.8;
   width: fit-content;
   margin:
     calc(-0.55em / var(--takeaway-title-scale) - 1px - 0.7em)
@@ -454,6 +454,14 @@ table td:first-child {
   padding: 0 0.4em;
   background: #fff;
   color: #131516;
+  /* A bold face of its own marks it as a label, not part of the message:
+     the textbook face on Windows, the rounded gothic on macOS, and the
+     theme's gothic, bold, elsewhere. */
+  font-family: "UD Digi Kyokasho NP-B", "UD Digi Kyokasho NP",
+    "UD デジタル 教科書体 NP-B", "UD デジタル 教科書体 NP",
+    "Hiragino Maru Gothic ProN", system-ui, -apple-system, "Hiragino Sans",
+    "Yu Gothic UI", "Segoe UI", "Meiryo", sans-serif;
+  font-weight: bold;
   font-size: calc(var(--takeaway-title-scale) * 1em);
   line-height: 1.4;
   text-align: left;
