@@ -57,6 +57,8 @@ classes:
     description: "On an H2, renders a section-divider slide; it also appears as a divider in the slide-list drawer."
   break-title:
     description: "Title-styling companion class for `.break-slide` section-divider slides."
+  break-subtitle:
+    description: "Optional subtitle under the `.break-title` of a `.break-slide`: a smaller gray line in a Mincho face, indented a little from the title's left edge. The slide-list drawer shows the title only."
 
   # --- Mini slide (mini-slide.lua + custom.css) ---
   mini-slide:

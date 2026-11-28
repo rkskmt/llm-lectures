@@ -1274,6 +1274,27 @@ a.lightbox[href]::after {
   padding: 0 0 0.24em;
   text-align: left;
 }
+/* Optional subtitle under the title: the same box as .break-title, indented
+   a little from its left edge, smaller and gray, in a Mincho face. */
+.break-slide .break-subtitle {
+  display: block;
+  width: 860px;
+  max-width: calc(100% - 310px);
+  margin-left: 190px !important;
+  margin-right: auto !important;
+  padding-top: 0.4em;
+  padding-left: 1.5em;
+  font-family: "Yu Mincho", "YuMincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+  font-size: 1.15em;
+  color: #444;
+  text-align: left;
+}
+/* The weight goes on the paragraph: the body-text rule at the top of this
+   file sets 400 on every `.reveal p`, overriding what it would inherit from
+   the div. */
+.break-slide .break-subtitle p {
+  font-weight: 300;
+}
 .slide-body ul {
   margin-top: 0 !important;
   margin-bottom: 0 !important;

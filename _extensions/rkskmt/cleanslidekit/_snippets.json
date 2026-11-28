@@ -24,6 +24,21 @@
 		"body": "## ${1:Section title} {.break-slide}",
 		"description": "Section-divider slide (also a divider in the slide-list drawer)"
 	},
+	"Break slide with subtitle": {
+		"prefix": "csk-break-sub",
+		"body": [
+			"## {background-color=\"white\" .center .break-slide}",
+			"",
+			"::: {.break-title}",
+			"${1:Section title}",
+			":::",
+			"",
+			"::: {.break-subtitle}",
+			"${2:Subtitle}",
+			":::"
+		],
+		"description": "Section-divider slide with a subtitle under its title"
+	},
 	"Image + citation slide": {
 		"prefix": "csk-figcite",
 		"body": [
