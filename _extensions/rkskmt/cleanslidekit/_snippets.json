@@ -110,6 +110,15 @@
 		],
 		"description": "Large outlined box for the slide's key message"
 	},
+	"Takeaway with title (slide key message)": {
+		"prefix": "csk-takeaway-title",
+		"body": [
+			"::: {.takeaway title=\"${1:Title}\"}",
+			"${2:Key message}",
+			":::"
+		],
+		"description": "Key-message box with a small title tag on its top-left shoulder"
+	},
 	"Takeaway, dark (slide key message)": {
 		"prefix": "csk-takeaway-dark",
 		"body": [
@@ -168,11 +177,11 @@
 	"Caption note": {
 		"prefix": "csk-caption",
 		"body": [
-			"::: {.caption-note}",
+			"::: {.caption-note .center}",
 			"$0",
 			":::"
 		],
-		"description": "Annotation caption for the element directly above it"
+		"description": "Annotation caption for the element directly above it, centered (drop .center under a left-anchored table or code output)"
 	},
 	"Slide peek link": {
 		"prefix": "csk-peek",

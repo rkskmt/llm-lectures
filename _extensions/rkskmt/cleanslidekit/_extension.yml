@@ -1,6 +1,6 @@
 title: CleanSlideKit RevealJS
 author: rkskmt
-version: 1.13.5
+version: 1.13.6
 quarto-required: ">=1.4.0"
 contributes:
   formats:
@@ -110,6 +110,8 @@ contributes:
       filters:
         - slide-body.lua
         - card-grid.lua
+        # Before hl.lua: a ==marker== in a takeaway title is highlighted too.
+        - takeaway.lua
         - hl.lua
         - cite-image.lua
         - plotly-iframe.lua

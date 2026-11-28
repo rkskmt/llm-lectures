@@ -45,6 +45,8 @@ classes:
     description: "Hands-on 'change one line & see what happens' practice block; a two-column table or a list renders as auto-numbered row-bands with a coral accent."
   prompt:
     description: "A neutral rounded frame marking a paragraph as the exercise statement."
+  takeaway:
+    description: "A large, centered key-message box for the end of a slide; it stays in normal flow, so it never overlaps taller content. Add .dark for white text on a black fill. Attribute: title (takeaway.lua), a small tag on the frame's top-left shoulder."
   caption-note:
     description: "An annotation caption for whatever sits directly above it (a table, a figure, a code block). The chip shrinks to its content; the body may be a paragraph, several paragraphs, or a list. Add .center to center the chip under a centered element such as a display formula."
   table-compact:
@@ -145,6 +147,11 @@ attributes:
       type: [string, number]
       description: "Iframe height in pixels or a CSS size."
       examples: [520]
+  ".takeaway":
+    title:
+      type: string
+      description: "A small tag on the frame's top-left shoulder, like the legend of a fieldset. Inline markdown: math, bold and links work. Pandoc reads backslash escapes in an attribute value first, so double the backslashes in math. A title that reads as a list or heading ('1. Step') stops the render; escape its marker ('1\\\\. Step')."
+      examples: ["In short"]
   ".mini-slide":
     width:
       type: string
